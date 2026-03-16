@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>勞務報酬單產生器 | HelloRuru 工具站</title>
+  <meta name="description" content="免費線上勞報單工具，自動計算 115 年度代扣繳所得稅與二代健保補充保費，支援 9A 執行業務、9B 稿費、50 薪資三種所得類別，填完直接列印或下載 PDF。">
+  <meta property="og:title" content="勞務報酬單產生器 | HelloRuru 工具站">
+  <meta property="og:description" content="3 分鐘產生一張完整的勞務報酬單，自動試算代扣繳與二代健保（115 年度基本工資 29,500 元），填完直接列印。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tools.helloruru.com/labor-report/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script src="https://lab.helloruru.com/shared/brand-header.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "勞務報酬單產生器",
+    "description": "免費線上勞報單工具，自動計算代扣繳所得稅與二代健保補充保費",
+    "url": "https://tools.helloruru.com/labor-report/",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "TWD" },
+    "author": { "@type": "Person", "name": "Kaoru Tsai", "url": "https://helloruru.com" }
+  }
+  </script>
+  <link rel="preconnect" href="https://lab.helloruru.com" crossorigin>
+  <style>
+    /* ========================================
+       DS 2.1 Classic — Hello Ruru 經典
+       ======================================== */
+    @font-face {
+      font-family: 'GenSenRounded';
+      src: url('https://lab.helloruru.com/fonts/GenSenRounded-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'GenSenRounded';
+      src: url('https://lab.helloruru.com/fonts/GenSenRounded-Medium.woff2') format('woff2');
+      font-weight: 500;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'GenSenRounded';
+      src: url('https://lab.helloruru.com/fonts/GenSenRounded-Bold.woff2') format('woff2');
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* 品牌色 */
+      --color-rose: #D4A5A5;
+      --color-lavender: #B8A9C9;
+      --color-gray-rose: #C9929A;
+      --color-coral: #E8A87C;
+      --color-coral-dark: #D09060;
+      --color-coral-bg: rgba(232, 168, 124, 0.10);
+      --color-brand-pink: #DFC6C6;
+      --color-brand-brown: #6D5954;
+      --gradient-brand: linear-gradient(135deg, #DFC6C6, #6D5954);
+      --gradient-primary: linear-gradient(135deg, #D4A5A5, #B8A9C9);
+      /* 中性色 */
+      --color-blush: #F5D0C5;
+      --color-sage: #A8B5A0;
+      --color-fog: #E8E4E1;
+      --color-warm-gray: #B5ADA7;
+      --color-charcoal: #5C5856;
+      /* 文字 */
+      --text-primary: #333333;
+      --text-secondary: #4A4A4A;
+      --text-muted: #888888;
+      --text-hint: #AAAAAA;
+      /* 背景 */
+      --bg-page: #FAFAFA;
+      --bg-card: #FFFFFF;
+      --border-color: #E8E4E1;
+      /* 狀態 */
+      --status-success: #A8B5A0;
+      --status-error: #C9929A;
+      --status-warning: #D4A5A5;
+      --status-info: #B8A9C9;
+      /* 圓角 */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 24px;
+      --radius-full: 50%;
+      /* 陰影（暖色） */
+      --shadow-sm: 0 2px 8px rgba(212, 165, 165, 0.08);
+      --shadow-md: 0 4px 16px rgba(212, 165, 165, 0.10);
+      --shadow-lg: 0 8px 32px rgba(212, 165, 165, 0.14);
+      /* 間距 */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+      /* 過渡 */
+      --transition-fast: 150ms ease;
+      --transition-normal: 250ms ease;
+      /* 字體 */
+      --font-body: 'GenSenRounded', 'Noto Sans TC', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--bg-page);
+      line-height: 1.8;
+      font-size: 16px;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: var(--space-lg) var(--space-md) 64px;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      margin-bottom: var(--space-xl);
+    }
+    .hero h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--color-brand-brown);
+      line-height: 1.3;
+      margin-bottom: var(--space-sm);
+    }
+    .hero p {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+    .hero .year-badge {
+      display: inline-block;
+      background: var(--gradient-brand);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-sm);
+    }
+
+    /* 卡片（DS 2.1 素面 A） */
+    .form-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-lg);
+      transition: all var(--transition-normal);
+    }
+    .form-card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+    .form-card h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-brand-brown);
+      margin-bottom: var(--space-md);
+      padding-bottom: var(--space-sm);
+      border-bottom: 2px solid var(--color-brand-pink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .form-card h2 .save-btn {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-rose);
+      background: none;
+      border: 1.5px solid var(--color-rose);
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all var(--transition-fast);
+    }
+    .form-card h2 .save-btn:hover {
+      background: var(--color-rose);
+      color: white;
+    }
+    .form-card h2 .save-btn.saved {
+      background: var(--status-success);
+      border-color: var(--status-success);
+      color: white;
+    }
+
+    /* 表單 */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+    .form-row.full { grid-template-columns: 1fr; }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .field label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .field label .required {
+      color: var(--color-coral);
+      margin-left: 2px;
+    }
+    .field input, .field select, .field textarea {
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 500;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      outline: none;
+      transition: border-color var(--transition-fast);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--color-rose);
+    }
+    .field textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    .field .hint {
+      font-size: 12px;
+      color: var(--text-hint);
+      line-height: 1.4;
+    }
+
+    /* 所得類別 */
+    .income-type-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .income-type-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all var(--transition-fast);
+      user-select: none;
+    }
+    .income-type-group label:hover {
+      border-color: var(--color-rose);
+    }
+    .income-type-group input[type="radio"] { display: none; }
+    .income-type-group input[type="radio"]:checked + label {
+      background: var(--color-rose);
+      color: white;
+      border-color: var(--color-rose);
+    }
+
+    /* checkbox */
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-top: var(--space-sm);
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--color-rose);
+    }
+    .checkbox-row label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    /* 9A 職業細類 */
+    .sub-field {
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: var(--color-brand-pink);
+      background: rgba(223, 198, 198, 0.15);
+      border-radius: var(--radius-md);
+      border: 1px dashed var(--color-brand-pink);
+    }
+    .sub-field.hidden { display: none; }
+
+    /* 試算結果（DS 2.1 淡粉卡片 B） */
+    .calc-result {
+      background: linear-gradient(135deg, rgba(212,165,165,0.06), rgba(184,169,201,0.04));
+      border: 1px solid rgba(212,165,165,0.2);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      margin-top: var(--space-md);
+    }
+    .calc-result h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-brand-brown);
+      margin-bottom: 12px;
+    }
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 15px;
+    }
+    .calc-row.total {
+      border-top: 2px solid var(--color-rose);
+      margin-top: var(--space-sm);
+      padding-top: 12px;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--text-primary);
+    }
+    .calc-row .label { color: var(--text-muted); }
+    .calc-row .value { font-weight: 700; color: var(--text-primary); }
+    .calc-row .value.deduct { color: var(--status-error); }
+    .calc-row .value.net { color: var(--status-success); }
+    .calc-hint {
+      font-size: 12px;
+      color: var(--text-hint);
+      margin-top: var(--space-sm);
+      line-height: 1.6;
+      padding-top: var(--space-sm);
+      border-top: 1px solid rgba(212,165,165,0.1);
+    }
+    .calc-hint .threshold {
+      display: inline-block;
+      background: var(--color-brand-pink);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      color: var(--color-brand-brown);
+    }
+
+    /* 業主負擔提示 */
+    .employer-note {
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: var(--color-coral-bg);
+      border-radius: var(--radius-md);
+      border-left: 3px solid var(--color-coral);
+      font-size: 13px;
+      color: var(--color-charcoal);
+      line-height: 1.6;
+    }
+    .employer-note.hidden { display: none; }
+    .employer-note strong { color: var(--color-coral-dark); }
+
+    /* 按鈕 */
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: var(--space-xl);
+      flex-wrap: wrap;
+    }
+    .btn {
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 12px 32px;
+      border: none;
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: var(--color-rose);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-primary:hover {
+      background: var(--color-gray-rose);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 2px solid var(--color-rose);
+    }
+    .btn-secondary:hover {
+      background: var(--color-rose);
+      color: white;
+    }
+
+    /* ===== 列印版 ===== */
+    .print-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 300;
+      overflow-y: auto;
+      padding: var(--space-lg);
+    }
+    .print-overlay.active {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .print-sheet-wrapper {
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      max-width: 900px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .print-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) var(--space-lg);
+      background: var(--bg-page);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .print-toolbar h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-brand-brown);
+    }
+
+    .print-sheet {
+      padding: 40px;
+      font-family: 'Noto Sans TC', sans-serif;
+      color: #333;
+    }
+    .print-sheet h2 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      letter-spacing: 4px;
+      color: var(--color-brand-brown);
+    }
+    .print-sheet table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .print-sheet table th,
+    .print-sheet table td {
+      border: 1px solid #595959;
+      padding: 8px 12px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    .print-sheet table th {
+      background: #f5f5f5;
+      font-weight: 700;
+      white-space: nowrap;
+      width: 120px;
+    }
+    .print-sheet .sign-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 32px;
+    }
+    .print-sheet .sign-box {
+      border: 1px solid #595959;
+      padding: 16px;
+      min-height: 80px;
+    }
+    .print-sheet .sign-box p {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 40px;
+    }
+    .print-sheet .note {
+      margin-top: 24px;
+      font-size: 12px;
+      color: #888;
+      line-height: 1.6;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--color-brand-brown);
+      color: white;
+      padding: 10px 24px;
+      border-radius: var(--radius-lg);
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 400;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Footer（DS 2.1 居中漸層淡線） */
+    .site-footer {
+      text-align: center;
+      padding: var(--space-xl) var(--space-md);
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .site-footer::before {
+      content: '';
+      display: block;
+      width: 120px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-rose), transparent);
+      margin: 0 auto var(--space-lg);
+      opacity: 0.5;
+    }
+    .site-footer a {
+      color: var(--color-rose);
+      text-decoration: underline;
+      transition: color var(--transition-fast);
+    }
+    .site-footer a:hover {
+      color: var(--color-gray-rose);
+    }
+
+    /* ===== 列印 ===== */
+    @media print {
+      body * { visibility: hidden; }
+      .print-sheet, .print-sheet * { visibility: visible; }
+      .print-sheet {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 20px;
+      }
+      .print-toolbar { display: none !important; }
+      .print-overlay {
+        display: block !important;
+        position: static;
+        background: none;
+        padding: 0;
+      }
+      .print-sheet-wrapper { box-shadow: none; border-radius: 0; }
+    }
+
+    /* ===== RWD ===== */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 30px; }
+      .form-card { padding: 20px; }
+      .form-row { grid-template-columns: 1fr; }
+      .income-type-group { flex-direction: column; }
+      .print-sheet { padding: 20px; }
+      .print-sheet .sign-area { grid-template-columns: 1fr; }
+      .btn-group { flex-direction: column; align-items: stretch; }
+      .btn { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<hello-ruru-header title="勞報單產生器"></hello-ruru-header>
+
+<div class="app-container" id="app">
+
+  <div class="hero">
+    <span class="year-badge">115 年度適用（基本工資 $29,500）</span>
+    <h1>勞務報酬單產生器</h1>
+    <p>填寫資料，自動計算代扣繳與二代健保，直接列印或下載 PDF</p>
+  </div>
+
+  <!-- 委託方 -->
+  <div class="form-card">
+    <h2>
+      委託方（公司）
+      <button class="save-btn" id="saveCompanyBtn" onclick="saveCompany()">記住公司資料</button>
+    </h2>
+    <div class="form-row">
+      <div class="field">
+        <label>公司名稱 <span class="required">*</span></label>
+        <input type="text" id="companyName" placeholder="例：某某股份有限公司">
+      </div>
+      <div class="field">
+        <label>統一編號</label>
+        <input type="text" id="companyTaxId" placeholder="8 碼" maxlength="8" inputmode="numeric">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="field">
+        <label>公司地址</label>
+        <input type="text" id="companyAddress" placeholder="公司登記地址">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>聯絡人</label>
+        <input type="text" id="companyContact" placeholder="承辦人姓名">
+      </div>
+      <div class="field">
+        <label>聯絡電話</label>
+        <input type="tel" id="companyPhone" placeholder="電話或手機">
+      </div>
+    </div>
+  </div>
+
+  <!-- 受款人 -->
+  <div class="form-card">
+    <h2>受款人（個人）</h2>
+    <div class="form-row">
+      <div class="field">
+        <label>姓名 <span class="required">*</span></label>
+        <input type="text" id="payeeName" placeholder="身分證上的全名">
+      </div>
+      <div class="field">
+        <label>身分證字號 <span class="required">*</span></label>
+        <input type="text" id="payeeId" placeholder="例：A123456789" maxlength="10">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="field">
+        <label>戶籍地址</label>
+        <input type="text" id="payeeAddress" placeholder="戶籍地址">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>聯絡電話</label>
+        <input type="tel" id="payeePhone" placeholder="手機號碼">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="payeeEmail" placeholder="電子信箱">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>銀行名稱</label>
+        <input type="text" id="bankName" placeholder="例：國泰世華銀行">
+      </div>
+      <div class="field">
+        <label>銀行帳號</label>
+        <input type="text" id="bankAccount" placeholder="匯款帳號">
+      </div>
+    </div>
+  </div>
+
+  <!-- 勞務內容 -->
+  <div class="form-card">
+    <h2>勞務內容</h2>
+    <div class="form-row">
+      <div class="field">
+        <label>勞務期間（起） <span class="required">*</span></label>
+        <input type="date" id="serviceStart">
+      </div>
+      <div class="field">
+        <label>勞務期間（迄） <span class="required">*</span></label>
+        <input type="date" id="serviceEnd">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="field">
+        <label>勞務說明 <span class="required">*</span></label>
+        <textarea id="serviceDesc" placeholder="簡述本次合作的工作內容，例如：文案撰寫、網站設計、攝影..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 所得資訊 -->
+  <div class="form-card">
+    <h2>所得資訊</h2>
+
+    <div class="field" style="margin-bottom:var(--space-md);">
+      <label>所得類別 <span class="required">*</span></label>
+      <div class="income-type-group">
+        <input type="radio" name="incomeType" id="type9a" value="9A" checked>
+        <label for="type9a">9A 執行業務所得</label>
+        <input type="radio" name="incomeType" id="type9b" value="9B">
+        <label for="type9b">9B 稿費</label>
+        <input type="radio" name="incomeType" id="type50" value="50">
+        <label for="type50">50 薪資所得</label>
+      </div>
+      <span class="hint" id="incomeHint">適用：擁有專業能力且自負盈虧的工作者（設計師、工程師、顧問等）</span>
+    </div>
+
+    <!-- 9A 職業細類 -->
+    <div class="sub-field" id="jobCategoryField">
+      <div class="field">
+        <label>職業細類（選填，影響報稅時的費用率）</label>
+        <select id="jobCategory">
+          <option value="">-- 不指定 --</option>
+          <option value="律師">律師（費用率 30%）</option>
+          <option value="會計師">會計師（費用率 30%）</option>
+          <option value="建築師">建築師（費用率 35%）</option>
+          <option value="技師">技師（費用率 35%）</option>
+          <option value="醫師">醫師（費用率 78%）</option>
+          <option value="藥師">藥師（費用率 20%）</option>
+          <option value="助產士">助產士（費用率 31%）</option>
+          <option value="地政士">地政士（費用率 30%）</option>
+          <option value="記帳士">記帳士（費用率 30%）</option>
+          <option value="保險經紀人">保險經紀人（費用率 26%）</option>
+          <option value="書畫家">書畫家（費用率 30%）</option>
+          <option value="表演人">表演人（費用率 45%）</option>
+          <option value="命理卜卦">命理卜卦（費用率 20%）</option>
+          <option value="程式設計師">程式設計師（費用率 20%）</option>
+          <option value="翻譯">翻譯（費用率 20%）</option>
+          <option value="其他">其他（費用率 20%）</option>
+        </select>
+        <span class="hint">此欄位不影響扣繳計算，僅顯示於勞報單上，方便報稅時參考費用率</span>
+      </div>
+    </div>
+
+    <div class="form-row" style="margin-top:var(--space-md);">
+      <div class="field">
+        <label>勞務報酬金額（TWD） <span class="required">*</span></label>
+        <input type="text" id="amount" placeholder="例：30,000" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>國籍</label>
+        <select id="nationality">
+          <option value="local" selected>本國籍（居住者）</option>
+          <option value="foreign">外國籍（非居住者）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="hasUnionInsurance">
+      <label for="hasUnionInsurance">已投保職業工會（免扣二代健保補充保費）</label>
+    </div>
+
+    <!-- 業主負擔提示 -->
+    <div class="employer-note hidden" id="employerNote">
+      <strong>提醒：</strong>選擇 50 薪資所得時，業主（公司）須額外負擔 2.11% 的二代健保補充保費。
+      此費用由公司支付，不從受款人報酬中扣除。
+      <br>業主負擔金額：<strong id="employerNhi">$0</strong>
+    </div>
+
+    <!-- 試算結果 -->
+    <div class="calc-result" id="calcResult">
+      <h3>試算結果</h3>
+      <div class="calc-row">
+        <span class="label">勞務報酬金額</span>
+        <span class="value" id="dispAmount">$0</span>
+      </div>
+      <div class="calc-row">
+        <span class="label" id="taxLabel">代扣繳所得稅（10%）</span>
+        <span class="value deduct" id="dispTax">-$0</span>
+      </div>
+      <div class="calc-row">
+        <span class="label">二代健保補充保費（2.11%）</span>
+        <span class="value deduct" id="dispNhi">-$0</span>
+      </div>
+      <div class="calc-row total">
+        <span class="label">實領淨額</span>
+        <span class="value net" id="dispNet">$0</span>
+      </div>
+      <div class="calc-hint" id="calcHint"></div>
+    </div>
+  </div>
+
+  <!-- 按鈕 -->
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="generateReport()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      產生勞報單
+    </button>
+    <button class="btn btn-secondary" onclick="resetForm()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      清除重填
+    </button>
+  </div>
+
+</div>
+
+<!-- 列印預覽 -->
+<div class="print-overlay" id="printOverlay">
+  <div class="print-sheet-wrapper">
+    <div class="print-toolbar">
+      <h3>勞務報酬單預覽</h3>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" onclick="window.print()" style="padding:8px 20px;font-size:14px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          列印 / 下載 PDF
+        </button>
+        <button class="btn btn-secondary" onclick="closePreview()" style="padding:8px 20px;font-size:14px;">關閉</button>
+      </div>
+    </div>
+    <div class="print-sheet" id="printSheet"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<footer class="site-footer">
+  &copy; 2026 Kaoru Tsai. All Rights Reserved. | Contact: <a href="mailto:hello@helloruru.com">hello@helloruru.com</a>
+</footer>
+
+<script>
+  // ===== 115 年度常數 =====
+  const MIN_WAGE = 29500;
+  const NHI_RATE = 0.0211;
+
+  const incomeHints = {
+    '9A': '適用：擁有專業能力且自負盈虧的工作者（設計師、工程師、顧問等）',
+    '9B': '適用：實體出版物的稿費、版稅、樂譜、作曲、編劇、漫畫、演講',
+    '50': '適用：有固定工作時間與地點、報酬固定的工作（如工讀、臨時人員）'
+  };
+
+  function init() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('serviceEnd').value = today;
+    loadCompany();
+
+    document.querySelectorAll('input[name="incomeType"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        document.getElementById('incomeHint').textContent = incomeHints[radio.value] || '';
+        toggleJobCategory();
+        recalculate();
+      });
+    });
+    document.getElementById('amount').addEventListener('input', handleAmountInput);
+    document.getElementById('nationality').addEventListener('change', recalculate);
+    document.getElementById('hasUnionInsurance').addEventListener('change', recalculate);
+
+    toggleJobCategory();
+    recalculate();
+  }
+
+  function handleAmountInput(e) {
+    const input = e.target;
+    const raw = input.value.replace(/[^0-9]/g, '');
+    const num = parseInt(raw, 10);
+    if (raw === '') { input.value = ''; }
+    else if (!isNaN(num)) { input.value = num.toLocaleString('en-US'); }
+    recalculate();
+  }
+
+  function toggleJobCategory() {
+    const type = document.querySelector('input[name="incomeType"]:checked').value;
+    document.getElementById('jobCategoryField').classList.toggle('hidden', type !== '9A');
+    document.getElementById('employerNote').classList.toggle('hidden', type !== '50');
+  }
+
+  function formatMoney(n) {
+    return '$' + Math.round(n).toLocaleString('en-US');
+  }
+
+  // ===== 核心計算（115 年度） =====
+  function getCalcValues() {
+    const rawAmount = document.getElementById('amount').value.replace(/,/g, '');
+    const amount = parseInt(rawAmount, 10) || 0;
+    const incomeType = document.querySelector('input[name="incomeType"]:checked').value;
+    const isLocal = document.getElementById('nationality').value === 'local';
+    const hasUnion = document.getElementById('hasUnionInsurance').checked;
+
+    let tax = 0, nhi = 0, employerNhi = 0, taxRate = 0, taxLabel = '', hints = [];
+
+    if (isLocal) {
+      if (incomeType === '9A' || incomeType === '9B') {
+        taxLabel = '代扣繳所得稅（10%）';
+        if (amount >= 20010) { taxRate = 10; tax = Math.floor(amount * 0.10); }
+        else { hints.push('所得稅：金額未達 <span class="threshold">$20,010</span>，免扣繳'); }
+        if (!hasUnion) {
+          if (amount >= MIN_WAGE) { nhi = Math.round(amount * NHI_RATE); }
+          else { hints.push('二代健保：金額未達基本工資 <span class="threshold">$' + MIN_WAGE.toLocaleString() + '</span>，免扣繳'); }
+        } else { hints.push('二代健保：已投保職業工會，免扣繳'); }
+      } else {
+        taxLabel = '代扣繳所得稅（5%）';
+        if (amount >= 86001) { taxRate = 5; tax = Math.floor(amount * 0.05); }
+        else { hints.push('所得稅：金額未達 <span class="threshold">$86,001</span>，免扣繳'); }
+        if (!hasUnion) {
+          if (amount >= MIN_WAGE) {
+            nhi = Math.round(amount * NHI_RATE);
+            employerNhi = Math.round(amount * NHI_RATE);
+          } else { hints.push('二代健保：金額未達基本工資 <span class="threshold">$' + MIN_WAGE.toLocaleString() + '</span>，免扣繳'); }
+        } else { hints.push('二代健保：已投保職業工會，免扣繳'); }
+      }
+    } else {
+      if (incomeType === '9A' || incomeType === '9B') {
+        taxRate = 20; taxLabel = '代扣繳所得稅（20%）';
+        if (incomeType === '9B' && amount <= 5000) {
+          tax = 0; hints.push('外國籍 9B 稿費：金額 <= $5,000，免扣繳（仍須填報免扣繳憑單）');
+        } else { tax = Math.floor(amount * 0.20); }
+      } else {
+        taxRate = 20; tax = Math.floor(amount * 0.20);
+        taxLabel = '代扣繳所得稅（20%）';
+      }
+      if (!hasUnion && amount >= MIN_WAGE) {
+        nhi = Math.round(amount * NHI_RATE);
+        if (incomeType === '50') { employerNhi = Math.round(amount * NHI_RATE); }
+      }
+    }
+
+    const net = amount - tax - nhi;
+    return { amount, incomeType, tax, nhi, employerNhi, net, taxLabel, taxRate, isLocal, hasUnion, hints };
+  }
+
+  function recalculate() {
+    const c = getCalcValues();
+    document.getElementById('dispAmount').textContent = formatMoney(c.amount);
+    document.getElementById('taxLabel').textContent = c.taxLabel;
+    document.getElementById('dispTax').textContent = c.tax > 0 ? '-' + formatMoney(c.tax) : '$0';
+    document.getElementById('dispNhi').textContent = c.nhi > 0 ? '-' + formatMoney(c.nhi) : '$0';
+    document.getElementById('dispNet').textContent = formatMoney(c.net);
+    document.getElementById('calcHint').innerHTML = c.hints.length > 0 ? c.hints.join('<br>') : '';
+    document.getElementById('employerNhi').textContent = formatMoney(c.employerNhi);
+  }
+
+  // ===== localStorage =====
+  const COMPANY_KEY = 'helloruru_labor_company';
+
+  function saveCompany() {
+    const data = {};
+    ['companyName','companyTaxId','companyAddress','companyContact','companyPhone'].forEach(id => {
+      data[id] = document.getElementById(id).value;
+    });
+    localStorage.setItem(COMPANY_KEY, JSON.stringify(data));
+    const btn = document.getElementById('saveCompanyBtn');
+    btn.textContent = '已儲存';
+    btn.classList.add('saved');
+    showToast('公司資料已儲存，下次開啟會自動帶入');
+    setTimeout(() => { btn.textContent = '記住公司資料'; btn.classList.remove('saved'); }, 2000);
+  }
+
+  function loadCompany() {
+    try {
+      const data = JSON.parse(localStorage.getItem(COMPANY_KEY));
+      if (!data) return;
+      Object.keys(data).forEach(id => {
+        const el = document.getElementById(id);
+        if (el && data[id]) el.value = data[id];
+      });
+    } catch(e) {}
+  }
+
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ===== 驗證 =====
+  function validateForm() {
+    const required = [
+      { id: 'companyName', name: '公司名稱' },
+      { id: 'payeeName', name: '受款人姓名' },
+      { id: 'payeeId', name: '身分證字號' },
+      { id: 'serviceStart', name: '勞務期間（起）' },
+      { id: 'serviceEnd', name: '勞務期間（迄）' },
+      { id: 'serviceDesc', name: '勞務說明' },
+      { id: 'amount', name: '勞務報酬金額' },
+    ];
+    const missing = required.filter(f => !document.getElementById(f.id).value.trim()).map(f => f.name);
+    if (missing.length > 0) { alert('請填寫以下必填欄位：\n' + missing.join('、')); return false; }
+    return true;
+  }
+
+  function incomeTypeText(type) {
+    return { '9A': '9A 執行業務所得', '9B': '9B 稿費', '50': '50 薪資所得' }[type] || type;
+  }
+
+  // ===== 產生勞報單 =====
+  function generateReport() {
+    if (!validateForm()) return;
+
+    const c = getCalcValues();
+    const v = (id) => document.getElementById(id).value.trim();
+    const today = new Date();
+    const rocYear = today.getFullYear() - 1911;
+    const rocToday = `${rocYear} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+
+    function fmtDate(s) {
+      if (!s) return '';
+      const d = new Date(s);
+      return `${d.getFullYear()-1911}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}`;
+    }
+
+    const jobCat = v('jobCategory');
+    const jobCatRow = (c.incomeType === '9A' && jobCat) ? `<tr><th>職業細類</th><td colspan="3">${jobCat}</td></tr>` : '';
+    const empNhiRow = (c.incomeType === '50' && c.employerNhi > 0) ?
+      `<tr><th>業主負擔二代健保</th><td style="text-align:right;">${formatMoney(c.employerNhi)}</td><th>費率</th><td>2.11%（由公司支付）</td></tr>` : '';
+
+    document.getElementById('printSheet').innerHTML = `
+      <h2>勞 務 報 酬 單</h2>
+      <p style="text-align:center;font-size:12px;color:#888;margin-top:-16px;margin-bottom:16px;">115 年度適用</p>
+      <table>
+        <tr><th colspan="4" style="text-align:center;background:#f0f0f0;font-size:15px;">委託方資訊</th></tr>
+        <tr><th>公司名稱</th><td>${v('companyName')}</td><th>統一編號</th><td>${v('companyTaxId')||'-'}</td></tr>
+        <tr><th>公司地址</th><td colspan="3">${v('companyAddress')||'-'}</td></tr>
+        <tr><th>聯絡人</th><td>${v('companyContact')||'-'}</td><th>聯絡電話</th><td>${v('companyPhone')||'-'}</td></tr>
+        <tr><th colspan="4" style="text-align:center;background:#f0f0f0;font-size:15px;">受款人資訊</th></tr>
+        <tr><th>姓名</th><td>${v('payeeName')}</td><th>身分證字號</th><td>${v('payeeId')}</td></tr>
+        <tr><th>戶籍地址</th><td colspan="3">${v('payeeAddress')||'-'}</td></tr>
+        <tr><th>聯絡電話</th><td>${v('payeePhone')||'-'}</td><th>Email</th><td>${v('payeeEmail')||'-'}</td></tr>
+        <tr><th>匯款銀行</th><td>${v('bankName')||'-'}</td><th>銀行帳號</th><td>${v('bankAccount')||'-'}</td></tr>
+        <tr><th colspan="4" style="text-align:center;background:#f0f0f0;font-size:15px;">勞務與所得資訊</th></tr>
+        <tr><th>勞務期間</th><td colspan="3">${fmtDate(v('serviceStart'))} ~ ${fmtDate(v('serviceEnd'))}</td></tr>
+        <tr><th>勞務說明</th><td colspan="3">${v('serviceDesc')}</td></tr>
+        <tr><th>所得類別</th><td>${incomeTypeText(c.incomeType)}</td><th>國籍</th><td>${c.isLocal?'本國籍（居住者）':'外國籍（非居住者）'}</td></tr>
+        ${jobCatRow}
+        <tr><th>勞務報酬</th><td style="text-align:right;font-weight:700;">${formatMoney(c.amount)}</td><th>職業工會</th><td>${c.hasUnion?'已投保（免扣二代健保）':'未投保'}</td></tr>
+        <tr><th colspan="4" style="text-align:center;background:#f0f0f0;font-size:15px;">扣繳明細</th></tr>
+        <tr><th>代扣繳所得稅</th><td style="text-align:right;">${c.tax>0?formatMoney(c.tax):'$0'}</td><th>扣繳比率</th><td>${c.tax>0?c.taxRate+'%':'免扣繳'}</td></tr>
+        <tr><th>二代健保補充保費</th><td style="text-align:right;">${c.nhi>0?formatMoney(c.nhi):'$0'}</td><th>費率</th><td>${c.nhi>0?'2.11%':'免扣繳'}</td></tr>
+        ${empNhiRow}
+        <tr style="background:#fdf6f6;"><th style="font-size:16px;">實領淨額</th><td colspan="3" style="text-align:right;font-size:18px;font-weight:700;color:#333;">${formatMoney(c.net)}</td></tr>
+      </table>
+      <div class="sign-area">
+        <div class="sign-box"><p>委託方簽章</p></div>
+        <div class="sign-box"><p>受款人簽章</p></div>
+      </div>
+      <div class="note">
+        <p>填表日期：${rocToday}（民國）</p>
+        <p>注意事項（依 115 年度規定）：</p>
+        <ul style="padding-left:20px;margin-top:4px;">
+          <li>9A/9B 所得：單次扣繳稅額超過 $2,000（即報酬 >= $20,010），代扣繳 10% 所得稅。</li>
+          <li>50 薪資所得：單次給付達 $86,001，代扣繳 5% 所得稅。</li>
+          <li>二代健保補充保費：單次給付達基本工資 $29,500，扣繳 2.11%（四捨五入）。</li>
+          <li>50 薪資所得：業主須額外負擔 2.11% 二代健保補充保費。</li>
+          <li>外國籍（非居住者）：統一代扣繳 20% 所得稅。</li>
+          <li>已投保職業工會者，投保期間免扣繳二代健保補充保費（請提供投保證明）。</li>
+          <li>本表僅供參考，實際扣繳金額請依國稅局及健保署規定為準。</li>
+        </ul>
+      </div>
+    `;
+    document.getElementById('printOverlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePreview() {
+    document.getElementById('printOverlay').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+
+  function resetForm() {
+    if (!confirm('確定要清除所有資料嗎？（公司資料不會清除）')) return;
+    ['payeeName','payeeId','payeeAddress','payeePhone','payeeEmail','bankName','bankAccount','serviceStart','serviceDesc'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('serviceEnd').value = new Date().toISOString().split('T')[0];
+    document.getElementById('amount').value = '';
+    document.getElementById('type9a').checked = true;
+    document.getElementById('nationality').value = 'local';
+    document.getElementById('hasUnionInsurance').checked = false;
+    document.getElementById('jobCategory').value = '';
+    document.getElementById('incomeHint').textContent = incomeHints['9A'];
+    toggleJobCategory();
+    recalculate();
+  }
+
+  init();
+</script>
+
+</body>
+</html>

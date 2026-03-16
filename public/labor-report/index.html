@@ -419,7 +419,7 @@
     }
     .print-overlay.active {
       display: flex;
-      justify-content: center;
+      justify-content: flex-start;
       align-items: flex-start;
     }
     .print-sheet-wrapper {
@@ -429,6 +429,8 @@
       max-width: 900px;
       width: 100%;
       overflow: visible;
+      margin: var(--space-lg) auto;
+      flex-shrink: 0;
     }
     .print-toolbar {
       display: flex;

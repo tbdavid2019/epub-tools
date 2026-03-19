@@ -174,12 +174,13 @@
     .deal-cell {
       display: flex; flex-direction: column;
       align-items: center; text-align: center;
-      gap: 8px;
+      gap: 6px;
       padding: 12px 8px;
       background: var(--bg-card);
       border-right: 1px solid var(--border-color);
       position: relative;
       transition: background var(--transition-normal), transform var(--transition-normal);
+      min-width: 0;
     }
     .deal-cell:last-child { border-right: none; }
     .deal-cell.is-today {
@@ -229,9 +230,10 @@
 
     /* 書封 */
     .deal-cell-cover {
-      width: 90px; height: 135px;
+      width: 80px; height: 120px;
       border-radius: 2px 6px 6px 2px;
       overflow: hidden; position: relative;
+      flex-shrink: 0;
       box-shadow: 3px 1px 4px rgba(92,74,58,0.15), 6px 4px 12px rgba(92,74,58,0.1);
     }
     .deal-cell-cover img {
@@ -264,13 +266,16 @@
     }
 
     .deal-cell-title {
-      font-weight: 700; font-size: 13px;
-      color: var(--text-primary); line-height: 1.4;
+      font-weight: 700; font-size: 12px;
+      color: var(--text-primary); line-height: 1.3;
       display: -webkit-box; -webkit-line-clamp: 2;
       -webkit-box-orient: vertical; overflow: hidden;
+      max-width: 100%; word-break: break-all;
     }
     .deal-cell-author {
       font-size: 11px; color: var(--text-muted);
+      white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; max-width: 100%;
     }
     .deal-cell-pricing {
       display: flex; align-items: center;
@@ -334,8 +339,8 @@
         -webkit-overflow-scrolling: touch;
       }
       .deals-cal-day { min-width: 120px; }
-      .deal-cell { min-width: 120px; padding: 10px 6px; }
-      .deal-cell-cover { width: 75px; height: 112px; }
+      .deal-cell { min-width: 110px; padding: 10px 6px; }
+      .deal-cell-cover { width: 70px; height: 105px; }
       .deal-cell-title { font-size: 12px; }
       .deal-cell-deal-price { font-size: 16px; }
       .deals-search-box { flex-direction: column; }

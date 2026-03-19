@@ -866,7 +866,30 @@
       gap: 24px;
       margin-top: 24px;
     }
-    .exh-category { }
+    .exh-platform {
+      margin-bottom: 24px;
+    }
+    .exh-plat-label {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-ink);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--gradient-primary);
+      background-image: var(--gradient-primary);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+    .exh-category {
+      margin-bottom: 12px;
+    }
+    .exh-stars {
+      font-size: 11px;
+      color: var(--color-gold);
+      flex-shrink: 0;
+      letter-spacing: 1px;
+    }
     .exh-cat-label {
       font-family: var(--font-serif);
       font-size: 15px;
@@ -1366,12 +1389,22 @@
 
     // === Exhibitions ===
     function categorizeExhibition(title) {
-      if (/(書展|馬拉松|週年慶|優惠|讀書|mooink)/i.test(title)) return 'event';
-      if (/(全書系|精選|作品)/i.test(title)) return 'series';
+      if (/(書展|馬拉松|週年慶|優惠|折|mooink|精選|限時)/i.test(title)) return 'event';
+      if (/(全書系|作品|漫畫|輕小說|雜誌|商管|文學|社會|心靈|成長)/i.test(title)) return 'series';
       return 'promo';
     }
-    const CAT_LABELS = { event: '活動 & 書展', series: '出版社 & 書系', promo: '新書 & 推薦' };
+    const CAT_LABELS = { event: '優惠 & 書展', series: '主題 & 書系', promo: '新書 & 推薦' };
     const CAT_ORDER = ['event', 'series', 'promo'];
+
+    // 優惠星級（3 = 必看，2 = 推薦，1 = 一般）
+    function rateExhibition(title) {
+      if (/(免費|99元|99 元|\b99\b|半價|5折|五折|買一送一)/i.test(title)) return 3;
+      if (/(折|優惠|限時|精選|獨家|特價)/i.test(title)) return 2;
+      return 1;
+    }
+    function renderStars(n) {
+      return '<span class="exh-stars">' + '\u2605'.repeat(n) + '</span>';
+    }
 
     function renderExhibitions(data) {
       const grid = document.getElementById('exhibitions-grid');
@@ -1403,7 +1436,10 @@
         groups[cat].push(e);
       }
 
-      // 依平台分組
+      // 平台 → 分類 兩層分組
+      const PLATFORM_LABELS = { readmoo: 'Readmoo', kobo: 'Kobo', books: '博客來' };
+      const PLATFORM_ORDER = ['readmoo', 'kobo', 'books'];
+
       const byPlatform = {};
       for (const e of filtered) {
         const src = e.source || 'readmoo';
@@ -1411,24 +1447,44 @@
         byPlatform[src].push(e);
       }
 
-      const PLATFORM_LABELS = { readmoo: 'Readmoo', kobo: 'Kobo', books: '博客來' };
-      const PLATFORM_ORDER = ['readmoo', 'kobo', 'books'];
+      function renderItem(e) {
+        const dotCls = e.source === 'kobo' ? ' kobo' : e.source === 'books' ? ' books' : '';
+        const stars = rateExhibition(e.title);
+        return '<a href="' + escapeHtml(e.url) + '" class="exh-item" target="_blank" rel="noopener">' +
+          '<span class="exh-dot' + dotCls + '"></span>' +
+          renderStars(stars) +
+          '<span class="exh-item-title">' + escapeHtml(e.title) + '</span>' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>' +
+        '</a>';
+      }
 
       let html = '';
       for (const plat of PLATFORM_ORDER) {
         const list = byPlatform[plat];
         if (!list || list.length === 0) continue;
-        html += '<div class="exh-category">';
-        html += '<div class="exh-cat-label">' + (PLATFORM_LABELS[plat] || plat) + '</div>';
-        html += '<div class="exh-cat-list">';
-        html += list.map(e =>
-          '<a href="' + escapeHtml(e.url) + '" class="exh-item" target="_blank" rel="noopener">' +
-            '<span class="exh-dot' + (e.source === 'kobo' ? ' kobo' : e.source === 'books' ? ' books' : '') + '"></span>' +
-            '<span class="exh-item-title">' + escapeHtml(e.title) + '</span>' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>' +
-          '</a>'
-        ).join('');
-        html += '</div></div>';
+
+        html += '<div class="exh-platform">';
+        html += '<div class="exh-plat-label">' + (PLATFORM_LABELS[plat] || plat) + '</div>';
+
+        // 分類
+        const cats = {};
+        for (const e of list) {
+          const cat = categorizeExhibition(e.title);
+          if (!cats[cat]) cats[cat] = [];
+          cats[cat].push(e);
+        }
+
+        for (const cat of CAT_ORDER) {
+          const items = cats[cat];
+          if (!items || items.length === 0) continue;
+          html += '<div class="exh-category">';
+          html += '<div class="exh-cat-label">' + CAT_LABELS[cat] + '</div>';
+          html += '<div class="exh-cat-list">';
+          html += items.map(renderItem).join('');
+          html += '</div></div>';
+        }
+
+        html += '</div>';
       }
       grid.innerHTML = html;
     }

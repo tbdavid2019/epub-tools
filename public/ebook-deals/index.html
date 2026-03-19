@@ -1084,30 +1084,10 @@
 
     <section id="quick-links-section">
       <div class="divider-gold"></div>
-      <h2>書展 &amp; 促銷入口</h2>
-      <p class="section-desc" style="text-align:center">逛逛各平台目前的電子書活動</p>
-      <div class="quick-links">
-        <a href="https://www.books.com.tw/web/exhibition_cebook" class="quick-link" target="_blank" rel="noopener">
-          <div class="quick-link-icon books">B</div>
-          <div class="quick-link-text">
-            <span class="quick-link-name">博客來電子書展</span>
-            <span class="quick-link-desc">2026 線上國際書展</span>
-          </div>
-        </a>
-        <a href="https://readmoo.com/" class="quick-link" target="_blank" rel="noopener">
-          <div class="quick-link-icon readmoo">R</div>
-          <div class="quick-link-text">
-            <span class="quick-link-name">Readmoo 促銷活動</span>
-            <span class="quick-link-desc">首頁看最新活動</span>
-          </div>
-        </a>
-        <a href="https://www.kobo.com/tw/zh" class="quick-link" target="_blank" rel="noopener">
-          <div class="quick-link-icon kobo">K</div>
-          <div class="quick-link-text">
-            <span class="quick-link-name">Kobo 暢銷特價</span>
-            <span class="quick-link-desc">每日 99 元專區</span>
-          </div>
-        </a>
+      <h2>書展 &amp; 促銷活動</h2>
+      <p class="section-desc" style="text-align:center">讀墨目前進行中的書展與促銷</p>
+      <div class="quick-links" id="exhibitions-grid">
+        <!-- 動態渲染 -->
       </div>
     </section>
   </main>
@@ -1182,6 +1162,7 @@
         }
         document.getElementById('refresh-btn').style.display = '';
         renderDeals(data);
+        renderExhibitions(data);
       } catch (err) {
         document.getElementById('grid-readmoo').innerHTML =
           '<div class="status-msg error">\u8F09\u5165\u5931\u6557\uFF1A' + escapeHtml(err.message) + '</div>';
@@ -1323,6 +1304,42 @@
       } catch {}
     }
 
+
+    // === Exhibitions ===
+    function renderExhibitions(data) {
+      const grid = document.getElementById('exhibitions-grid');
+      if (!grid) return;
+
+      const exh = data.exhibitions;
+      const items = (exh && exh.success && exh.exhibitions) ? exh.exhibitions : [];
+
+      // 過濾掉 empty_slider banner 和免費書籍
+      const filtered = items.filter(e =>
+        e.title && e.url &&
+        e.title !== '免費書籍'
+      );
+
+      if (filtered.length === 0) {
+        grid.innerHTML =
+          '<a href="https://readmoo.com/" class="quick-link" target="_blank" rel="noopener">' +
+            '<div class="quick-link-icon readmoo">R</div>' +
+            '<div class="quick-link-text">' +
+              '<span class="quick-link-name">Readmoo 促銷活動</span>' +
+              '<span class="quick-link-desc">首頁看最新活動</span>' +
+            '</div></a>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(e => {
+        const icon = e.source === 'books' ? 'books' : e.source === 'kobo' ? 'kobo' : 'readmoo';
+        const letter = icon === 'books' ? 'B' : icon === 'kobo' ? 'K' : 'R';
+        return '<a href="' + escapeHtml(e.url) + '" class="quick-link" target="_blank" rel="noopener">' +
+          '<div class="quick-link-icon ' + icon + '">' + letter + '</div>' +
+          '<div class="quick-link-text">' +
+            '<span class="quick-link-name">' + escapeHtml(e.title) + '</span>' +
+          '</div></a>';
+      }).join('');
+    }
 
     // === Search ===
     document.getElementById('search-btn').addEventListener('click', doSearch);

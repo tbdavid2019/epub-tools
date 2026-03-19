@@ -862,10 +862,67 @@
     /* --- Quick Links (書展入口) --- */
     .quick-links {
       display: flex;
-      gap: 16px;
-      justify-content: center;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 24px;
       margin-top: 24px;
+    }
+    .exh-category { }
+    .exh-cat-label {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-ink);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .exh-cat-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 8px;
+    }
+    .exh-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: all var(--transition-fast);
+      background-image: none;
+    }
+    .exh-item:hover {
+      border-color: var(--color-sage);
+      background: var(--color-sage-bg);
+      transform: translateX(4px);
+    }
+    .exh-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--color-sage);
+      flex-shrink: 0;
+    }
+    .exh-item-title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .exh-item svg {
+      flex-shrink: 0;
+      color: var(--text-hint);
+    }
+    html.dark .exh-item:hover {
+      background: rgba(168, 181, 160, 0.08);
+    }
+    @media (max-width: 768px) {
+      .exh-cat-list {
+        grid-template-columns: 1fr;
+      }
     }
     .quick-link {
       display: flex;
@@ -1306,6 +1363,14 @@
 
 
     // === Exhibitions ===
+    function categorizeExhibition(title) {
+      if (/(書展|馬拉松|週年慶|優惠|讀書|mooink)/i.test(title)) return 'event';
+      if (/(全書系|精選|作品)/i.test(title)) return 'series';
+      return 'promo';
+    }
+    const CAT_LABELS = { event: '活動 & 書展', series: '出版社 & 書系', promo: '新書 & 推薦' };
+    const CAT_ORDER = ['event', 'series', 'promo'];
+
     function renderExhibitions(data) {
       const grid = document.getElementById('exhibitions-grid');
       if (!grid) return;
@@ -1313,10 +1378,8 @@
       const exh = data.exhibitions;
       const items = (exh && exh.success && exh.exhibitions) ? exh.exhibitions : [];
 
-      // 過濾掉 empty_slider banner 和免費書籍
       const filtered = items.filter(e =>
-        e.title && e.url &&
-        e.title !== '免費書籍'
+        e.title && e.url && e.title !== '免費書籍'
       );
 
       if (filtered.length === 0) {
@@ -1330,15 +1393,31 @@
         return;
       }
 
-      grid.innerHTML = filtered.map(e => {
-        const icon = e.source === 'books' ? 'books' : e.source === 'kobo' ? 'kobo' : 'readmoo';
-        const letter = icon === 'books' ? 'B' : icon === 'kobo' ? 'K' : 'R';
-        return '<a href="' + escapeHtml(e.url) + '" class="quick-link" target="_blank" rel="noopener">' +
-          '<div class="quick-link-icon ' + icon + '">' + letter + '</div>' +
-          '<div class="quick-link-text">' +
-            '<span class="quick-link-name">' + escapeHtml(e.title) + '</span>' +
-          '</div></a>';
-      }).join('');
+      // 分類
+      const groups = {};
+      for (const e of filtered) {
+        const cat = categorizeExhibition(e.title);
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(e);
+      }
+
+      let html = '';
+      for (const cat of CAT_ORDER) {
+        const list = groups[cat];
+        if (!list || list.length === 0) continue;
+        html += '<div class="exh-category">';
+        html += '<div class="exh-cat-label">' + CAT_LABELS[cat] + '</div>';
+        html += '<div class="exh-cat-list">';
+        html += list.map(e =>
+          '<a href="' + escapeHtml(e.url) + '" class="exh-item" target="_blank" rel="noopener">' +
+            '<span class="exh-dot"></span>' +
+            '<span class="exh-item-title">' + escapeHtml(e.title) + '</span>' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>' +
+          '</a>'
+        ).join('');
+        html += '</div></div>';
+      }
+      grid.innerHTML = html;
     }
 
     // === Search ===

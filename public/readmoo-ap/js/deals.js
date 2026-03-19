@@ -187,9 +187,17 @@
         '<span class="deal-cell-deal-price">$' + deal.dealPrice + '</span>' +
         (deal.originalPrice > 0 ? '<span class="deal-cell-orig-price">$' + deal.originalPrice + '</span>' : '') +
       '</div>' +
-      '<a href="' + esc(deal.bookUrl) + '" class="deal-cell-link" target="_blank" rel="noopener">' +
-        '前往購買 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
-      '</a>' +
+      '<div class="deal-cell-actions">' +
+        '<button class="deal-cell-add-btn" onclick="window._dealsAddBook(this)" ' +
+          'data-title="' + esc(deal.title) + '" ' +
+          'data-author="' + esc(deal.author || '') + '" ' +
+          'data-publisher="' + esc(deal.publisher || '') + '">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 加入書單' +
+        '</button>' +
+        '<a href="' + esc(deal.bookUrl) + '" class="deal-cell-link" target="_blank" rel="noopener">' +
+          '前往購買 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
+        '</a>' +
+      '</div>' +
     '</article>';
   }
 
@@ -231,6 +239,49 @@
       gridEl.innerHTML = '<p style="text-align:center;color:var(--status-error);padding:var(--space-xl)">載入失敗：' + esc(err.message) + '</p>';
     }
   }
+
+  // === 加入書單 ===
+  window._dealsAddBook = function(btn) {
+    const title = btn.dataset.title;
+    const author = btn.dataset.author || '';
+    const publisher = btn.dataset.publisher || '';
+    if (!title) return;
+
+    // 用 books.js 的全域函式
+    if (typeof getBooks !== 'function' || typeof saveBooks !== 'function') return;
+
+    const books = getBooks();
+    // 檢查重複
+    const exists = books.some(b => b.title === title);
+    if (exists) {
+      btn.textContent = '已在書單';
+      btn.disabled = true;
+      btn.classList.add('added');
+      return;
+    }
+
+    books.push({
+      id: Date.now().toString(36),
+      title: title,
+      author: author,
+      publisher: publisher,
+      pubdate: '',
+      notes: '',
+      orderNumber: '',
+      status: 'want',
+      addedAt: new Date().toISOString()
+    });
+    saveBooks(books);
+
+    btn.textContent = '已加入';
+    btn.disabled = true;
+    btn.classList.add('added');
+
+    // toast
+    if (typeof showToast === 'function') {
+      showToast('已加入書單：' + title);
+    }
+  };
 
   // 延遲載入：切到 tab 才抓
   let dealsLoaded = false;

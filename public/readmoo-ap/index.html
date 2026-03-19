@@ -344,6 +344,35 @@
     }
     .deals-more-link i { width: 14px; height: 14px; }
 
+    /* 修改我的資料卡片 */
+    .dir-self-edit-card {
+      display: flex; align-items: center; gap: var(--space-md);
+      padding: var(--space-md) var(--space-lg);
+      background: rgba(168, 181, 160, 0.08);
+      border: 1px dashed var(--color-sage);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-md);
+    }
+    .dir-self-edit-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--status-success-bg);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .dir-self-edit-icon i { width: 20px; height: 20px; color: var(--color-sage-dark); }
+    .dir-self-edit-text { flex: 1; }
+    .dir-self-edit-text strong {
+      display: block; font-size: 15px;
+      color: var(--text-primary);
+    }
+    .dir-self-edit-text p {
+      font-size: 13px; color: var(--text-muted); margin: 0;
+    }
+    html.dark .dir-self-edit-card {
+      background: rgba(168, 181, 160, 0.06);
+    }
+
     /* shimmer */
     .deals-shimmer {
       display: flex; flex-direction: column; gap: var(--space-sm);
@@ -833,6 +862,18 @@
               <i data-lucide="download"></i> 匯出
             </button>
           </div>
+        </div>
+
+        <!-- 修改我的資料（醒目入口） -->
+        <div class="dir-self-edit-card" id="dir-self-edit">
+          <div class="dir-self-edit-icon"><i data-lucide="user-pen"></i></div>
+          <div class="dir-self-edit-text">
+            <strong>修改我的資料</strong>
+            <p>更新暱稱或 AP 連結</p>
+          </div>
+          <button id="btn-self-edit" class="btn-primary btn-sm">
+            <i data-lucide="pencil"></i> 修改
+          </button>
         </div>
 
         <div class="directory-toolbar">

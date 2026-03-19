@@ -197,6 +197,41 @@ function initDirectory(members) {
     openExportModal('directory', selected);
   });
 
+  // === 修改我的資料（快捷入口） ===
+  const btnSelfEdit = document.getElementById('btn-self-edit');
+  if (btnSelfEdit) {
+    btnSelfEdit.addEventListener('click', () => {
+      requireAuth(() => {
+        // 用目前登入身份找到自己
+        const user = AppState.user;
+        if (!user) {
+          showToast('請先選擇你的身份');
+          return;
+        }
+        const member = AppState.members.find(m => m.name === user.name || m.id === user.id);
+        if (!member) {
+          showToast('在名冊中找不到你，請確認身份');
+          return;
+        }
+
+        const newName = prompt('修改暱稱：', member.name);
+        if (newName === null) return;
+        const newLink = prompt('修改 AP 連結：', member.link);
+        if (newLink === null) return;
+
+        const finalName = newName.trim() || member.name;
+        const finalLink = newLink.trim() || member.link;
+
+        if (finalName === member.name && finalLink === member.link) {
+          showToast('沒有變更');
+          return;
+        }
+
+        editMember(member.id, finalName, finalLink);
+      });
+    });
+  }
+
   // Initial render
   render();
 }

@@ -375,6 +375,8 @@ async function loadDaily99() {
       [book.author, book.publisher].filter(Boolean).join(' · ');
     document.getElementById('daily-99-original').textContent =
       book.originalPrice ? `NT$ ${book.originalPrice}` : '';
+    const promoEl = document.getElementById('daily-99-promo');
+    if (promoEl) promoEl.textContent = `NT$ ${book.promoPrice}`;
     document.getElementById('daily-99-link').href = book.url;
 
     const coverImg = document.getElementById('daily-99-cover');

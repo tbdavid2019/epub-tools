@@ -46,38 +46,21 @@
   }
   </script>
 
-  <!-- Fonts -->
+  <!-- Fonts（全部自有 CDN，已子集化） -->
   <link rel="preconnect" href="https://lab.helloruru.com" crossorigin>
-  <link rel="preload" href="https://lab.helloruru.com/fonts/GenSenRounded-Medium.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="https://lab.helloruru.com/fonts/NotoSerifTC-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="https://lab.helloruru.com/fonts/GenWanMin2TC-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
 
   <!-- Brand Header -->
   <script src="https://lab.helloruru.com/shared/brand-header.js"></script>
 
   <style>
     /* =============================================
-       DS 文青 V0.2（Behance 等級）
-       鼠尾草綠 + 源雲明朝 + 暖棕多層陰影 + 紙質感
+       DS 文青 V2.4（G 方案：全 serif）
+       鼠尾草綠 + 源雲明朝 + 思源宋體 + 暖棕多層陰影 + 紙質感
        ============================================= */
 
-    /* --- Fonts --- */
-    @font-face {
-      font-family: 'GenSenRounded';
-      src: url('https://lab.helloruru.com/fonts/GenSenRounded-Regular.woff2') format('woff2');
-      font-weight: 400; font-display: swap;
-    }
-    @font-face {
-      font-family: 'GenSenRounded';
-      src: url('https://lab.helloruru.com/fonts/GenSenRounded-Medium.woff2') format('woff2');
-      font-weight: 500; font-display: swap;
-    }
-    @font-face {
-      font-family: 'GenSenRounded';
-      src: url('https://lab.helloruru.com/fonts/GenSenRounded-Bold.woff2') format('woff2');
-      font-weight: 700; font-display: swap;
-    }
+    /* --- Fonts（G 方案：源雲明朝 + 思源宋體，全 serif） --- */
     @font-face {
       font-family: 'GenWanMin2TC';
       src: url('https://lab.helloruru.com/fonts/GenWanMin2TC-Regular.woff2') format('woff2');
@@ -86,6 +69,16 @@
     @font-face {
       font-family: 'GenWanMin2TC';
       src: url('https://lab.helloruru.com/fonts/GenWanMin2TC-SemiBold.woff2') format('woff2');
+      font-weight: 600; font-display: swap;
+    }
+    @font-face {
+      font-family: 'NotoSerifTC';
+      src: url('https://lab.helloruru.com/fonts/NotoSerifTC-Regular.woff2') format('woff2');
+      font-weight: 400; font-display: swap;
+    }
+    @font-face {
+      font-family: 'NotoSerifTC';
+      src: url('https://lab.helloruru.com/fonts/NotoSerifTC-SemiBold.woff2') format('woff2');
       font-weight: 600; font-display: swap;
     }
 
@@ -133,8 +126,8 @@
 
       --gradient-primary: linear-gradient(135deg, #A8B5A0, #AEA8B8);
 
-      --font-serif: 'GenWanMin2TC', 'Noto Serif TC', serif;
-      --font-body: 'GenSenRounded', 'Noto Sans TC', sans-serif;
+      --font-serif: 'GenWanMin2TC', 'NotoSerifTC', serif;
+      --font-body: 'NotoSerifTC', serif;
 
       --radius-sm: 8px;
       --radius-md: 12px;
@@ -189,7 +182,7 @@
 
     body {
       font-family: var(--font-body);
-      font-weight: 500;
+      font-weight: 400;
       font-size: 16px;
       line-height: 1.8;
       color: var(--text-secondary);

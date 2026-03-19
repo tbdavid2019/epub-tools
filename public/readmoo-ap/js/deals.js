@@ -178,9 +178,6 @@
       : '<div class="deal-cell-cover-ph">' + esc(deal.title.slice(0, 6)) + '</div>';
 
     const cls = 'deal-cell' + (isToday ? ' is-today' : '') + (is99 ? ' is-99' : '');
-    const disc = deal.originalPrice > 0
-      ? Math.round((1 - deal.dealPrice / deal.originalPrice) * 100) : 0;
-
     return '<article class="' + cls + '">' +
       (is99 ? '<span class="deal-99-badge">$99</span>' : '') +
       '<div class="deal-cell-cover">' + cover + '</div>' +
@@ -189,7 +186,6 @@
       '<div class="deal-cell-pricing">' +
         '<span class="deal-cell-deal-price">$' + deal.dealPrice + '</span>' +
         (deal.originalPrice > 0 ? '<span class="deal-cell-orig-price">$' + deal.originalPrice + '</span>' : '') +
-        (disc > 0 ? '<span class="deal-cell-discount">-' + disc + '%</span>' : '') +
       '</div>' +
       '<a href="' + esc(deal.bookUrl) + '" class="deal-cell-link" target="_blank" rel="noopener">' +
         '前往購買 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +

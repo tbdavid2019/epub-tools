@@ -903,9 +903,11 @@
     .exh-dot {
       width: 6px; height: 6px;
       border-radius: 50%;
-      background: var(--color-sage);
+      background: #c62828;
       flex-shrink: 0;
     }
+    .exh-dot.kobo { background: #7b1fa2; }
+    .exh-dot.books { background: #1a73e8; }
     .exh-item-title {
       flex: 1;
       overflow: hidden;
@@ -1401,16 +1403,27 @@
         groups[cat].push(e);
       }
 
+      // 依平台分組
+      const byPlatform = {};
+      for (const e of filtered) {
+        const src = e.source || 'readmoo';
+        if (!byPlatform[src]) byPlatform[src] = [];
+        byPlatform[src].push(e);
+      }
+
+      const PLATFORM_LABELS = { readmoo: 'Readmoo', kobo: 'Kobo', books: '博客來' };
+      const PLATFORM_ORDER = ['readmoo', 'kobo', 'books'];
+
       let html = '';
-      for (const cat of CAT_ORDER) {
-        const list = groups[cat];
+      for (const plat of PLATFORM_ORDER) {
+        const list = byPlatform[plat];
         if (!list || list.length === 0) continue;
         html += '<div class="exh-category">';
-        html += '<div class="exh-cat-label">' + CAT_LABELS[cat] + '</div>';
+        html += '<div class="exh-cat-label">' + (PLATFORM_LABELS[plat] || plat) + '</div>';
         html += '<div class="exh-cat-list">';
         html += list.map(e =>
           '<a href="' + escapeHtml(e.url) + '" class="exh-item" target="_blank" rel="noopener">' +
-            '<span class="exh-dot"></span>' +
+            '<span class="exh-dot' + (e.source === 'kobo' ? ' kobo' : e.source === 'books' ? ' books' : '') + '"></span>' +
             '<span class="exh-item-title">' + escapeHtml(e.title) + '</span>' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>' +
           '</a>'

@@ -147,8 +147,37 @@ function decodeEntities(str) {
     .replace(/&apos;/g, "'");
 }
 
+// KV 記錄新書首次出現的日期
+async function recordFirstSeen(kv, lib, books) {
+  if (!kv) return books;
+  const key = `firstseen:${lib}`;
+  let record = {};
+  try {
+    const raw = await kv.get(key);
+    if (raw) record = JSON.parse(raw);
+  } catch { /* ignore */ }
+
+  const today = new Date().toISOString().slice(0, 10);
+  let changed = false;
+
+  for (const book of books) {
+    if (!record[book.id]) {
+      record[book.id] = today;
+      changed = true;
+    }
+    book.firstSeen = record[book.id];
+  }
+
+  if (changed) {
+    await kv.put(key, JSON.stringify(record), { expirationTtl: 86400 * 90 }); // 保留 90 天
+  }
+
+  return books;
+}
+
 export async function onRequest(context) {
   const url = new URL(context.request.url);
+  const kv = context.env.LIBRARY_CACHE || null;
 
   if (context.request.method === 'OPTIONS') {
     return new Response(null, { headers: CORS_HEADERS });
@@ -178,11 +207,12 @@ export async function onRequest(context) {
       return jsonResponse({ library: LIBRARIES[lib], books });
 
     } else if (action === 'new' && lib) {
-      // 新書上架
+      // 新書上架（KV 記錄首次出現日期）
       const html = await fetchHyRead(
         `https://${lib}.ebook.hyread.com.tw/Template/RWD3.0/moccount-page.jsp`
       );
       const books = parseNewBooks(html);
+      await recordFirstSeen(kv, lib, books);
       return jsonResponse({ library: LIBRARIES[lib], books });
 
     } else if (action === 'bestseller') {

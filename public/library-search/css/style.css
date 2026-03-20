@@ -368,6 +368,11 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
   overflow: hidden;
   text-decoration: none;
 }
+.book-date {
+  font-size: 11px;
+  color: var(--text-hint);
+  margin-top: var(--space-xs);
+}
 .book-rank {
   display: inline-block;
   width: 22px; height: 22px;

@@ -5,3 +5,7 @@ compatibility_date = "2024-09-23"
 
 [vars]
 ENVIRONMENT = "production"
+
+[[kv_namespaces]]
+binding = "LIBRARY_CACHE"
+id = "d6ecdc7628484aefbfddcdc2062c65ad"

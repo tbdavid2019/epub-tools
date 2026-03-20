@@ -79,16 +79,46 @@ function parseBooks(html) {
       if (imgMatch) coverMap[id] = imgMatch[1];
     }
 
-    // 抓書名（從 h6 或 img title/alt）
+    // 抓書名（h6 > contTxt > 純文字 > img title/alt）
     if (!titleMap[id]) {
       const h6Match = block.match(/<h6[^>]*>([\s\S]*?)<\/h6>/i);
-      if (h6Match) {
-        titleMap[id] = decodeEntities(h6Match[1].replace(/<[^>]*>/g, '').trim());
-      } else {
-        const titleMatch = block.match(/<img[^>]*title="([^"#]+)"/i);
-        const altMatch = block.match(/<img[^>]*alt="([^"]+)"/i);
-        const t = (titleMatch ? titleMatch[1].trim() : '') || (altMatch ? altMatch[1].trim() : '');
-        if (t) titleMap[id] = decodeEntities(t);
+      const contMatch = block.match(/<div[^>]*class="[^"]*contTxt[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+      const plainText = block.replace(/<[^>]*>/g, '').trim();
+      const titleMatch = block.match(/<img[^>]*title="([^"#]+)"/i);
+      const altMatch = block.match(/<img[^>]*alt="([^"]+)"/i);
+
+      const t = (h6Match ? h6Match[1].replace(/<[^>]*>/g, '').trim() : '')
+        || (contMatch ? contMatch[1].replace(/<[^>]*>/g, '').trim() : '')
+        || (plainText && plainText.length < 200 ? plainText : '')
+        || (titleMatch ? titleMatch[1].trim() : '')
+        || (altMatch ? altMatch[1].trim() : '');
+
+      if (t) titleMap[id] = decodeEntities(t);
+    }
+  }
+
+  // 補充：從 book-title-01 裡抓書名（書店搜尋結果用）
+  const btRe = /<div[^>]*class="[^"]*book-title-01[^"]*"[^>]*>\s*<a[^>]*href="[^"]*bookDetail\.jsp\?id=(\d+)[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
+  while ((m = btRe.exec(html)) !== null) {
+    const id = m[1];
+    if (!idOrder.includes(id)) idOrder.push(id);
+    if (!titleMap[id]) {
+      titleMap[id] = decodeEntities(m[2].replace(/<[^>]*>/g, '').trim());
+    }
+  }
+
+  // 補充：從 bookPic img src 抓封面（書店搜尋結果用）
+  const bpRe = /<img[^>]*src="(https?:\/\/[^"]*bookcover\/(\d+)[^"]*)"[^>]*class="[^"]*bookPic[^"]*"/gi;
+  const bpRe2 = /<img[^>]*class="[^"]*bookPic[^"]*"[^>]*src="(https?:\/\/[^"]*bookcover\/(\d+)[^"]*)"[^>]*/gi;
+  for (const re of [bpRe, bpRe2]) {
+    while ((m = re.exec(html)) !== null) {
+      // 從封面 URL 裡提取 id（bookcover/485700978...jpg → 485700 是前 N 位）
+      // 用 idOrder 裡的 id 去匹配
+      for (const knownId of idOrder) {
+        if (m[1].includes(`bookcover/${knownId}`)) {
+          if (!coverMap[knownId]) coverMap[knownId] = m[1];
+          break;
+        }
       }
     }
   }

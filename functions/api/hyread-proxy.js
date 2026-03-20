@@ -191,6 +191,40 @@ export async function onRequest(context) {
       const books = parseNewBooks(html);
       return jsonResponse({ library: LIBRARIES[lib], books });
 
+    } else if (action === 'bestseller') {
+      // HyRead 書店暢銷榜（要花錢買的書）
+      const html = await fetchHyRead(
+        'https://ebook.hyread.com.tw/Template/RWD3.0/topSaleBook.jsp'
+      );
+      const books = parseBooks(html);
+      return jsonResponse({ books: books.map((b, i) => ({ rank: i + 1, ...b })) });
+
+    } else if (action === 'free-hits' && lib) {
+      // 圖書館新書 vs 書店暢銷榜 交叉比對
+      const [newHtml, bestHtml] = await Promise.all([
+        fetchHyRead(`https://${lib}.ebook.hyread.com.tw/Template/RWD3.0/moccount-page.jsp`),
+        fetchHyRead('https://ebook.hyread.com.tw/Template/RWD3.0/topSaleBook.jsp'),
+      ]);
+      const newBooks = parseNewBooks(newHtml);
+      const bestBooks = parseBooks(bestHtml);
+
+      // 用 normalizeTitle 比對
+      const normalize = (t) => (t || '').toLowerCase().replace(/\s+/g, '')
+        .replace(/[（(）)【】\[\]：:，,。.、！!？?～~「」『』""''《》〈〉\-—─·・]/g, '');
+      const bestSet = new Set(bestBooks.map(b => normalize(b.title)));
+      const bestMap = {};
+      bestBooks.forEach((b, i) => { bestMap[normalize(b.title)] = i + 1; });
+
+      const hits = newBooks.filter(b => bestSet.has(normalize(b.title)))
+        .map(b => ({ ...b, bestsellerRank: bestMap[normalize(b.title)] || 0 }));
+
+      return jsonResponse({
+        library: LIBRARIES[lib],
+        hits,
+        totalNew: newBooks.length,
+        totalBestseller: bestBooks.length,
+      });
+
     } else if (action === 'search' && lib && query) {
       // 搜尋特定圖書館
       const encoded = encodeURIComponent(query);

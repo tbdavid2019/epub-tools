@@ -71,6 +71,10 @@ function switchTab(tab) {
     libSelector.style.display = 'none';
     searchPanel.style.display = '';
     clearResults();
+  } else if (tab === 'free-hits') {
+    libSelector.style.display = '';
+    searchPanel.style.display = 'none';
+    loadFreeHits();
   } else {
     libSelector.style.display = '';
     searchPanel.style.display = 'none';
@@ -81,6 +85,59 @@ function switchTab(tab) {
 // ══════════════════════════════════════════════════
 // 載入書籍
 // ══════════════════════════════════════════════════
+
+async function loadFreeHits() {
+  showLoading(true, `比對${libraries[currentLib] || ''}新書 vs 書店暢銷榜...`);
+  clearResults();
+
+  try {
+    const data = await fetchAPI({ action: 'free-hits', lib: currentLib });
+    const hits = data.hits || [];
+    currentBooks = hits;
+
+    const container = document.getElementById('results');
+    const emptyState = document.getElementById('empty-state');
+    const sortRow = document.getElementById('sort-row');
+
+    if (hits.length === 0) {
+      emptyState.style.display = '';
+      emptyState.querySelector('p').textContent =
+        `目前沒有交集。（新書 ${data.totalNew} 本 vs 暢銷榜 ${data.totalBestseller} 本）`;
+      sortRow.style.display = 'none';
+      return;
+    }
+
+    emptyState.style.display = 'none';
+    sortRow.style.display = '';
+    document.getElementById('result-count').textContent =
+      `${hits.length} 本熱賣中，圖書館免費借得到`;
+
+    const grid = document.createElement('div');
+    grid.className = 'book-grid';
+
+    for (const book of hits) {
+      const a = document.createElement('a');
+      a.className = 'book-card free-hit';
+      a.href = `https://${currentLib}.ebook.hyread.com.tw/bookDetail.jsp?id=${book.id}`;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.innerHTML = `
+        <span class="free-hit-badge">熱賣中 免費借</span>
+        <img class="book-cover" src="${book.thumbnail}" alt="${escapeHtml(book.title)}"
+             onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 3 4%22><rect fill=%22%23E5E0DB%22 width=%223%22 height=%224%22/></svg>'">
+        <div class="book-title">${escapeHtml(book.title)}</div>
+      `;
+      grid.appendChild(a);
+    }
+
+    container.innerHTML = '';
+    container.appendChild(grid);
+  } catch (err) {
+    showToast('比對失敗：' + err.message);
+  } finally {
+    showLoading(false);
+  }
+}
 
 async function loadBooks() {
   const action = currentTab === 'new' ? 'new' : 'top';
@@ -309,7 +366,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // 圖書館切換
   document.getElementById('select-lib').addEventListener('change', (e) => {
     currentLib = e.target.value;
-    if (currentTab !== 'search') loadBooks();
+    if (currentTab === 'free-hits') loadFreeHits();
+    else if (currentTab !== 'search') loadBooks();
   });
 
   // 搜尋

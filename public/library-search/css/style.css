@@ -329,6 +329,20 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
   text-decoration: none;
   display: block;
 }
+.book-card.free-hit {
+  border-color: var(--color-gold);
+  background: var(--color-gold-bg);
+}
+.free-hit-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-gold);
+  padding: 2px 10px;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-xs);
+}
 .book-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-3px);

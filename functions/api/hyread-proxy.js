@@ -254,29 +254,60 @@ export async function onRequest(context) {
       return jsonResponse({ books: books.map((b, i) => ({ rank: i + 1, ...b })) });
 
     } else if (action === 'free-hits' && lib) {
-      // 圖書館新書 vs 書店暢銷榜 交叉比對
-      const [newHtml, bestHtml] = await Promise.all([
+      // 圖書館新書 vs HyRead 暢銷榜 + Readmoo 暢銷榜 交叉比對
+      const [newHtml, hyreadBestHtml, readmooHtml] = await Promise.all([
         fetchHyRead(`https://${lib}.ebook.hyread.com.tw/Template/RWD3.0/moccount-page.jsp`),
         fetchHyRead('https://one.ebook.hyread.com.tw/Template/GO/bestSelling.jsp'),
+        fetchHyRead('https://readmoo.com/search/popular'),
       ]);
       const newBooks = parseNewBooks(newHtml);
-      const bestBooks = parseBooks(bestHtml);
+      const hyreadBest = parseBooks(hyreadBestHtml);
 
-      // 用 normalizeTitle 比對
+      // Readmoo 暢銷榜：從 img alt 抓書名
+      const readmooBest = [];
+      const rmRe = /<img[^>]*alt="([^"]{2,100})"[^>]*>/gi;
+      let rmm;
+      const rmSkip = /logo|app|readmoo|mobile|排行|裝飾|下載/i;
+      const rmSeen = new Set();
+      while ((rmm = rmRe.exec(readmooHtml)) !== null) {
+        const t = rmm[1].trim();
+        if (t && !rmSkip.test(t) && !rmSeen.has(t)) {
+          rmSeen.add(t);
+          readmooBest.push({ title: t });
+        }
+      }
+
+      // 合併兩個暢銷榜
       const normalize = (t) => (t || '').toLowerCase().replace(/\s+/g, '')
         .replace(/[（(）)【】\[\]：:，,。.、！!？?～~「」『』""''《》〈〉\-—─·・]/g, '');
-      const bestSet = new Set(bestBooks.map(b => normalize(b.title)));
-      const bestMap = {};
-      bestBooks.forEach((b, i) => { bestMap[normalize(b.title)] = i + 1; });
+      const bestSet = new Set();
+      const bestSource = {}; // normalize(title) -> 來源
+      hyreadBest.forEach(b => {
+        const k = normalize(b.title);
+        bestSet.add(k);
+        bestSource[k] = 'HyRead 暢銷';
+      });
+      readmooBest.forEach(b => {
+        const k = normalize(b.title);
+        if (bestSet.has(k)) {
+          bestSource[k] = 'HyRead + Readmoo 暢銷';
+        } else {
+          bestSet.add(k);
+          bestSource[k] = 'Readmoo 暢銷';
+        }
+      });
 
       const hits = newBooks.filter(b => bestSet.has(normalize(b.title)))
-        .map(b => ({ ...b, bestsellerRank: bestMap[normalize(b.title)] || 0 }));
+        .map(b => ({
+          ...b,
+          source: bestSource[normalize(b.title)] || '',
+        }));
 
       return jsonResponse({
         library: LIBRARIES[lib],
         hits,
         totalNew: newBooks.length,
-        totalBestseller: bestBooks.length,
+        totalBestseller: bestSet.size,
       });
 
     } else if (action === 'search' && query) {

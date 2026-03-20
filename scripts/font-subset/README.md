@@ -8,7 +8,8 @@
 |------|---------|---------|-------|
 | 源雲明朝 Regular | 21.7 MB | 815 KB | 96% |
 | 源雲明朝 SemiBold | 21.6 MB | 831 KB | 96% |
-| 源泉圓體 Regular | ~20 MB | ~200 KB | 99% |
+| 思源宋體 Regular | 23.4 MB | 1579 KB | 93% |
+| 思源宋體 SemiBold | 23.6 MB | 1616 KB | 93% |
 
 ## 安裝
 
@@ -28,13 +29,12 @@ python subset-font.py \
   --fonts GenWanMin2TC-R.otf:GenWanMin2TC-Regular.woff2 \
          GenWanMin2TC-SB.otf:GenWanMin2TC-SemiBold.woff2
 
-# 源泉圓體
+# 思源宋體（V2.5 文青版內文用）
 python subset-font.py \
-  --source /tmp/GenSenRounded \
+  --source /tmp/noto-serif \
   --output ../../../helloruru.github.io/fonts \
-  --fonts GenSenRounded2TW-R.otf:GenSenRounded-Regular.woff2 \
-         GenSenRounded2TW-M.otf:GenSenRounded-Medium.woff2 \
-         GenSenRounded2TW-B.otf:GenSenRounded-Bold.woff2
+  --fonts NotoSerifCJKtc-Regular.otf:NotoSerifTC-Regular.woff2 \
+         NotoSerifCJKtc-SemiBold.otf:NotoSerifTC-SemiBold.woff2
 ```
 
 ## 參數
@@ -58,6 +58,7 @@ python subset-font.py \
 ## 字體來源
 
 - **源雲明朝**（GenWanMinCho）：[ButTaiwan/genwan-font](https://github.com/ButTaiwan/genwan-font)，SIL OFL 授權
-- **源泉圓體**（GenSenRounded）：[ButTaiwan/gensen-font](https://github.com/ButTaiwan/gensen-font)，SIL OFL 授權
+- **思源宋體**（Noto Serif CJK TC）：[notofonts/noto-cjk](https://github.com/notofonts/noto-cjk)，SIL OFL 授權
+- ~~源泉圓體~~：V2.5 起不再使用
 
 子集化後的 woff2 檔案部署於 `lab.helloruru.com/fonts/`。

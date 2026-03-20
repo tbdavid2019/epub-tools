@@ -8,7 +8,7 @@ const categories = [
   { id: 'text', label: '文字 & 轉檔', desc: '小說轉檔 · 社群排版 · AI 提示詞' },
   { id: 'media', label: '圖片 & 多媒體', desc: '去背 · PDF · 卡片 · 問安圖 · 色票 · 歌詞 · 歌單' },
   { id: 'discover', label: '查詢 & 測驗', desc: '閱讀器推薦 · 美妝色號' },
-  { id: 'reading', label: '閱讀 & 電子書', desc: '書櫃管理 · AP 串接' },
+  { id: 'reading', label: '閱讀 & 電子書', desc: '書櫃管理 · AP 串接 · 圖書館新書' },
 ]
 
 // ── Tools ──────────────────────────────────────────
@@ -93,6 +93,21 @@ const tools = [
     id: 'ebook-deals', name: '每日好書推薦', category: 'reading',
     description: '三平台電子書每日特價一覽，Readmoo、博客來、Kobo 搜尋比價。',
     path: '/ebook-deals/', color: 'rose', external: true,
+  },
+  {
+    id: 'library-search', name: '圖書館新書探測器', category: 'reading',
+    description: '追蹤全台 23 間 HyRead 公共圖書館新書上架與熱門排行，搜尋免費借閱。',
+    path: '/library-search/', color: 'sage', external: true, badge: 'New',
+  },
+  {
+    id: 'labor-report', name: '勞務報酬單產生器', category: 'text',
+    description: '輸入基本資料，自動計算扣繳稅額，產生 115 年度勞務報酬單 PDF。',
+    path: '/labor-report/', color: 'rose', external: true,
+  },
+  {
+    id: 'tankdrum-music', name: '空靈鼓簡譜集', category: 'media',
+    description: '空靈鼓數字簡譜瀏覽與播放工具。',
+    path: '/tankdrum-music/', color: 'sage', external: true,
   },
 ]
 
@@ -272,6 +287,10 @@ const getIcon = (id) => {
     case 'spotify-goods': return <MusicIcon />
     case 'book-manager': return <BookOpenIcon />
     case 'readmoo-ap': return <BookIcon />
+    case 'ebook-deals': return <BookIcon />
+    case 'library-search': return <BookOpenIcon />
+    case 'labor-report': return <PdfEditIcon />
+    case 'tankdrum-music': return <MusicIcon />
     default: return <BookIcon />
   }
 }

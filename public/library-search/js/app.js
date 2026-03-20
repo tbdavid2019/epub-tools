@@ -92,7 +92,7 @@ async function loadFreeHits() {
     if (hits.length === 0) {
       emptyState.style.display = '';
       emptyState.querySelector('p').textContent =
-        `目前沒有交集。（新書 ${data.totalNew} 本 vs 暢銷榜 ${data.totalBestseller} 本）`;
+        `這間圖書館最近上架的 ${data.totalNew} 本新書，都不在書店暢銷榜上。換一間看看？`;
       sortRow.style.display = 'none';
       return;
     }

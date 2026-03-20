@@ -83,7 +83,7 @@
 
   /* Font — 文青 */
   --font-serif: 'GenWanMin2TC', 'Noto Serif TC', serif;
-  --font-body: 'GenSenRounded', 'Noto Sans TC', sans-serif;
+  --font-body: 'NotoSerifTC', serif;
 }
 
 /* ---- Dark Mode (文青夜讀) ---- */
@@ -139,9 +139,10 @@ html * {
 
 body {
   font-family: var(--font-body);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 16px;
   line-height: 1.8;
+  letter-spacing: 0.04em;
   color: var(--text-secondary);
   background: var(--bg-page);
   min-height: 100vh;
@@ -152,6 +153,7 @@ h1, h2, h3 {
   color: var(--color-ink);
   line-height: 1.4;
   font-weight: 600;
+  letter-spacing: 0.06em;
 }
 h2 { font-size: 26px; margin-bottom: var(--space-md); }
 h3 { font-size: 19px; margin-bottom: var(--space-sm); }
@@ -164,7 +166,7 @@ a {
 }
 a:hover { color: var(--color-gray-rose); }
 
-strong { font-weight: 700; }
+strong { font-weight: 600; }
 em { font-style: italic; }
 
 /* ---- Brand Header Spacing ---- */
@@ -196,7 +198,7 @@ hello-ruru-header {
   color: var(--text-muted);
   font-family: inherit;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition-normal);
   white-space: nowrap;
@@ -214,7 +216,7 @@ hello-ruru-header {
   background: var(--bg-card);
   border-color: var(--color-rose);
   border-bottom: 2px solid var(--bg-card);
-  font-weight: 700;
+  font-weight: 600;
   top: 0;
 }
 
@@ -272,7 +274,7 @@ hello-ruru-header {
   border-radius: var(--radius-lg);
   font-family: inherit;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition-normal);
 }
@@ -299,7 +301,7 @@ hello-ruru-header {
   border-radius: var(--radius-lg);
   font-family: inherit;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   text-decoration: none;
   transition: all var(--transition-normal);
@@ -343,7 +345,7 @@ hello-ruru-header {
   border-radius: var(--radius-md);
   font-family: inherit;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   transition: border-color var(--transition-fast);
 }
 .input-field:focus {
@@ -374,7 +376,7 @@ select.input-field {
 .form-group label {
   display: block;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-primary);
   margin-bottom: var(--space-xs);
 }
@@ -425,7 +427,7 @@ select.input-field {
   color: var(--color-lavender);
   border-radius: 999px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 /* ---- Section Header ---- */
@@ -716,7 +718,7 @@ html.dark .quick-action-card:hover {
   stroke-width: 1.5;
 }
 .page-label {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 16px;
   color: var(--color-rose);
   margin-bottom: var(--space-sm);
@@ -808,7 +810,7 @@ html.dark .storybook-page::before {
 }
 .flow-label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-secondary);
 }
 .flow-arrow {
@@ -845,7 +847,7 @@ html.dark .storybook-page::before {
   background: linear-gradient(135deg, #C97070, #D4A5A5);
   color: #fff;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 3px 10px;
   border-radius: 8px;
   margin-bottom: var(--space-sm);
@@ -869,7 +871,7 @@ html.dark .storybook-page::before {
   min-width: 0;
 }
 .daily-99-title {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 15px;
   color: var(--text-primary);
   margin-bottom: 4px;
@@ -893,7 +895,7 @@ html.dark .storybook-page::before {
 }
 .daily-99-promo {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   color: #C97070;
 }
 .daily-99-actions {
@@ -937,7 +939,7 @@ html.dark .storybook-page::before {
 .faq-item summary {
   padding: var(--space-sm) var(--space-md);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 400;
   font-size: 14px;
   color: var(--text-primary);
   list-style: none;
@@ -1119,13 +1121,13 @@ html.dark .storybook-page::before {
 }
 .queue-number {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-hint);
   min-width: 28px;
 }
 .queue-name {
   flex: 1;
-  font-weight: 500;
+  font-weight: 400;
   font-size: 14px;
 }
 .queue-card-body {
@@ -1193,7 +1195,7 @@ html.dark .storybook-page::before {
   color: var(--text-muted);
   font-family: inherit;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -1234,7 +1236,7 @@ html.dark .storybook-page::before {
   min-width: 0;
 }
 .book-info .book-title {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   font-size: 16px;
 }
@@ -1319,7 +1321,7 @@ html.dark .storybook-page::before {
 }
 .dir-item .dir-name {
   flex: 1;
-  font-weight: 500;
+  font-weight: 400;
   font-size: 15px;
 }
 .dir-item .dir-link {
@@ -1362,7 +1364,7 @@ html.dark .storybook-page::before {
   min-width: 100px;
 }
 .log-item .log-user {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-rose);
   min-width: 80px;
 }
@@ -1481,7 +1483,7 @@ html.dark .storybook-page::before {
   background: var(--status-warning-bg);
 }
 .export-btn i { width: 28px; height: 28px; color: var(--color-rose); }
-.export-btn span { font-weight: 500; font-size: 15px; }
+.export-btn span { font-weight: 400; font-size: 15px; }
 .export-btn small { font-size: 12px; color: var(--text-muted); }
 /* LINE 按鈕紙膠帶強調 */
 .export-btn-line {
@@ -1543,7 +1545,7 @@ html.dark .storybook-page::before {
   border-radius: 999px;
   box-shadow: var(--shadow-md);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   z-index: var(--z-toast);
   animation: toastIn var(--transition-normal);
   border: 1px solid var(--border-color);
@@ -1620,7 +1622,7 @@ html.dark .theme-toggle .icon-moon { display: none; }
 }
 .user-bar strong {
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 400;
 }
 .local-hint {
   font-size: 11px;
@@ -1836,7 +1838,7 @@ html.dark .theme-toggle .icon-moon { display: none; }
 }
 .search-fallback-hint a {
   color: var(--color-rose);
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .cache-badge {
@@ -1908,7 +1910,7 @@ html.dark .theme-toggle .icon-moon { display: none; }
 }
 
 .rm-result-title {
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -1924,7 +1926,7 @@ html.dark .theme-toggle .icon-moon { display: none; }
 .rm-result-price {
   font-size: 0.8125rem;
   color: var(--color-rose);
-  font-weight: 500;
+  font-weight: 400;
   margin-top: 2px;
 }
 
@@ -1941,7 +1943,7 @@ html.dark .theme-toggle .icon-moon { display: none; }
   gap: 4px;
   color: var(--status-success);
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 /* Dark mode */

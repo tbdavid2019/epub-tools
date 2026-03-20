@@ -1,4 +1,4 @@
-/* ─── DS 文青 V0.1 — 電子書書櫃管理 ─── */
+/* ─── DS 文青 V2.5 — 電子書書櫃管理 ─── */
 
 :root {
   /* ── 品牌色 ── */
@@ -78,7 +78,7 @@
 
   /* ── 字體 ── */
   --font-serif: 'GenWanMin2TC', 'Noto Serif TC', serif;
-  --font-body: 'GenSenRounded', 'Noto Sans TC', sans-serif;
+  --font-body: 'NotoSerifTC', serif;
 
   /* ── 平台色 ── */
   --color-readmoo: #00C1FF;
@@ -138,12 +138,15 @@ html * {
 
 body {
   font-family: var(--font-body);
-  font-weight: 500;
+  font-weight: 400;
   background: var(--bg-page);
   color: var(--text-primary);
   line-height: 1.8;
+  letter-spacing: 0.04em;
   min-height: 100vh;
 }
+
+h1, h2, h3 { letter-spacing: 0.06em; }
 
 a {
   color: var(--color-sage);
@@ -246,7 +249,7 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
   box-shadow: var(--shadow-sm);
   font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 2;
   color: var(--text-secondary);
   transition: all var(--transition-normal);
@@ -273,7 +276,7 @@ ol.guide-steps {
 ol.guide-steps li {
   counter-increment: step;
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 400;
   line-height: 2.3;
   padding-left: 28px;
   position: relative;
@@ -287,7 +290,7 @@ ol.guide-steps li::before {
   color: #fff;
   border-radius: var(--radius-full);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   display: flex; align-items: center; justify-content: center;
   top: 8px;
 }
@@ -302,7 +305,7 @@ ol.guide-steps li::before {
   position: relative;
   font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 2;
   color: var(--text-secondary);
 }
@@ -347,7 +350,7 @@ html.dark .card-page::before {
 .faq-list dt {
   font-family: var(--font-body);
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-ink);
   margin-top: var(--space-md);
   padding-left: var(--space-sm);
@@ -419,7 +422,7 @@ html.dark .card-page::before {
   border-radius: var(--radius-md);
   font-family: var(--font-body);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   outline: none;
   transition: border-color var(--transition-fast);
 }
@@ -439,7 +442,7 @@ html.dark .card-page::before {
   border-radius: var(--radius-md);
   font-family: var(--font-body);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   resize: vertical;
   outline: none;
   transition: border-color var(--transition-fast);
@@ -491,7 +494,7 @@ ol.bm-steps > li::before {
   color: #fff;
   border-radius: var(--radius-full);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   display: flex; align-items: center; justify-content: center;
 }
 .bm-step { color: var(--text-secondary); line-height: 1.8; }
@@ -511,7 +514,7 @@ ol.bm-steps > li::before {
   color: #FFFFFF;
   border-radius: var(--radius-lg);
   font-family: var(--font-body);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 14px;
   cursor: grab;
   transition: all var(--transition-normal);
@@ -546,7 +549,7 @@ ol.bm-steps > li::before {
   border-radius: var(--radius-lg);
   font-family: var(--font-body);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition-normal);
 }
@@ -648,7 +651,7 @@ ol.bm-steps > li::before {
   background: var(--color-sage);
   color: #fff;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 2px 10px;
   border-radius: 999px;
   vertical-align: middle;
@@ -669,7 +672,7 @@ ol.bm-steps > li::before {
   color: var(--text-muted);
   font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition-normal);
 }
@@ -741,7 +744,7 @@ ol.bm-steps > li::before {
 }
 .book-badge {
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   color: #fff;
   padding: 1px 8px;
   border-radius: 999px;
@@ -752,7 +755,7 @@ ol.bm-steps > li::before {
 .book-category {
   font-size: 11px;
   font-family: var(--font-body);
-  font-weight: 500;
+  font-weight: 400;
   padding: 0 6px;
   height: 22px;
   border-radius: 999px;
@@ -772,7 +775,7 @@ ol.bm-steps > li::before {
 .book-category-filter {
   font-size: 14px;
   font-family: var(--font-body);
-  font-weight: 500;
+  font-weight: 400;
   padding: var(--space-xs) var(--space-md);
   border: 1px solid var(--border-color);
   border-radius: 999px;

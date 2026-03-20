@@ -324,7 +324,7 @@ async function runDiagnostics() {
 
   statusEl.innerHTML = `
     <div style="text-align:left; font-size:13px; line-height:1.8;">
-      <div style="font-size:15px; font-weight:500; margin-bottom:6px; color:${verdictColor};">
+      <div style="font-size:15px; font-weight:400; margin-bottom:6px; color:${verdictColor};">
         ${verdict}
       </div>
       <div style="color:var(--color-muted, #888); font-size:12px;">

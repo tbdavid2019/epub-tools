@@ -51,7 +51,7 @@
   --transition-normal: 250ms ease;
 
   --font-serif: 'GenWanMin2TC', 'Noto Serif TC', serif;
-  --font-body: 'GenSenRounded', 'Noto Sans TC', sans-serif;
+  --font-body: 'NotoSerifTC', serif;
 }
 
 /* ── 深色模式 ── */
@@ -83,12 +83,15 @@ html { transition: background-color 300ms ease, color 300ms ease; }
 
 body {
   font-family: var(--font-body);
-  font-weight: 500;
+  font-weight: 400;
   background: var(--bg-page);
   color: var(--text-primary);
   line-height: 1.8;
+  letter-spacing: 0.04em;
   min-height: 100vh;
 }
+
+h1, h2, h3 { letter-spacing: 0.06em; }
 
 a {
   color: var(--color-sage);
@@ -207,7 +210,7 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
   color: var(--text-muted);
   font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition-fast);
   border-bottom: 2px solid transparent;
@@ -228,7 +231,7 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
 }
 .lib-selector label {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-secondary);
   white-space: nowrap;
 }
@@ -241,7 +244,7 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: border-color var(--transition-fast);
 }
@@ -265,7 +268,7 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
 }
 .input:focus {
   outline: none;
@@ -290,7 +293,7 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
@@ -367,7 +370,7 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
 .free-hit-badge {
   display: inline-block;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: #fff;
   background: var(--color-gold);
   padding: 2px 10px;
@@ -389,7 +392,7 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
 }
 .book-card .book-title {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-primary);
   line-height: 1.5;
   display: -webkit-box;
@@ -408,7 +411,7 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
   width: 22px; height: 22px;
   line-height: 22px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: #fff;
   background: var(--color-sage);
   border-radius: var(--radius-full);
@@ -474,7 +477,7 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
 }
 .book-list-item .book-title {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-primary);
   text-decoration: none;
 }

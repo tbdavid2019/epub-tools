@@ -26,7 +26,7 @@
       "description": "上傳多張圖片，AI 自動去除背景。全程本機處理，不限解析度，完全免費。",
       "path": "/bg-remove",
       "icon": "scissors",
-      "ready": true,
+      "ready": false,
       "color": "lavender",
       "external": false
     },
@@ -56,7 +56,7 @@
       "description": "美妝色號搜尋引擎，快速找到試色文章與 Instagram 試色照片。",
       "path": "/cosmetics-for-you/",
       "icon": "palette",
-      "ready": true,
+      "ready": false,
       "color": "sakura",
       "external": true
     },
@@ -156,7 +156,7 @@
       "description": "貼上歌詞，搭配音樂同步捲動顯示。支援 LRC 時間軸格式。",
       "path": "/lyric-player/",
       "icon": "music",
-      "ready": true,
+      "ready": false,
       "color": "lavender",
       "external": true
     },
@@ -166,7 +166,7 @@
       "description": "線上製作個人名片，支援多種模板與自訂設計。",
       "path": "/card-maker/",
       "icon": "credit-card",
-      "ready": true,
+      "ready": false,
       "color": "rose",
       "external": true
     },
@@ -176,7 +176,7 @@
       "description": "線上合併、分割、旋轉 PDF 檔案。全程瀏覽器處理，不上傳。",
       "path": "/pdf-editor/",
       "icon": "file",
-      "ready": true,
+      "ready": false,
       "color": "lavender",
       "external": true
     },

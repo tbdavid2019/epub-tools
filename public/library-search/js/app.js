@@ -77,7 +77,7 @@ function switchTab(tab) {
 // ══════════════════════════════════════════════════
 
 async function loadFreeHits() {
-  showLoading(true, `比對${libraries[currentLib] || ''}新書 vs 書店暢銷榜...`);
+  showLoading(true, `比對${libraries[currentLib] || ''}熱門+新書 vs 書店暢銷榜...`);
   clearResults();
 
   try {
@@ -92,7 +92,7 @@ async function loadFreeHits() {
     if (hits.length === 0) {
       emptyState.style.display = '';
       emptyState.querySelector('p').textContent =
-        `這間圖書館最近上架的 ${data.totalNew} 本新書，都不在書店暢銷榜上。換一間看看？`;
+        `比對了 ${data.totalLib} 本館藏（熱門 + 近期新書），都不在書店暢銷榜上。換一間看看？`;
       sortRow.style.display = 'none';
       return;
     }

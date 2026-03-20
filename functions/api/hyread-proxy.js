@@ -97,6 +97,16 @@ function parseBooks(html) {
     }
   }
 
+  // 補充：從 book-title > span 抓書名（HyRead One 暢銷榜用）
+  const btSpanRe = /<a[^>]*href="[^"]*bookDetail\.jsp\?id=(\d+)[^"]*"[^>]*>[\s\S]*?<div class="book-title">\s*<span>([^<]+)<\/span>/gi;
+  while ((m = btSpanRe.exec(html)) !== null) {
+    const id = m[1];
+    if (!idOrder.includes(id)) idOrder.push(id);
+    if (!titleMap[id]) {
+      titleMap[id] = decodeEntities(m[2].trim());
+    }
+  }
+
   // 補充：從 book-title-01 裡抓書名（書店搜尋結果用）
   const btRe = /<div[^>]*class="[^"]*book-title-01[^"]*"[^>]*>\s*<a[^>]*href="[^"]*bookDetail\.jsp\?id=(\d+)[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
   while ((m = btRe.exec(html)) !== null) {
@@ -254,13 +264,36 @@ export async function onRequest(context) {
       return jsonResponse({ books: books.map((b, i) => ({ rank: i + 1, ...b })) });
 
     } else if (action === 'free-hits' && lib) {
-      // 圖書館新書 vs HyRead 暢銷榜 + Readmoo 暢銷榜 交叉比對
-      const [newHtml, hyreadBestHtml, readmooHtml] = await Promise.all([
-        fetchHyRead(`https://${lib}.ebook.hyread.com.tw/Template/RWD3.0/moccount-page.jsp`),
+      // 圖書館（熱門 + 新書多頁）vs HyRead 暢銷榜 + Readmoo 暢銷榜 交叉比對
+      const MAX_NEW_PAGES = 3;
+      const newPageUrls = [];
+      for (let p = 1; p <= MAX_NEW_PAGES; p++) {
+        newPageUrls.push(
+          fetchHyRead(`https://${lib}.ebook.hyread.com.tw/Template/RWD3.0/moccount-page.jsp?page=${p}`)
+        );
+      }
+
+      const [topHtml, hyreadBestHtml, readmooHtml, ...newPages] = await Promise.all([
+        fetchHyRead(`https://${lib}.ebook.hyread.com.tw/Template/RWD3.0/topLendBook.jsp`),
         fetchHyRead('https://one.ebook.hyread.com.tw/Template/GO/bestSelling.jsp'),
         fetchHyRead('https://readmoo.com/search/popular'),
+        ...newPageUrls,
       ]);
-      const newBooks = parseNewBooks(newHtml);
+
+      // 合併圖書館書籍：熱門排行 + 多頁新書（去重）
+      const topBooks = parseTopBooks(topHtml);
+      const allLibBooks = [...topBooks];
+      const seenIds = new Set(topBooks.map(b => b.id));
+      for (const pageHtml of newPages) {
+        const pageBooks = parseNewBooks(pageHtml);
+        for (const b of pageBooks) {
+          if (!seenIds.has(b.id)) {
+            seenIds.add(b.id);
+            allLibBooks.push(b);
+          }
+        }
+      }
+
       const hyreadBest = parseBooks(hyreadBestHtml);
 
       // Readmoo 暢銷榜：從 img alt 抓書名
@@ -277,18 +310,22 @@ export async function onRequest(context) {
         }
       }
 
-      // 合併兩個暢銷榜
+      // 合併兩個暢銷榜（用主書名比對，冒號前的部分）
       const normalize = (t) => (t || '').toLowerCase().replace(/\s+/g, '')
         .replace(/[（(）)【】\[\]：:，,。.、！!？?～~「」『』""''《》〈〉\-—─·・]/g, '');
+      const mainTitle = (t) => normalize((t || '').split(/[:：]/)[0]);
+
       const bestSet = new Set();
-      const bestSource = {}; // normalize(title) -> 來源
+      const bestSource = {}; // mainTitle -> 來源
       hyreadBest.forEach(b => {
-        const k = normalize(b.title);
+        const k = mainTitle(b.title);
+        if (k.length < 3) return;
         bestSet.add(k);
         bestSource[k] = 'HyRead 暢銷';
       });
       readmooBest.forEach(b => {
-        const k = normalize(b.title);
+        const k = mainTitle(b.title);
+        if (k.length < 3) return;
         if (bestSet.has(k)) {
           bestSource[k] = 'HyRead + Readmoo 暢銷';
         } else {
@@ -297,16 +334,16 @@ export async function onRequest(context) {
         }
       });
 
-      const hits = newBooks.filter(b => bestSet.has(normalize(b.title)))
+      const hits = allLibBooks.filter(b => bestSet.has(mainTitle(b.title)))
         .map(b => ({
           ...b,
-          source: bestSource[normalize(b.title)] || '',
+          source: bestSource[mainTitle(b.title)] || '',
         }));
 
       return jsonResponse({
         library: LIBRARIES[lib],
         hits,
-        totalNew: newBooks.length,
+        totalLib: allLibBooks.length,
         totalBestseller: bestSet.size,
       });
 

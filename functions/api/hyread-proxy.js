@@ -54,76 +54,76 @@ async function fetchHyRead(url) {
   return await res.text();
 }
 
-// 解析熱門書 HTML（topLendBook.jsp）
-function parseTopBooks(html) {
+// 通用解析：從 HTML 找 bookDetail 連結 + h6 書名 或 img title
+function parseBooks(html) {
   const books = [];
-  // 每本書在 <li> 裡，書名在 .bookPicArea 的 title 或 .book-title
-  const bookPattern = /<li[^>]*class="[^"]*bookItem[^"]*"[^>]*>[\s\S]*?<\/li>/gi;
-  const items = html.match(bookPattern) || [];
+  const seen = new Set();
 
-  // 備用：用更寬鬆的 pattern 抓書名和封面
-  const titlePattern = /<div[^>]*class="[^"]*bookTitle[^"]*"[^>]*>[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/gi;
-  const imgPattern = /<img[^>]*class="[^"]*bookPic[^"]*"[^>]*src="([^"]*)"[^>]*>/gi;
-  const linkPattern = /bookDetail\.jsp\?id=(\d+)/g;
-
-  // 用 all-in-one 方式：找所有書名連結
-  const allTitles = [];
-  const titleRe = /<a[^>]*href="[^"]*bookDetail\.jsp\?id=(\d+)[^"]*"[^>]*title="([^"]*)"[^>]*>/gi;
+  // 策略 1：找 <a href="bookDetail.jsp?id=XXX"> 後面跟著 <h6>書名</h6>
+  const h6Re = /<a[^>]*href="[^"]*bookDetail\.jsp\?id=(\d+)[^"]*"[^>]*>[\s\S]*?<h6>([\s\S]*?)<\/h6>/gi;
   let m;
-  while ((m = titleRe.exec(html)) !== null) {
-    allTitles.push({ id: m[1], title: decodeEntities(m[2]) });
+  while ((m = h6Re.exec(html)) !== null) {
+    const id = m[1];
+    const title = decodeEntities(m[2].replace(/<[^>]*>/g, '').trim());
+    if (!title || seen.has(id)) continue;
+    seen.add(id);
+    books.push({ id, title });
   }
 
-  // 去重（同一個 id 可能出現多次）
-  const seen = new Set();
-  for (const item of allTitles) {
-    if (seen.has(item.id)) continue;
-    seen.add(item.id);
-    books.push({
-      rank: books.length + 1,
-      title: item.title,
-      id: item.id,
-      thumbnail: `https://webcdn2.ebook.hyread.com.tw/bookcover/${item.id}.jpg`,
-    });
+  // 策略 2：找 <img title="書名"> 搭配 bookDetail id
+  if (books.length === 0) {
+    const imgRe = /<a[^>]*href="[^"]*bookDetail\.jsp\?id=(\d+)[^"]*"[^>]*>[\s\S]*?<img[^>]*title="([^"#]+)"[^>]*>/gi;
+    while ((m = imgRe.exec(html)) !== null) {
+      const id = m[1];
+      const title = decodeEntities(m[2].trim());
+      if (!title || seen.has(id)) continue;
+      seen.add(id);
+      books.push({ id, title });
+    }
+  }
+
+  // 策略 3：找 <img alt="書名"> 搭配 bookDetail id
+  if (books.length === 0) {
+    const altRe = /<a[^>]*href="[^"]*bookDetail\.jsp\?id=(\d+)[^"]*"[^>]*>[\s\S]*?<img[^>]*alt="([^"]+)"[^>]*>/gi;
+    while ((m = altRe.exec(html)) !== null) {
+      const id = m[1];
+      const title = decodeEntities(m[2].trim());
+      if (!title || seen.has(id)) continue;
+      seen.add(id);
+      books.push({ id, title });
+    }
   }
 
   return books;
+}
+
+// 解析熱門書 HTML（topLendBook.jsp）
+function parseTopBooks(html) {
+  const books = parseBooks(html);
+  return books.map((b, i) => ({
+    rank: i + 1,
+    title: b.title,
+    id: b.id,
+    thumbnail: `https://webcdn2.ebook.hyread.com.tw/bookcover/${b.id}.jpg`,
+  }));
 }
 
 // 解析新書上架 HTML（moccount-page.jsp）
 function parseNewBooks(html) {
-  const books = [];
-  const titleRe = /<a[^>]*href="[^"]*bookDetail\.jsp\?id=(\d+)[^"]*"[^>]*title="([^"]*)"[^>]*>/gi;
-  let m;
-  const seen = new Set();
-  while ((m = titleRe.exec(html)) !== null) {
-    if (seen.has(m[1])) continue;
-    seen.add(m[1]);
-    books.push({
-      title: decodeEntities(m[2]),
-      id: m[1],
-      thumbnail: `https://webcdn2.ebook.hyread.com.tw/bookcover/${m[1]}.jpg`,
-    });
-  }
-  return books;
+  return parseBooks(html).map(b => ({
+    title: b.title,
+    id: b.id,
+    thumbnail: `https://webcdn2.ebook.hyread.com.tw/bookcover/${b.id}.jpg`,
+  }));
 }
 
 // 解析搜尋結果 HTML（searchList.jsp）
 function parseSearchResults(html) {
-  const books = [];
-  const titleRe = /<a[^>]*href="[^"]*bookDetail\.jsp\?id=(\d+)[^"]*"[^>]*title="([^"]*)"[^>]*>/gi;
-  let m;
-  const seen = new Set();
-  while ((m = titleRe.exec(html)) !== null) {
-    if (seen.has(m[1])) continue;
-    seen.add(m[1]);
-    books.push({
-      title: decodeEntities(m[2]),
-      id: m[1],
-      thumbnail: `https://webcdn2.ebook.hyread.com.tw/bookcover/${m[1]}.jpg`,
-    });
-  }
-  return books;
+  return parseBooks(html).map(b => ({
+    title: b.title,
+    id: b.id,
+    thumbnail: `https://webcdn2.ebook.hyread.com.tw/bookcover/${b.id}.jpg`,
+  }));
 }
 
 function decodeEntities(str) {

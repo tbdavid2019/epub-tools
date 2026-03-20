@@ -101,6 +101,36 @@ a:hover { color: var(--color-sage-dark); }
 hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
 
 /* ── Theme Toggle ── */
+/* ── 回頂層 ── */
+.back-to-top {
+  position: fixed;
+  bottom: calc(var(--space-lg) + 56px);
+  right: var(--space-lg);
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
+  z-index: 99;
+  opacity: 0;
+  pointer-events: none;
+}
+.back-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.back-to-top:hover {
+  background: var(--color-sage-bg);
+  border-color: var(--color-sage);
+  color: var(--color-sage-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
 .theme-toggle {
   position: fixed;
   bottom: var(--space-lg);

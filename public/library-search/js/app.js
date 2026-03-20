@@ -393,6 +393,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentTab !== 'search') renderBooks();
   });
 
+  // 回頂層按鈕
+  const btnTop = document.getElementById('btn-back-top');
+  window.addEventListener('scroll', () => {
+    btnTop.classList.toggle('visible', window.scrollY > 400);
+  }, { passive: true });
+  btnTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
   // 初始載入
   lucide.createIcons();
   loadBooks();

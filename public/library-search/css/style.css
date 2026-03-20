@@ -328,6 +328,7 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
   cursor: pointer;
   text-decoration: none;
   display: block;
+  overflow: hidden;
 }
 .book-card.free-hit {
   border-color: var(--color-gold);

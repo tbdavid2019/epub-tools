@@ -64,20 +64,10 @@ function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
 
-  const libSelector = document.getElementById('lib-selector');
-  const searchPanel = document.getElementById('search-panel');
-
-  if (tab === 'search') {
-    libSelector.style.display = 'none';
-    searchPanel.style.display = '';
-    clearResults();
-  } else if (tab === 'free-hits') {
-    libSelector.style.display = '';
-    searchPanel.style.display = 'none';
+  // 搜尋面板永遠顯示，圖書館選擇器在非搜尋模式顯示
+  if (tab === 'free-hits') {
     loadFreeHits();
   } else {
-    libSelector.style.display = '';
-    searchPanel.style.display = 'none';
     loadBooks();
   }
 }

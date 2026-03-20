@@ -81,19 +81,10 @@
       <button class="tab" data-tab="free-hits">
         <i data-lucide="sparkles" width="16" height="16"></i> 免費撿熱書
       </button>
-      <button class="tab" data-tab="search">
-        <i data-lucide="search" width="16" height="16"></i> 搜尋
-      </button>
     </nav>
 
-    <!-- 圖書館選擇器（新書/熱門用） -->
-    <div class="lib-selector" id="lib-selector">
-      <label for="select-lib">選擇圖書館</label>
-      <select id="select-lib" class="select"></select>
-    </div>
-
-    <!-- 搜尋面板 -->
-    <div class="search-panel" id="search-panel" style="display:none">
+    <!-- 搜尋（永遠顯示） -->
+    <div class="search-panel" id="search-panel">
       <div class="search-row">
         <input type="text" id="search-input" class="input" placeholder="輸入書名，例如：原子習慣">
         <button class="btn btn-primary" id="btn-search">
@@ -101,6 +92,12 @@
         </button>
       </div>
       <p class="form-note">同時搜尋 23 間公共圖書館的 HyRead 電子書館藏</p>
+    </div>
+
+    <!-- 圖書館選擇器 -->
+    <div class="lib-selector" id="lib-selector">
+      <label for="select-lib">選擇圖書館</label>
+      <select id="select-lib" class="select"></select>
     </div>
 
     <!-- 排序列 -->

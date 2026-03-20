@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5">
+
+  <title>圖書館新書探測器｜HyRead 全台圖書館新書・熱門・搜尋 | Hello Ruru Tools</title>
+  <meta name="description" content="追蹤全台 23 間 HyRead 公共圖書館的新書上架與熱門排行，搜尋你想看的書哪間圖書館有。免費借閱，不用花錢買。">
+  <meta name="author" content="Hello Ruru">
+  <link rel="canonical" href="https://tools.helloruru.com/library-search/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="圖書館新書探測器｜HyRead 全台圖書館新書・熱門・搜尋">
+  <meta property="og:description" content="追蹤全台 HyRead 公共圖書館的新書上架與熱門排行。想看的書有沒有上圖書館？搜一下就知道。">
+  <meta property="og:url" content="https://tools.helloruru.com/library-search/">
+  <meta property="og:site_name" content="Hello Ruru Tools">
+  <meta property="og:locale" content="zh_TW">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="圖書館新書探測器｜HyRead 全台圖書館">
+  <meta name="twitter:description" content="追蹤全台 HyRead 公共圖書館的新書上架與熱門排行。免費借閱，不用花錢買。">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "圖書館新書探測器",
+    "applicationCategory": "UtilitiesApplication",
+    "url": "https://tools.helloruru.com/library-search/",
+    "description": "追蹤全台 HyRead 公共圖書館的新書上架與熱門排行，搜尋你想看的書哪間圖書館有免費借閱。",
+    "featureList": [
+      "全台 23 間 HyRead 公共圖書館新書上架追蹤",
+      "各館熱門排行 Top 100",
+      "跨館搜尋：輸入書名，查哪間圖書館有",
+      "深色模式",
+      "全程瀏覽器處理，不需登入"
+    ],
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "TWD" },
+    "creator": { "@type": "Person", "name": "Kaoru Tsai", "url": "https://ohruru.com" }
+  }
+  </script>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://lab.helloruru.com" crossorigin>
+  <style>
+    @font-face { font-family: 'GenWanMin2TC'; src: url('https://lab.helloruru.com/fonts/GenWanMin2TC-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+    @font-face { font-family: 'GenWanMin2TC'; src: url('https://lab.helloruru.com/fonts/GenWanMin2TC-SemiBold.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+    @font-face { font-family: 'GenSenRounded'; src: url('https://lab.helloruru.com/fonts/GenSenRounded-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+    @font-face { font-family: 'GenSenRounded'; src: url('https://lab.helloruru.com/fonts/GenSenRounded-Medium.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+    @font-face { font-family: 'GenSenRounded'; src: url('https://lab.helloruru.com/fonts/GenSenRounded-Bold.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+  </style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600&display=swap">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css?v=20260320">
+</head>
+<body>
+  <!-- Brand Header -->
+  <script src="https://lab.helloruru.com/shared/brand-header.js"></script>
+  <hello-ruru-header title="圖書館新書探測器"></hello-ruru-header>
+
+  <main class="main">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="accent-bar"></div>
+      <h1>圖書館新書探測器</h1>
+      <p>想看的書，先查圖書館有沒有</p>
+    </div>
+
+    <!-- Tab 切換 -->
+    <nav class="tab-nav" id="tab-nav">
+      <button class="tab active" data-tab="new">
+        <i data-lucide="book-plus" width="16" height="16"></i> 新書上架
+      </button>
+      <button class="tab" data-tab="top">
+        <i data-lucide="flame" width="16" height="16"></i> 熱門排行
+      </button>
+      <button class="tab" data-tab="search">
+        <i data-lucide="search" width="16" height="16"></i> 搜尋
+      </button>
+    </nav>
+
+    <!-- 圖書館選擇器（新書/熱門用） -->
+    <div class="lib-selector" id="lib-selector">
+      <label for="select-lib">選擇圖書館</label>
+      <select id="select-lib" class="select"></select>
+    </div>
+
+    <!-- 搜尋面板 -->
+    <div class="search-panel" id="search-panel" style="display:none">
+      <div class="search-row">
+        <input type="text" id="search-input" class="input" placeholder="輸入書名，例如：原子習慣">
+        <button class="btn btn-primary" id="btn-search">
+          <i data-lucide="search" width="16" height="16"></i> 搜尋全部圖書館
+        </button>
+      </div>
+      <p class="form-note">同時搜尋 23 間公共圖書館的 HyRead 電子書館藏</p>
+    </div>
+
+    <!-- 排序列 -->
+    <div class="sort-row" id="sort-row">
+      <span class="result-count" id="result-count"></span>
+      <button class="btn btn-sm btn-outline" id="btn-sort">
+        <i data-lucide="arrow-up-down" width="14" height="14"></i> 按書名
+      </button>
+    </div>
+
+    <!-- 載入中 -->
+    <div class="loading" id="loading" style="display:none">
+      <div class="spinner"></div>
+      <span id="loading-text">載入中...</span>
+    </div>
+
+    <!-- 結果區 -->
+    <div id="results"></div>
+
+    <!-- 空狀態 -->
+    <div class="empty" id="empty-state">
+      <p>選一間圖書館，看看最近上了什麼新書。</p>
+    </div>
+
+    <!-- 致敬 -->
+    <section class="section credits-section">
+      <div class="divider-gold"></div>
+      <p class="credits">
+        資料來源：<a href="https://ebook.hyread.com.tw/" target="_blank" rel="noopener">HyRead ebook</a>
+        ｜搜尋機制參考
+        <a href="https://github.com/Taiwan-Ebook-Lover" target="_blank" rel="noopener">Taiwan-Ebook-Lover</a>（MIT）、
+        <a href="https://github.com/Michelle37101/Library-Hyread-Ebook-Searching" target="_blank" rel="noopener">Library-Hyread-Ebook-Searching</a>（MIT）、
+        <a href="https://github.com/YuanLiou/TaiwanEbookSearch" target="_blank" rel="noopener">TaiwanEbookSearch</a>（MIT）
+      </p>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>&copy; 2026 <a href="https://ohruru.com">Kaoru Tsai</a>. All Rights Reserved. | Contact: <a href="mailto:hello@helloruru.com">hello@helloruru.com</a></p>
+  </footer>
+
+  <!-- Theme Toggle -->
+  <button class="theme-toggle" id="btn-dark-mode" aria-label="切換深色模式">
+    <i data-lucide="moon" width="18" height="18"></i>
+  </button>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" style="display:none"></div>
+
+  <script src="js/app.js?v=20260320"></script>
+</body>
+</html>

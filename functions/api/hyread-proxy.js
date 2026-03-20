@@ -59,15 +59,31 @@ function parseBooks(html) {
   const books = [];
   const seen = new Set();
 
+  // 先建一個 id -> 封面圖 URL 的對照表
+  const coverMap = {};
+  const coverRe = /bookcover\/(\d+)[^"]*\.jpg/gi;
+  let cm;
+  while ((cm = coverRe.exec(html)) !== null) {
+    if (!coverMap[cm[1]]) {
+      coverMap[cm[1]] = cm[0].startsWith('http') ? cm[0] : `https://webcdn2.ebook.hyread.com.tw/${cm[0]}`;
+    }
+  }
+  // 再用完整 src 抓一次
+  const srcRe = /<img[^>]*src="(https?:\/\/[^"]*bookcover\/(\d+)[^"]*)"[^>]*>/gi;
+  while ((cm = srcRe.exec(html)) !== null) {
+    coverMap[cm[2]] = cm[1];
+  }
+
+  let m;
+
   // 策略 1：找 <a href="bookDetail.jsp?id=XXX"> 後面跟著 <h6>書名</h6>
   const h6Re = /<a[^>]*href="[^"]*bookDetail\.jsp\?id=(\d+)[^"]*"[^>]*>[\s\S]*?<h6>([\s\S]*?)<\/h6>/gi;
-  let m;
   while ((m = h6Re.exec(html)) !== null) {
     const id = m[1];
     const title = decodeEntities(m[2].replace(/<[^>]*>/g, '').trim());
     if (!title || seen.has(id)) continue;
     seen.add(id);
-    books.push({ id, title });
+    books.push({ id, title, thumbnail: coverMap[id] || '' });
   }
 
   // 策略 2：找 <img title="書名"> 搭配 bookDetail id
@@ -78,7 +94,7 @@ function parseBooks(html) {
       const title = decodeEntities(m[2].trim());
       if (!title || seen.has(id)) continue;
       seen.add(id);
-      books.push({ id, title });
+      books.push({ id, title, thumbnail: coverMap[id] || '' });
     }
   }
 
@@ -90,7 +106,7 @@ function parseBooks(html) {
       const title = decodeEntities(m[2].trim());
       if (!title || seen.has(id)) continue;
       seen.add(id);
-      books.push({ id, title });
+      books.push({ id, title, thumbnail: coverMap[id] || '' });
     }
   }
 
@@ -104,7 +120,7 @@ function parseTopBooks(html) {
     rank: i + 1,
     title: b.title,
     id: b.id,
-    thumbnail: `https://webcdn2.ebook.hyread.com.tw/bookcover/${b.id}.jpg`,
+    thumbnail: b.thumbnail || '',
   }));
 }
 
@@ -113,7 +129,7 @@ function parseNewBooks(html) {
   return parseBooks(html).map(b => ({
     title: b.title,
     id: b.id,
-    thumbnail: `https://webcdn2.ebook.hyread.com.tw/bookcover/${b.id}.jpg`,
+    thumbnail: b.thumbnail || '',
   }));
 }
 
@@ -122,7 +138,7 @@ function parseSearchResults(html) {
   return parseBooks(html).map(b => ({
     title: b.title,
     id: b.id,
-    thumbnail: `https://webcdn2.ebook.hyread.com.tw/bookcover/${b.id}.jpg`,
+    thumbnail: b.thumbnail || '',
   }));
 }
 

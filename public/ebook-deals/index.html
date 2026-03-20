@@ -1527,7 +1527,15 @@
           );
         }
         if (all.length === 0) {
-          sr.innerHTML = '<div class="status-msg">沒有找到相關書籍</div>';
+          const fallbackUrls = {
+            readmoo: 'https://readmoo.com/search/keyword?q=' + encodeURIComponent(query),
+            books: 'https://search.books.com.tw/search/query/key/' + encodeURIComponent(query) + '/cat/EBA',
+            kobo: 'https://www.kobo.com/tw/zh/search?query=' + encodeURIComponent(query),
+          };
+          sr.innerHTML = '<div class="status-msg">沒有找到相關書籍，試試自己查：' +
+            Object.entries(fallbackUrls).map(([p, u]) =>
+              '<a href="' + u + '" target="_blank" rel="noopener" style="color:var(--color-sage);font-weight:500;margin-left:8px;background-image:none">' + (names[p] || p) + '</a>'
+            ).join('') + '</div>';
           return;
         }
 
@@ -1562,7 +1570,17 @@
         // 多平台的組排前面（比價更有意義）
         const sorted = [...groups.values()].sort((a, b) => b.items.length - a.items.length);
 
-        let html = '<p class="search-summary">找到 ' + all.length + ' 筆，' + sorted.length + ' 本書</p>';
+        // 檢查哪些平台沒結果
+        const gotPlatforms = new Set(all.map(r => r.platform));
+        const searchUrls = {
+          readmoo: 'https://readmoo.com/search/keyword?q=' + encodeURIComponent(query),
+          books: 'https://search.books.com.tw/search/query/key/' + encodeURIComponent(query) + '/cat/EBA',
+          kobo: 'https://www.kobo.com/tw/zh/search?query=' + encodeURIComponent(query),
+        };
+        const missingPlatforms = ['readmoo', 'books', 'kobo'].filter(p => !gotPlatforms.has(p));
+
+        let html = '<p class="search-summary">找到 ' + all.length + ' 筆，' + sorted.length + ' 本書' +
+          (data._cached ? ' <span style="font-size:11px;color:var(--text-hint)">(快取)</span>' : '') + '</p>';
         html += sorted.map(g => {
           let inner = '<div class="book-group">';
           inner += '<div class="book-group-header">';
@@ -1587,6 +1605,16 @@
           inner += '</div>';
           return inner;
         }).join('');
+        // 有平台沒抓到 → 顯示「自己查」連結
+        if (missingPlatforms.length > 0) {
+          html += '<div class="search-fallback">' +
+            '<span style="font-size:13px;color:var(--text-muted)">部分平台未抓到，可自行查詢：</span>' +
+            missingPlatforms.map(p =>
+              '<a href="' + searchUrls[p] + '" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-sage);font-weight:500;background-image:none">' + (names[p] || p) + '</a>'
+            ).join(' ') +
+          '</div>';
+        }
+
         sr.innerHTML = html;
       } catch (err) {
         sr.innerHTML = '<div class="status-msg error">搜尋失敗：' + escapeHtml(err.message) + '</div>';

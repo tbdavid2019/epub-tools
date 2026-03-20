@@ -102,6 +102,16 @@
 
       const sorted = [...groups.values()].sort((a, b) => b.items.length - a.items.length);
 
+      // 檢查哪些平台沒結果
+      const gotPlatforms = new Set(all.map(r => r.platform));
+      const SEARCH_URLS = {
+        readmoo: 'https://readmoo.com/search/keyword?q=' + encodeURIComponent(query),
+        books: 'https://search.books.com.tw/search/query/key/' + encodeURIComponent(query) + '/cat/EBA',
+        kobo: 'https://www.kobo.com/tw/zh/search?query=' + encodeURIComponent(query),
+        googlebooks: 'https://play.google.com/store/search?q=' + encodeURIComponent(query) + '&c=books',
+      };
+      const missingPlatforms = ['readmoo', 'books', 'kobo'].filter(p => !gotPlatforms.has(p));
+
       let html = '<p class="deals-search-summary">找到 ' + all.length + ' 筆，' + sorted.length + ' 本書</p>';
 
       html += sorted.map(g => {
@@ -124,6 +134,16 @@
         inner += '</div>';
         return inner;
       }).join('');
+
+      // 有平台沒抓到 → 顯示「自己查」連結
+      if (missingPlatforms.length > 0) {
+        html += '<div class="deals-fallback-links">';
+        html += '<span>部分平台未抓到，可自行查詢：</span>';
+        html += missingPlatforms.map(p =>
+          '<a href="' + SEARCH_URLS[p] + '" target="_blank" rel="noopener">' + (PLATFORM_NAMES[p] || p) + '</a>'
+        ).join(' ');
+        html += '</div>';
+      }
 
       sr.innerHTML = html;
     } catch (err) {

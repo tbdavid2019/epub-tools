@@ -17,7 +17,7 @@ const tools = [
   {
     id: 'epub', name: 'TXT 轉 EPUB', category: 'text',
     description: '上傳 TXT 小說檔案，自動偵測章節結構、支援簡轉繁，一鍵生成標準 EPUB 電子書格式。',
-    path: '/epub', color: 'rose',
+    path: '/txt-to-epub', color: 'rose',
   },
   {
     id: 'epub-convert', name: 'EPUB 簡轉繁', category: 'text',

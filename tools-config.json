@@ -1,10 +1,10 @@
 {
   "tools": [
     {
-      "id": "epub",
+      "id": "txt-to-epub",
       "name": "TXT 轉 EPUB",
       "description": "上傳 TXT 小說檔案，自動偵測章節結構、支援簡轉繁，一鍵生成標準 EPUB 電子書格式。",
-      "path": "/epub/",
+      "path": "/txt-to-epub/",
       "icon": "book",
       "ready": true,
       "color": "rose",

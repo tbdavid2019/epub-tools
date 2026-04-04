@@ -47,7 +47,7 @@ export const routes = [
               position: 1,
               name: 'TXT 轉 EPUB',
               description: '上傳 TXT 小說檔案，自動偵測章節結構、支援簡轉繁，一鍵生成標準 EPUB 電子書格式。',
-              url: `${BASE}/epub`,
+              url: `${BASE}/txt-to-epub`,
             },
             {
               '@type': 'ListItem',
@@ -97,21 +97,21 @@ export const routes = [
     },
   },
   {
-    path: '/epub',
+    path: '/txt-to-epub',
     element: EpubTool,
     title: 'TXT 轉 EPUB',
     seo: {
       title: 'TXT 轉 EPUB — 免費線上 TXT 小說轉電子書工具｜HelloRuru',
       description: '免費線上 TXT 轉 EPUB 工具，自動偵測章節結構、支援簡體轉繁體、直排橫排切換、自訂封面與字型。全程瀏覽器本機處理，不上傳檔案。',
       keywords: 'TXT轉EPUB,小說轉電子書,免費EPUB製作,簡轉繁,電子書工具,線上轉檔,本機處理',
-      canonical: `${BASE}/epub`,
+      canonical: `${BASE}/txt-to-epub`,
       jsonLd: {
         '@context': 'https://schema.org',
         '@type': 'WebApplication',
         name: 'TXT 轉 EPUB — HelloRuru',
         alternateName: ['TXT to EPUB Converter', 'TXT 小說轉電子書'],
         description: '免費線上 TXT 轉 EPUB 工具，自動偵測章節結構、支援簡體轉繁體、直排橫排切換、自訂封面與字型。全程瀏覽器本機處理，不上傳檔案。',
-        url: `${BASE}/epub`,
+        url: `${BASE}/txt-to-epub`,
         applicationCategory: 'UtilitiesApplication',
         operatingSystem: 'All',
         browserRequirements: 'Requires JavaScript',

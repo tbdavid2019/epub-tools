@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO -->
+  <title>EPUB 編輯器 — 免費線上 EPUB 電子書編輯工具｜HelloRuru</title>
+  <meta name="description" content="免費線上 EPUB 編輯工具：簡轉繁、台灣標點符號轉換、字型替換、行距字級調整。使用 OpenCC 引擎，保留原書排版。全程瀏覽器本機處理。">
+  <meta name="keywords" content="EPUB編輯器,EPUB簡轉繁,電子書編輯,字型替換,標點符號轉換,OpenCC,免費工具,本機處理">
+  <meta name="author" content="Hello Ruru">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://tools.helloruru.com/epub-editor/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="EPUB 編輯器 — 免費線上 EPUB 電子書編輯工具｜HelloRuru">
+  <meta property="og:description" content="免費線上 EPUB 編輯工具：簡轉繁、台灣標點、字型替換、行距字級調整。全程本機處理。">
+  <meta property="og:url" content="https://tools.helloruru.com/epub-editor/">
+  <meta property="og:site_name" content="Hello Ruru Tools">
+  <meta property="og:locale" content="zh_TW">
+  <meta property="og:image" content="https://tools.helloruru.com/og-image.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="EPUB 編輯器 — 免費線上 EPUB 電子書編輯工具｜HelloRuru">
+  <meta name="twitter:description" content="免費線上 EPUB 編輯工具：簡轉繁、台灣標點、字型替換、行距字級調整。全程本機處理。">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script src="https://lab.helloruru.com/shared/brand-header.js"></script>
+  <script>
+    (function() {
+      var saved = localStorage.getItem('theme');
+      if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="container">
+      <hello-ruru-header title="EPUB 編輯器"></hello-ruru-header>
+
+      <div class="theme-toggle-wrap">
+        <button class="theme-toggle" id="themeToggle" aria-label="切換深色模式">
+          <svg class="icon-sun" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+
+      <a href="/" class="back-link">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        返回工具箱
+      </a>
+
+      <!-- Instructions -->
+      <div id="instructionCard" class="card instruction-card">
+        <h2 class="card-title">
+          <span class="icon-circle lavender">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </span>
+          使用說明
+        </h2>
+        <div class="instruction-steps">
+          <div class="instruction-step"><span class="step-num">1</span><div><div class="step-title">上傳 EPUB 檔案</div><div class="step-desc">支援任意大小，全程本機處理</div></div></div>
+          <div class="instruction-step"><span class="step-num">2</span><div><div class="step-title">調整設定</div><div class="step-desc">簡轉繁、標點符號、字型、行距、字級</div></div></div>
+          <div class="instruction-step"><span class="step-num">3</span><div><div class="step-title">下載 EPUB</div><div class="step-desc">一鍵輸出，保留原書排版結構</div></div></div>
+        </div>
+      </div>
+
+      <!-- Step Indicator -->
+      <div class="step-indicator" id="stepIndicator"></div>
+      <div class="step-label" id="stepLabel"></div>
+
+      <!-- Main Card -->
+      <div class="card main-card">
+        <!-- Step 1: Upload -->
+        <div id="step1">
+          <div class="upload-header">
+            <h2>上傳 EPUB 檔案</h2>
+            <div class="upload-hints">
+              <span>所有處理都在瀏覽器中完成</span>
+              <span>關閉分頁後，資料自動清除</span>
+            </div>
+          </div>
+          <label id="dropZone" class="drop-zone">
+            <input type="file" id="fileInput" accept=".epub" hidden>
+            <svg viewBox="0 0 24 24" width="48" height="48" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor" class="upload-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p class="drop-text" id="dropText">拖放 EPUB 到這裡</p>
+            <p class="drop-hint">或點擊選擇檔案</p>
+          </label>
+          <div id="fileInfo" class="file-info hidden">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor" class="file-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <div class="file-details">
+              <p id="fileName" class="file-name"></p>
+              <p id="fileSize" class="file-size"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Settings -->
+        <div id="step2" class="hidden">
+          <div class="settings-section">
+            <div class="settings-title">
+              <span class="icon-circle rose">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </span>
+              編輯設定
+            </div>
+
+            <!-- Convert Toggle -->
+            <div class="toggle-row">
+              <div class="toggle-label">
+                <div class="toggle-title">簡體轉繁體</div>
+                <div class="toggle-desc">使用 OpenCC 繁化姬引擎，含詞彙轉換</div>
+              </div>
+              <button class="toggle-switch on" id="toggleConvert">
+                <span class="toggle-knob"></span>
+              </button>
+            </div>
+
+            <!-- Punctuation Toggle -->
+            <div class="toggle-row">
+              <div class="toggle-label">
+                <div class="toggle-title">台灣標點符號</div>
+                <div class="toggle-desc">"" → 「」、'' → 『』，半形標點轉全形</div>
+              </div>
+              <button class="toggle-switch on" id="togglePunctuation">
+                <span class="toggle-knob"></span>
+              </button>
+            </div>
+
+            <!-- Font Family -->
+            <div class="form-group">
+              <label class="form-label">字型風格</label>
+              <div class="option-grid" id="fontGrid">
+                <button class="option-btn" data-font="none">
+                  <div class="option-btn-title">不變更</div>
+                  <div class="option-btn-desc">保留原書字型</div>
+                </button>
+                <button class="option-btn active" data-font="sans">
+                  <div class="option-btn-title">黑體</div>
+                  <div class="option-btn-desc">現代、清晰易讀</div>
+                </button>
+                <button class="option-btn" data-font="serif">
+                  <div class="option-btn-title">明體</div>
+                  <div class="option-btn-desc">傳統、適合長文</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Font Size -->
+            <div class="form-group">
+              <label class="form-label">字體大小</label>
+              <div class="small-btn-grid" id="fontSizeGrid">
+                <button class="small-btn" data-value="none">不變更</button>
+                <button class="small-btn" data-value="small">小</button>
+                <button class="small-btn active" data-value="medium">中</button>
+                <button class="small-btn" data-value="large">大</button>
+                <button class="small-btn" data-value="xlarge">特大</button>
+              </div>
+            </div>
+
+            <!-- Line Height -->
+            <div class="form-group">
+              <label class="form-label">行距</label>
+              <div class="small-btn-grid" id="lineHeightGrid">
+                <button class="small-btn" data-value="none">不變更</button>
+                <button class="small-btn" data-value="compact">緊湊</button>
+                <button class="small-btn active" data-value="normal">適中</button>
+                <button class="small-btn" data-value="relaxed">寬鬆</button>
+                <button class="small-btn" data-value="loose">特寬</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Export -->
+        <div id="step3" class="hidden">
+          <div class="export-section">
+            <div id="exportReady">
+              <h2>確認並輸出</h2>
+              <div class="summary-card" id="summaryCard"></div>
+              <div id="exportProgress" class="progress-info hidden">
+                <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+                <p id="progressText" class="progress-text"></p>
+              </div>
+              <button class="btn btn-primary btn-large" id="btnExport">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                下載 EPUB
+              </button>
+            </div>
+            <div id="exportComplete" class="hidden">
+              <svg viewBox="0 0 24 24" width="64" height="64" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor" class="complete-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <h2 style="font-size:24px;font-weight:500;color:var(--text-heading);margin-bottom:8px">編輯完成！</h2>
+              <p style="color:var(--text-muted);margin-bottom:8px">檔案已自動下載到你的裝置</p>
+              <p id="completeStats" class="complete-stats"></p>
+              <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px">
+                <button class="btn btn-primary" id="btnReset">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  編輯另一個檔案
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nav Buttons -->
+      <div class="nav-buttons" id="navButtons">
+        <button class="btn btn-secondary" id="btnPrev" style="visibility:hidden">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          上一步
+        </button>
+        <button class="btn btn-primary" id="btnNext" disabled>
+          下一步
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <footer class="site-footer">
+        <p>&copy; <span id="footer-year"></span> Kaoru Tsai. All Rights Reserved. | Contact: <a href="mailto:hello@helloruru.com">hello@helloruru.com</a></p>
+      </footer>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

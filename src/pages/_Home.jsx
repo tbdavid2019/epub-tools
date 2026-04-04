@@ -20,9 +20,9 @@ const tools = [
     path: '/txt-to-epub', color: 'rose',
   },
   {
-    id: 'epub-convert', name: 'EPUB 簡轉繁', category: 'text',
-    description: '將簡體中文 EPUB 電子書轉換為繁體中文，保留原有格式與排版。',
-    path: '/epub-convert', color: 'lavender',
+    id: 'epub-editor', name: 'EPUB 編輯器', category: 'text',
+    description: 'EPUB 電子書編輯工具：簡轉繁、台灣標點符號、字型替換、行距字級調整。',
+    path: '/epub-editor', color: 'lavender',
   },
   {
     id: 'post-writer', name: '社群貼文排版', category: 'text',

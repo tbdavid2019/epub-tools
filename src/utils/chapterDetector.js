@@ -143,24 +143,33 @@ function detectByPatterns(text) {
     /^[　\s]*(卷[零一二三四五六七八九十百千\d]+.*?)$/gm,
   ]
 
-  // 合併所有匹配
-  let matches = []
+  // 各 pattern 分開收集，選命中數最多的那組
+  const groups = []
   for (const pattern of patterns) {
     const found = [...text.matchAll(pattern)]
+    const group = []
     for (const match of found) {
-      // 取出整行：從 match.index 往前找換行、往後找換行
+      // 取出整行，排除超過 30 字的（正文不是標題）
       const lineStart = text.lastIndexOf('\n', match.index) + 1
       const lineEnd = text.indexOf('\n', match.index)
       const fullLine = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd).trim()
-
-      // 排除整行超過 30 字的（是正文不是章節標題）
       if (fullLine.length > 30) continue
 
-      matches.push({
+      group.push({
         title: match[1].trim(),
         index: match.index,
       })
     }
+    if (group.length >= 2) {
+      groups.push(group)
+    }
+  }
+
+  // 選命中數最多的 pattern 組，避免多種 pattern 混合導致誤判
+  let matches = []
+  if (groups.length > 0) {
+    groups.sort((a, b) => b.length - a.length)
+    matches = groups[0]
   }
 
   // 按位置排序

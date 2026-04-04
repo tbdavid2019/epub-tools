@@ -134,18 +134,26 @@ window.ChapterDetector = {
       /^[　\s]*(卷[零一二三四五六七八九十百千\d]+.*?)$/gm,
     ];
 
-    var matches = [];
+    // 各 pattern 分開收集，選命中數最多的那組
+    var groups = [];
     for (var p = 0; p < patterns.length; p++) {
       var found = Array.from(text.matchAll(patterns[p]));
+      var group = [];
       for (var f = 0; f < found.length; f++) {
-        // 取出整行，排除超過 30 字的（是正文不是章節標題）
         var lineStart = text.lastIndexOf('\n', found[f].index) + 1;
         var lineEnd = text.indexOf('\n', found[f].index);
         var fullLine = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd).trim();
         if (fullLine.length > 30) continue;
-
-        matches.push({ title: found[f][1].trim(), index: found[f].index });
+        group.push({ title: found[f][1].trim(), index: found[f].index });
       }
+      if (group.length >= 2) groups.push(group);
+    }
+
+    // 選命中數最多的 pattern 組
+    var matches = [];
+    if (groups.length > 0) {
+      groups.sort(function (a, b) { return b.length - a.length; });
+      matches = groups[0];
     }
 
     matches.sort(function (a, b) { return a.index - b.index; });

@@ -335,6 +335,9 @@ html.dark .icon-moon { display: none; }
 .site-footer { margin-top: 40px; padding: 32px 0; text-align: center; font-size: 14px; color: var(--text-muted); }
 .site-footer a { color: var(--rose); transition: opacity 0.3s; }
 .site-footer a:hover { opacity: 0.8; }
+.footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 12px; }
+.footer-link { font-size: 14px; color: var(--text-muted); transition: color 0.3s; }
+.footer-link:hover { color: var(--rose); }
 
 /* Spinner */
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

@@ -148,6 +148,14 @@ function detectByPatterns(text) {
   for (const pattern of patterns) {
     const found = [...text.matchAll(pattern)]
     for (const match of found) {
+      // 取出整行：從 match.index 往前找換行、往後找換行
+      const lineStart = text.lastIndexOf('\n', match.index) + 1
+      const lineEnd = text.indexOf('\n', match.index)
+      const fullLine = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd).trim()
+
+      // 排除整行超過 30 字的（是正文不是章節標題）
+      if (fullLine.length > 30) continue
+
       matches.push({
         title: match[1].trim(),
         index: match.index,

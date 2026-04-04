@@ -138,6 +138,12 @@ window.ChapterDetector = {
     for (var p = 0; p < patterns.length; p++) {
       var found = Array.from(text.matchAll(patterns[p]));
       for (var f = 0; f < found.length; f++) {
+        // 取出整行，排除超過 30 字的（是正文不是章節標題）
+        var lineStart = text.lastIndexOf('\n', found[f].index) + 1;
+        var lineEnd = text.indexOf('\n', found[f].index);
+        var fullLine = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd).trim();
+        if (fullLine.length > 30) continue;
+
         matches.push({ title: found[f][1].trim(), index: found[f].index });
       }
     }

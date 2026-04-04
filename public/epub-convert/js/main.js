@@ -19,6 +19,28 @@
     return getConverter()(text);
   }
 
+  // ── 台灣標點符號轉換 ──
+  var CJK = '[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\uff00-\uffef]';
+  var convertPunctuationEnabled = true;
+  function convertPunctuation(text) {
+    return text
+      .replace(/\.{3,}/g, '……')
+      .replace(/。{2,}/g, '……')
+      .replace(/\u201c/g, '「').replace(/\u201d/g, '」')
+      .replace(/\u2018/g, '『').replace(/\u2019/g, '』')
+      .replace(new RegExp('(' + CJK + '),', 'g'), '$1，')
+      .replace(new RegExp(',(' + CJK + ')', 'g'), '，$1')
+      .replace(new RegExp('(' + CJK + ')!', 'g'), '$1！')
+      .replace(new RegExp('!(' + CJK + ')', 'g'), '！$1')
+      .replace(new RegExp('(' + CJK + ')\\?', 'g'), '$1？')
+      .replace(new RegExp('\\?(' + CJK + ')', 'g'), '？$1')
+      .replace(new RegExp('(' + CJK + ');', 'g'), '$1；')
+      .replace(new RegExp('(' + CJK + '):', 'g'), '$1：')
+      .replace(new RegExp(':(' + CJK + ')', 'g'), '：$1')
+      .replace(new RegExp('(' + CJK + ')\\(', 'g'), '$1（')
+      .replace(new RegExp('\\)(' + CJK + ')', 'g'), '）$1');
+  }
+
   // ── Encoding Detection ──
   function detectBOM(bytes) {
     if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) return 'utf-8';
@@ -149,6 +171,12 @@
   });
 
   // ── Button Events ──
+  // Punctuation toggle
+  document.getElementById('togglePunctuation').addEventListener('click', function () {
+    convertPunctuationEnabled = !convertPunctuationEnabled;
+    this.className = 'toggle-switch ' + (convertPunctuationEnabled ? 'on' : 'off');
+  });
+
   btnRemoveFile.addEventListener('click', function () { if (!isProcessing) reset(); });
   btnCancel.addEventListener('click', function () { if (!isProcessing) reset(); });
   btnReset.addEventListener('click', reset);
@@ -197,6 +225,7 @@
           }
 
           var converted = convertToTraditional(content);
+          if (convertPunctuationEnabled) converted = convertPunctuation(converted);
 
           if (converted !== content) {
             convertedCount++;

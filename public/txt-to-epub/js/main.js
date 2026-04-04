@@ -13,6 +13,30 @@
   }
   function convertText(text) { return getConverter()(text); }
 
+  // ── 台灣標點符號轉換 ──
+  var CJK = '[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\uff00-\uffef]';
+  function convertPunctuation(text) {
+    return text
+      // 省略號統一（先處理，避免被後面的句號轉換影響）
+      .replace(/\.{3,}/g, '……')
+      .replace(/。{2,}/g, '……')
+      // 中國引號 → 台灣直角引號
+      .replace(/\u201c/g, '「').replace(/\u201d/g, '」')   // "" → 「」
+      .replace(/\u2018/g, '『').replace(/\u2019/g, '』')   // '' → 『』
+      // 半形標點 → 全形（僅在 CJK 文字旁）
+      .replace(new RegExp('(' + CJK + '),', 'g'), '$1，')
+      .replace(new RegExp(',(' + CJK + ')', 'g'), '，$1')
+      .replace(new RegExp('(' + CJK + ')!', 'g'), '$1！')
+      .replace(new RegExp('!(' + CJK + ')', 'g'), '！$1')
+      .replace(new RegExp('(' + CJK + ')\\?', 'g'), '$1？')
+      .replace(new RegExp('\\?(' + CJK + ')', 'g'), '？$1')
+      .replace(new RegExp('(' + CJK + ');', 'g'), '$1；')
+      .replace(new RegExp('(' + CJK + '):', 'g'), '$1：')
+      .replace(new RegExp(':(' + CJK + ')', 'g'), '：$1')
+      .replace(new RegExp('(' + CJK + ')\\(', 'g'), '$1（')
+      .replace(new RegExp('\\)(' + CJK + ')', 'g'), '）$1');
+  }
+
   // ── State ──
   var state = {
     step: 1,
@@ -26,6 +50,7 @@
     settings: {
       title: '', author: '',
       convertToTraditional: true,
+      convertPunctuation: true,
       writingMode: 'horizontal',
       fontFamily: 'noto-sans',
       fontSize: 'medium',
@@ -196,9 +221,11 @@
     $('inputTitle').value = state.settings.title;
     $('inputAuthor').value = state.settings.author;
 
-    // Convert toggle
+    // Convert toggles
     var toggleBtn = $('toggleConvert');
     toggleBtn.className = 'toggle-switch ' + (state.settings.convertToTraditional ? 'on' : 'off');
+    var punctBtn = $('togglePunctuation');
+    punctBtn.className = 'toggle-switch ' + (state.settings.convertPunctuation ? 'on' : 'off');
 
     // Writing mode
     $('modeHorizontal').classList.toggle('active', state.settings.writingMode === 'horizontal');
@@ -261,6 +288,11 @@
     this.className = 'toggle-switch ' + (state.settings.convertToTraditional ? 'on' : 'off');
   });
 
+  $('togglePunctuation').addEventListener('click', function () {
+    state.settings.convertPunctuation = !state.settings.convertPunctuation;
+    this.className = 'toggle-switch ' + (state.settings.convertPunctuation ? 'on' : 'off');
+  });
+
   $('modeHorizontal').addEventListener('click', function () {
     state.settings.writingMode = 'horizontal';
     $('modeHorizontal').classList.add('active');
@@ -320,6 +352,7 @@
       ['章節數', state.chapters.length + ' 章'],
       ['封面', state.coverBlob ? '已設定' : '無'],
       ['簡轉繁', state.settings.convertToTraditional ? '是' : '否'],
+      ['台灣標點', state.settings.convertPunctuation ? '是' : '否'],
       ['排版', state.settings.writingMode === 'vertical' ? '直排' : '橫排'],
       ['字型', fontName],
     ];
@@ -352,6 +385,20 @@
         }
         processedTitle = convertText(state.settings.title);
         if (processedAuthor) processedAuthor = convertText(processedAuthor);
+      }
+
+      if (state.settings.convertPunctuation) {
+        $('exportProgressText').textContent = '正在轉換標點符號...';
+        var src = processedChapters === state.chapters ? state.chapters : processedChapters;
+        processedChapters = [];
+        for (var j = 0; j < src.length; j++) {
+          processedChapters.push({
+            title: convertPunctuation(src[j].title),
+            content: convertPunctuation(src[j].content),
+          });
+        }
+        processedTitle = convertPunctuation(processedTitle);
+        if (processedAuthor) processedAuthor = convertPunctuation(processedAuthor);
       }
 
       // Generate filename
@@ -406,6 +453,7 @@
     state.settings.title = '';
     state.settings.author = '';
     state.settings.convertToTraditional = true;
+    state.settings.convertPunctuation = true;
     state.settings.writingMode = 'horizontal';
     state.settings.fontFamily = 'noto-sans';
     state.settings.fontSize = 'medium';

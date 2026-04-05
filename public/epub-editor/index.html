@@ -6,7 +6,7 @@
 <title>EPUB 編輯器｜簡轉繁・直排橫排・字型調整 | Hello Ruru Tools</title>
 <link rel="canonical" href="https://tools.helloruru.com/epub-editor/">
 <meta name="description" content="免費線上 EPUB 編輯器：簡體轉繁體、直排橫排切換、字型字級行距調整、標點符號轉換。全程瀏覽器本機處理，不上傳任何檔案，保護個人隱私。">
-<meta name="keywords" content="EPUB編輯,簡轉繁,直排,橫排,電子書,EPUB工具,OpenCC,繁化姬,HelloRuru">
+<meta name="keywords" content="EPUB編輯,簡轉繁,直排,橫排,電子書,EPUB工具,OpenCC,HelloRuru">
 <meta name="robots" content="index, follow">
 <meta name="author" content="HelloRuru">
 <!-- Open Graph -->
@@ -38,13 +38,13 @@
   "browserRequirements": "Requires JavaScript",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "TWD" },
   "featureList": [
-    "簡體中文轉繁體中文（OpenCC 繁化姬引擎）",
+    "簡體中文轉繁體中文（OpenCC 引擎）",
     "標點符號轉換（簡體標點轉繁體標點）",
     "直排/橫排切換",
-    "字型風格設定",
+    "字型風格設定（思源黑體、思源宋體、原俠正楷、jf 粉圓）",
     "字級大小調整",
     "行距調整",
-    "自動編碼偵測（UTF-8/GBK/Big5）",
+    "封面圖片新增/替換/移除",
     "全程瀏覽器本機處理，檔案不上傳"
   ],
   "publisher": { "@type": "Organization", "name": "HelloRuru", "url": "https://helloruru.com" }
@@ -98,6 +98,7 @@
       <p class="drop-text">拖放 EPUB 到這裡</p>
       <p class="drop-hint">或點擊選擇檔案</p>
       <p class="drop-limit">建議 50MB 以下，超過可能較慢</p>
+      <p class="drop-limit" style="font-size:11px">桌機可處理較大檔案，手機建議 20MB 以下</p>
     </label>
 
     <!-- File info (hidden until file selected) -->
@@ -123,8 +124,8 @@
     </div>
 
     <div class="instructions">
-      <p>支援功能：簡轉繁、標點符號轉換、字型風格、字級行距、直排/橫排切換</p>
-      <p>建議檔案大小：50MB 以下（瀏覽器記憶體限制）</p>
+      <p>支援功能：簡轉繁、標點符號轉換、字型風格、字級行距、直排/橫排切換、封面新增替換</p>
+      <p>建議檔案大小：桌機 50MB 以下，手機 20MB 以下（瀏覽器記憶體限制）</p>
     </div>
   </section>
 
@@ -148,7 +149,7 @@
       <div class="setting-row">
         <div>
           <p class="setting-label">簡體轉繁體</p>
-          <p class="setting-desc">使用 OpenCC 繁化姬引擎，含詞彙轉換（如「軟件」→「軟體」）</p>
+          <p class="setting-desc">使用 OpenCC 引擎，含詞彙轉換（如「軟件」→「軟體」）</p>
         </div>
         <button id="toggle-convert" class="toggle active" aria-pressed="true">
           <span class="toggle-knob"></span>

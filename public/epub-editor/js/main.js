@@ -1,307 +1,630 @@
 /**
- * EPUB 編輯器 — 主程式
- * 三步驟：上傳 → 設定 → 輸出
+ * EPUB 編輯器 — main.js
+ * 功能：上傳 EPUB → 簡轉繁 / 標點轉換 / 排版設定 → 下載
+ * 相依：JSZip (CDN), OpenCC (CDN)
  */
 
-(function () {
-  'use strict';
+/* ========== 全域狀態 ========== */
+const state = {
+  file: null,           // 原始 File 物件
+  zip: null,            // JSZip 實例（解壓後）
+  converter: null,      // OpenCC converter
+  resultBlob: null,     // 處理完成的 blob
+  resultFilename: '',   // 輸出檔名
+  epubMeta: {},         // 解析到的 metadata
 
-  // ── OpenCC ──
-  var converter = null;
-  function getConverter() {
-    if (!converter) converter = OpenCC.Converter({ from: 'cn', to: 'twp' });
-    return converter;
+  // 設定
+  settings: {
+    convertToTraditional: true,
+    convertPunctuation: true,
+    writingMode: 'horizontal',
+    fontFamily: 'sans',
+    fontSize: 'medium',
+    lineHeight: 'normal',
   }
-  function convertToTraditional(text) { return getConverter()(text); }
+};
 
-  // ── 台灣標點符號轉換 ──
-  var CJK = '[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\uff00-\uffef]';
-  function convertPunctuation(text) {
-    return text
-      .replace(/\.{3,}/g, '\u2026\u2026')
-      .replace(/\u3002{2,}/g, '\u2026\u2026')
-      .replace(/\u201c/g, '\u300c').replace(/\u201d/g, '\u300d')
-      .replace(/\u2018/g, '\u300e').replace(/\u2019/g, '\u300f')
-      .replace(new RegExp('(' + CJK + '),', 'g'), '$1\uff0c')
-      .replace(new RegExp(',(' + CJK + ')', 'g'), '\uff0c$1')
-      .replace(new RegExp('(' + CJK + ')!', 'g'), '$1\uff01')
-      .replace(new RegExp('!(' + CJK + ')', 'g'), '\uff01$1')
-      .replace(new RegExp('(' + CJK + ')\\?', 'g'), '$1\uff1f')
-      .replace(new RegExp('\\?(' + CJK + ')', 'g'), '\uff1f$1')
-      .replace(new RegExp('(' + CJK + ');', 'g'), '$1\uff1b')
-      .replace(new RegExp('(' + CJK + '):', 'g'), '$1\uff1a')
-      .replace(new RegExp(':(' + CJK + ')', 'g'), '\uff1a$1')
-      .replace(new RegExp('(' + CJK + ')\\(', 'g'), '$1\uff08')
-      .replace(new RegExp('\\)(' + CJK + ')', 'g'), '\uff09$1');
-  }
+/* ========== 常數 ========== */
+const TEXT_EXTENSIONS = ['.xhtml', '.html', '.htm', '.xml', '.ncx', '.opf', '.css'];
+const CONTENT_EXTENSIONS = ['.xhtml', '.html', '.htm'];
 
-  // ── Encoding Detection ──
-  function detectEncoding(buffer) {
-    var bytes = new Uint8Array(buffer);
-    if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) return 'utf-8';
-    if (bytes[0] === 0xFF && bytes[1] === 0xFE) return 'utf-16le';
-    if (bytes[0] === 0xFE && bytes[1] === 0xFF) return 'utf-16be';
-    var i = 0, invalid = 0, max = Math.min(bytes.length, 10000);
-    while (i < max) {
-      var b = bytes[i];
-      if (b <= 0x7F) { i++; }
-      else if ((b & 0xE0) === 0xC0) { if (i+1 >= max || (bytes[i+1] & 0xC0) !== 0x80) { invalid++; i++; continue; } i += 2; }
-      else if ((b & 0xF0) === 0xE0) { if (i+2 >= max || (bytes[i+1] & 0xC0) !== 0x80 || (bytes[i+2] & 0xC0) !== 0x80) { invalid++; i++; continue; } i += 3; }
-      else if ((b & 0xF8) === 0xF0) { if (i+3 >= max || (bytes[i+1] & 0xC0) !== 0x80 || (bytes[i+2] & 0xC0) !== 0x80 || (bytes[i+3] & 0xC0) !== 0x80) { invalid++; i++; continue; } i += 4; }
-      else { invalid++; i++; }
-    }
-    if (invalid < max * 0.01) return 'utf-8';
-    var gbk = 0, total = 0;
-    for (var j = 0; j < max - 1; j++) {
-      if (bytes[j] >= 0x81 && bytes[j] <= 0xFE) {
-        total++;
-        if (bytes[j+1] >= 0x40 && bytes[j+1] <= 0xFE && bytes[j+1] !== 0x7F) { gbk++; j++; }
-      }
-    }
-    return (total > 0 && (gbk / total) >= 0.7) ? 'gbk' : 'utf-8';
-  }
+const SIZE_MAP = {
+  small: '0.9em',
+  medium: '1em',
+  large: '1.15em',
+  xlarge: '1.3em',
+};
 
-  // ── CSS 注入邏輯 ──
-  var FONT_MAP = {
-    none: '',
-    sans: 'font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif !important;',
-    serif: 'font-family: "Noto Serif TC", "Source Han Serif TC", serif !important;',
-  };
-  var SIZE_MAP = {
-    none: '', small: 'font-size: 14px !important;', medium: 'font-size: 16px !important;',
-    large: 'font-size: 18px !important;', xlarge: 'font-size: 22px !important;',
-  };
-  var LH_MAP = {
-    none: '', compact: 'line-height: 1.4 !important;', normal: 'line-height: 1.8 !important;',
-    relaxed: 'line-height: 2.0 !important;', loose: 'line-height: 2.4 !important;',
-  };
+const LINE_HEIGHT_MAP = {
+  compact: '1.5',
+  normal: '1.8',
+  relaxed: '2.0',
+  loose: '2.3',
+};
 
-  function buildInjectedCSS(settings) {
-    var rules = [];
-    if (settings.fontFamily !== 'none') rules.push(FONT_MAP[settings.fontFamily]);
-    if (settings.fontSize !== 'none') rules.push(SIZE_MAP[settings.fontSize]);
-    if (settings.lineHeight !== 'none') rules.push(LH_MAP[settings.lineHeight]);
-    if (rules.length === 0) return '';
-    return '\n/* HelloRuru EPUB Editor */\nbody, p, div, span, li, td, th, h1, h2, h3, h4, h5, h6 { ' + rules.join(' ') + ' }\n';
-  }
+const FONT_MAP = {
+  sans: { family: '"Noto Sans TC", "Microsoft JhengHei", sans-serif', name: '黑體' },
+  serif: { family: '"Noto Serif TC", "PMingLiU", serif', name: '明體' },
+  kai: { family: '"LXGW WenKai TC", "DFKai-SB", "BiauKai", serif', name: '楷體' },
+  default: { family: 'serif', name: '閱讀器預設' },
+};
 
-  // ── State ──
-  var state = {
-    step: 1,
-    file: null,
-    settings: {
-      convertToTraditional: true,
-      convertPunctuation: true,
-      fontFamily: 'sans',
-      fontSize: 'medium',
-      lineHeight: 'normal',
-    },
-  };
+// 簡體標點 → 繁體標點
+const PUNCTUATION_MAP = {
+  '\u201C': '\u300C',  // " → 「
+  '\u201D': '\u300D',  // " → 」
+  '\u2018': '\u300E',  // ' → 『
+  '\u2019': '\u300F',  // ' → 』
+  '\u3001': '\u3001',  // 、（相同，保留）
+  '\u3002': '\u3002',  // 。（相同，保留）
+};
 
-  var stepLabels = ['\u4e0a\u50b3\u6a94\u6848', '\u8abf\u6574\u8a2d\u5b9a', '\u8f38\u51fa EPUB'];
-  var $ = function (id) { return document.getElementById(id); };
+// 最大建議檔案大小（50MB）
+const MAX_RECOMMENDED_SIZE = 50 * 1024 * 1024;
 
-  // ── Step Navigation ──
-  function renderStepIndicator() {
-    var html = '';
-    for (var s = 1; s <= 3; s++) {
-      var cls = state.step >= s ? 'active' : 'inactive';
-      html += '<div class="step-dot ' + cls + '">' + s + '</div>';
-      if (s < 3) html += '<div class="step-line ' + (state.step > s ? 'active' : 'inactive') + '"></div>';
-    }
-    $('stepIndicator').innerHTML = html;
-    $('stepLabel').textContent = stepLabels[state.step - 1];
-  }
+/* ========== DOM 元素 ========== */
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
 
-  function showStep(n) {
-    state.step = n;
-    for (var s = 1; s <= 3; s++) {
-      $('step' + s).classList.toggle('hidden', s !== n);
-    }
-    $('btnPrev').style.visibility = n > 1 ? 'visible' : 'hidden';
-    $('btnNext').style.display = n < 3 ? '' : 'none';
-    $('btnNext').disabled = (n === 1 && !state.file);
-    $('navButtons').style.display = n <= 2 ? '' : 'none';
-    $('instructionCard').style.display = n === 1 ? '' : 'none';
-    if (n === 3) renderSummary();
-    renderStepIndicator();
-  }
+/* ========== 工具函數 ========== */
+function showToast(message, type = 'info') {
+  const container = $('#toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
 
-  $('btnNext').addEventListener('click', function () { if (state.step < 3) showStep(state.step + 1); });
-  $('btnPrev').addEventListener('click', function () { if (state.step > 1) showStep(state.step - 1); });
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+}
 
-  // ── Step 1: Upload ──
-  var dropZone = $('dropZone');
-  var fileInput = $('fileInput');
-  dropZone.addEventListener('dragover', function (e) { e.preventDefault(); dropZone.classList.add('dragging'); });
-  dropZone.addEventListener('dragleave', function (e) { e.preventDefault(); dropZone.classList.remove('dragging'); });
-  dropZone.addEventListener('drop', function (e) {
-    e.preventDefault(); dropZone.classList.remove('dragging');
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+function showStep(stepId) {
+  ['step-upload', 'step-settings', 'step-processing', 'step-complete'].forEach(id => {
+    const el = $(`#${id}`);
+    if (el) el.hidden = (id !== stepId);
   });
-  fileInput.addEventListener('change', function () {
-    if (fileInput.files[0]) handleFile(fileInput.files[0]);
-    fileInput.value = '';
-  });
+}
 
-  function handleFile(file) {
-    if (!file.name.toLowerCase().endsWith('.epub')) { alert('\u8acb\u4e0a\u50b3 .epub \u683c\u5f0f\u7684\u6a94\u6848'); return; }
-    state.file = file;
-    $('fileName').textContent = file.name;
-    $('fileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
-    $('fileInfo').classList.remove('hidden');
-    $('btnNext').disabled = false;
-    showStep(2);
+function updateProgress(percent, text) {
+  const fill = $('#progress-fill');
+  const textEl = $('#progress-text');
+  if (fill) fill.style.width = `${percent}%`;
+  if (textEl) textEl.textContent = text;
+}
+
+/* ========== 編碼偵測 ========== */
+function detectBOM(bytes) {
+  if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) return 'utf-8';
+  if (bytes[0] === 0xFF && bytes[1] === 0xFE) return 'utf-16le';
+  if (bytes[0] === 0xFE && bytes[1] === 0xFF) return 'utf-16be';
+  return null;
+}
+
+function isValidUTF8(bytes) {
+  let i = 0;
+  let invalidCount = 0;
+  const maxCheck = Math.min(bytes.length, 10000);
+  while (i < maxCheck) {
+    const b = bytes[i];
+    if (b <= 0x7F) { i++; }
+    else if ((b & 0xE0) === 0xC0) {
+      if (i + 1 >= maxCheck || (bytes[i+1] & 0xC0) !== 0x80) { invalidCount++; i++; continue; }
+      i += 2;
+    } else if ((b & 0xF0) === 0xE0) {
+      if (i + 2 >= maxCheck || (bytes[i+1] & 0xC0) !== 0x80 || (bytes[i+2] & 0xC0) !== 0x80) { invalidCount++; i++; continue; }
+      i += 3;
+    } else if ((b & 0xF8) === 0xF0) {
+      if (i + 3 >= maxCheck || (bytes[i+1] & 0xC0) !== 0x80 || (bytes[i+2] & 0xC0) !== 0x80 || (bytes[i+3] & 0xC0) !== 0x80) { invalidCount++; i++; continue; }
+      i += 4;
+    } else { invalidCount++; i++; }
   }
+  return invalidCount < maxCheck * 0.01;
+}
 
-  // ── Step 2: Settings ──
-  function bindOptionGrid(containerId, settingKey) {
-    var container = $(containerId);
-    container.querySelectorAll('.option-btn, .small-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        container.querySelectorAll('.option-btn, .small-btn').forEach(function (b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        state.settings[settingKey] = btn.dataset.font || btn.dataset.value;
-      });
+function detectGBKScore(bytes) {
+  let pairs = 0, total = 0;
+  const maxCheck = Math.min(bytes.length, 10000);
+  for (let i = 0; i < maxCheck - 1; i++) {
+    if (bytes[i] >= 0x81 && bytes[i] <= 0xFE) {
+      total++;
+      if (bytes[i+1] >= 0x40 && bytes[i+1] <= 0xFE && bytes[i+1] !== 0x7F) { pairs++; i++; }
+    }
+  }
+  return total === 0 ? 0 : Math.round((pairs / total) * 100);
+}
+
+function detectEncoding(uint8Array) {
+  const bom = detectBOM(uint8Array);
+  if (bom) return bom;
+  if (isValidUTF8(uint8Array)) return 'utf-8';
+  if (detectGBKScore(uint8Array) >= 70) return 'gbk';
+  return 'utf-8';
+}
+
+function decodeContent(uint8Array) {
+  const encoding = detectEncoding(uint8Array);
+  try {
+    return new TextDecoder(encoding, { fatal: false }).decode(uint8Array);
+  } catch {
+    return new TextDecoder('utf-8', { fatal: false }).decode(uint8Array);
+  }
+}
+
+/* ========== OpenCC 初始化 ========== */
+function getConverter() {
+  if (state.converter) return state.converter;
+  if (typeof OpenCC === 'undefined') {
+    throw new Error('OpenCC 載入失敗，請檢查網路連線後重新整理頁面');
+  }
+  // opencc-js UMD: OpenCC.Converter
+  state.converter = OpenCC.Converter({ from: 'cn', to: 'twp' });
+  return state.converter;
+}
+
+/* ========== 標點符號轉換 ========== */
+function convertPunctuation(text) {
+  let result = text;
+  for (const [from, to] of Object.entries(PUNCTUATION_MAP)) {
+    if (from !== to) {
+      result = result.split(from).join(to);
+    }
+  }
+  return result;
+}
+
+/* ========== EPUB Metadata 解析 ========== */
+function parseEpubMetadata(zip) {
+  const meta = { title: '', author: '', language: '', fileCount: 0, textFileCount: 0 };
+  const allFiles = Object.keys(zip.files);
+  meta.fileCount = allFiles.filter(f => !zip.files[f].dir).length;
+  meta.textFileCount = allFiles.filter(f => {
+    const ext = f.toLowerCase().slice(f.lastIndexOf('.'));
+    return CONTENT_EXTENSIONS.includes(ext);
+  }).length;
+
+  // 找 content.opf
+  const opfFile = allFiles.find(f => f.toLowerCase().endsWith('.opf'));
+  if (opfFile) {
+    return zip.files[opfFile].async('string').then(content => {
+      const titleMatch = content.match(/<dc:title[^>]*>([^<]+)<\/dc:title>/i);
+      const authorMatch = content.match(/<dc:creator[^>]*>([^<]+)<\/dc:creator>/i);
+      const langMatch = content.match(/<dc:language[^>]*>([^<]+)<\/dc:language>/i);
+      if (titleMatch) meta.title = titleMatch[1].trim();
+      if (authorMatch) meta.author = authorMatch[1].trim();
+      if (langMatch) meta.language = langMatch[1].trim();
+      return meta;
     });
   }
-  bindOptionGrid('fontGrid', 'fontFamily');
-  bindOptionGrid('fontSizeGrid', 'fontSize');
-  bindOptionGrid('lineHeightGrid', 'lineHeight');
+  return Promise.resolve(meta);
+}
 
-  $('toggleConvert').addEventListener('click', function () {
-    state.settings.convertToTraditional = !state.settings.convertToTraditional;
-    this.className = 'toggle-switch ' + (state.settings.convertToTraditional ? 'on' : 'off');
-  });
-  $('togglePunctuation').addEventListener('click', function () {
-    state.settings.convertPunctuation = !state.settings.convertPunctuation;
-    this.className = 'toggle-switch ' + (state.settings.convertPunctuation ? 'on' : 'off');
-  });
+/* ========== CSS 注入 ========== */
+function generateStyleOverrides() {
+  const s = state.settings;
+  const isVertical = s.writingMode === 'vertical';
+  const font = FONT_MAP[s.fontFamily] || FONT_MAP.default;
+  const fontSize = SIZE_MAP[s.fontSize] || SIZE_MAP.medium;
+  const lineHeight = LINE_HEIGHT_MAP[s.lineHeight] || LINE_HEIGHT_MAP.normal;
 
-  // ── Step 3: Summary & Export ──
-  function renderSummary() {
-    var fontLabels = { none: '\u4e0d\u8b8a\u66f4', sans: '\u9ed1\u9ad4', serif: '\u660e\u9ad4' };
-    var sizeLabels = { none: '\u4e0d\u8b8a\u66f4', small: '\u5c0f', medium: '\u4e2d', large: '\u5927', xlarge: '\u7279\u5927' };
-    var lhLabels = { none: '\u4e0d\u8b8a\u66f4', compact: '\u7dca\u6e4a', normal: '\u9069\u4e2d', relaxed: '\u5bec\u9b06', loose: '\u7279\u5bec' };
-    var items = [
-      ['\u6a94\u6848', state.file ? state.file.name : ''],
-      ['\u7c21\u8f49\u7e41', state.settings.convertToTraditional ? '\u662f' : '\u5426'],
-      ['\u53f0\u7063\u6a19\u9ede', state.settings.convertPunctuation ? '\u662f' : '\u5426'],
-      ['\u5b57\u578b', fontLabels[state.settings.fontFamily]],
-      ['\u5b57\u7d1a', sizeLabels[state.settings.fontSize]],
-      ['\u884c\u8ddd', lhLabels[state.settings.lineHeight]],
-    ];
-    var html = '';
-    for (var i = 0; i < items.length; i++) {
-      html += '<div class="summary-row"><span class="summary-label">' + items[i][0] + '</span><span class="summary-value">' + items[i][1] + '</span></div>';
-    }
-    $('summaryCard').innerHTML = html;
+  let css = '\n/* === HelloRuru EPUB Editor 樣式覆蓋 === */\n';
+
+  if (s.fontFamily !== 'default') {
+    css += `body { font-family: ${font.family}; }\n`;
+  }
+  css += `body { font-size: ${fontSize}; line-height: ${lineHeight}; }\n`;
+
+  if (isVertical) {
+    css += `body {
+  writing-mode: vertical-rl;
+  -webkit-writing-mode: vertical-rl;
+  -epub-writing-mode: vertical-rl;
+  text-orientation: mixed;
+}\n`;
   }
 
-  function setProgress(percent, text) {
-    $('progressFill').style.width = percent + '%';
-    $('progressText').textContent = text;
-  }
+  return css;
+}
 
-  $('btnExport').addEventListener('click', async function () {
-    if (!state.file) return;
-    $('btnExport').disabled = true;
-    $('btnExport').textContent = '\u8655\u7406\u4e2d...';
-    $('exportProgress').classList.remove('hidden');
-    $('navButtons').style.display = 'none';
-    setProgress(5, '\u8b80\u53d6 EPUB...');
+function injectStyleIntoCSS(zip) {
+  const overrides = generateStyleOverrides();
+  const cssFiles = Object.keys(zip.files).filter(f =>
+    f.toLowerCase().endsWith('.css') && !zip.files[f].dir
+  );
 
-    try {
-      var zip = await JSZip.loadAsync(state.file);
-      var totalFiles = Object.keys(zip.files).length;
-      var processedFiles = 0, totalChars = 0, convertedCount = 0;
-      var textExts = ['.xhtml', '.html', '.htm', '.xml', '.ncx', '.opf'];
-      var cssExts = ['.css'];
-      var injectedCSS = buildInjectedCSS(state.settings);
+  const promises = cssFiles.map(async (filename) => {
+    const content = await zip.files[filename].async('string');
+    // 在 CSS 末尾附加覆蓋樣式
+    zip.file(filename, content + overrides);
+  });
 
-      for (var filename in zip.files) {
-        var zipEntry = zip.files[filename];
-        if (zipEntry.dir) { processedFiles++; continue; }
-        var ext = filename.toLowerCase().slice(filename.lastIndexOf('.'));
+  // 如果沒有 CSS 檔案，找 XHTML 注入 <style>
+  if (cssFiles.length === 0) {
+    const xhtmlFiles = Object.keys(zip.files).filter(f => {
+      const ext = f.toLowerCase().slice(f.lastIndexOf('.'));
+      return CONTENT_EXTENSIONS.includes(ext) && !zip.files[f].dir;
+    });
 
-        if (textExts.indexOf(ext) !== -1) {
-          setProgress(10 + Math.floor((processedFiles / totalFiles) * 75), '\u8655\u7406\uff1a' + filename.split('/').pop());
-          var uint8 = await zipEntry.async('uint8array');
-          var enc = detectEncoding(uint8.buffer);
-          var content;
-          try { content = new TextDecoder(enc).decode(uint8); }
-          catch (e) { content = new TextDecoder('utf-8').decode(uint8); }
-
-          var result = content;
-          if (state.settings.convertToTraditional) result = convertToTraditional(result);
-          if (state.settings.convertPunctuation) result = convertPunctuation(result);
-
-          if (injectedCSS && (ext === '.xhtml' || ext === '.html' || ext === '.htm')) {
-            var styleTag = '<style type="text/css">' + injectedCSS + '</style>';
-            if (result.indexOf('</head>') !== -1) {
-              result = result.replace('</head>', styleTag + '\n</head>');
-            }
+    xhtmlFiles.forEach(filename => {
+      promises.push(
+        zip.files[filename].async('string').then(content => {
+          const styleTag = `<style>${overrides}</style>`;
+          if (content.includes('</head>')) {
+            content = content.replace('</head>', styleTag + '</head>');
+          } else if (content.includes('<body')) {
+            content = content.replace('<body', styleTag + '<body');
           }
-          if (result !== content) { convertedCount++; totalChars += content.length; }
-          zip.file(filename, result);
-        }
+          zip.file(filename, content);
+        })
+      );
+    });
+  }
 
-        if (cssExts.indexOf(ext) !== -1 && injectedCSS) {
-          var cssContent = await zipEntry.async('string');
-          zip.file(filename, cssContent + injectedCSS);
+  return Promise.all(promises);
+}
+
+/* ========== OPF spine 方向修改 ========== */
+function updateSpineDirection(zip) {
+  const isVertical = state.settings.writingMode === 'vertical';
+  const opfFile = Object.keys(zip.files).find(f => f.toLowerCase().endsWith('.opf'));
+  if (!opfFile) return Promise.resolve();
+
+  return zip.files[opfFile].async('string').then(content => {
+    // 更新 spine 的 page-progression-direction
+    if (isVertical) {
+      if (content.includes('page-progression-direction')) {
+        content = content.replace(/page-progression-direction="[^"]*"/, 'page-progression-direction="rtl"');
+      } else {
+        content = content.replace(/<spine([^>]*)>/, '<spine$1 page-progression-direction="rtl">');
+      }
+    } else {
+      // 橫排：移除 rtl 或改成 ltr
+      content = content.replace(/\s*page-progression-direction="rtl"/, '');
+    }
+    zip.file(opfFile, content);
+  });
+}
+
+/* ========== 核心處理流程 ========== */
+async function processEpub() {
+  const { file, settings } = state;
+  if (!file) return;
+
+  showStep('step-processing');
+  updateProgress(0, '讀取 EPUB...');
+
+  try {
+    // 1. 解壓
+    updateProgress(5, '解壓 EPUB 檔案...');
+    const zip = await JSZip.loadAsync(file);
+    state.zip = zip;
+
+    const allFiles = Object.keys(zip.files).filter(f => !zip.files[f].dir);
+    const textFiles = allFiles.filter(f => {
+      const ext = f.toLowerCase().slice(f.lastIndexOf('.'));
+      return TEXT_EXTENSIONS.includes(ext);
+    });
+
+    let totalProcessed = 0;
+    let totalCharsConverted = 0;
+    let converter = null;
+
+    // 2. 初始化 OpenCC（如果需要）
+    if (settings.convertToTraditional) {
+      updateProgress(8, '載入繁化姬引擎...');
+      try {
+        converter = getConverter();
+      } catch (err) {
+        showToast('OpenCC 載入失敗：' + err.message, 'error');
+        showStep('step-settings');
+        return;
+      }
+    }
+
+    // 3. 逐檔處理文字
+    for (let i = 0; i < textFiles.length; i++) {
+      const filename = textFiles[i];
+      const shortName = filename.split('/').pop();
+      const progress = 10 + Math.floor((i / textFiles.length) * 60);
+      updateProgress(progress, `處理中：${shortName}`);
+
+      const uint8Array = await zip.files[filename].async('uint8array');
+      let content = decodeContent(uint8Array);
+      let modified = false;
+
+      // 簡轉繁
+      if (settings.convertToTraditional && converter) {
+        const ext = filename.toLowerCase().slice(filename.lastIndexOf('.'));
+        if (CONTENT_EXTENSIONS.includes(ext) || ext === '.ncx' || ext === '.opf') {
+          const converted = converter(content);
+          if (converted !== content) {
+            totalCharsConverted += content.length;
+            content = converted;
+            modified = true;
+          }
         }
-        processedFiles++;
       }
 
-      setProgress(90, '\u6253\u5305 EPUB...');
-      var newEpub = await zip.generateAsync({
-        type: 'blob', mimeType: 'application/epub+zip',
-        compression: 'DEFLATE', compressionOptions: { level: 9 }
-      });
+      // 標點符號轉換（只對內容檔案做）
+      if (settings.convertPunctuation) {
+        const ext = filename.toLowerCase().slice(filename.lastIndexOf('.'));
+        if (CONTENT_EXTENSIONS.includes(ext)) {
+          const punctuated = convertPunctuation(content);
+          if (punctuated !== content) {
+            content = punctuated;
+            modified = true;
+          }
+        }
+      }
 
-      var outName = state.file.name.replace(/\.epub$/i, '');
-      if (state.settings.convertToTraditional) outName = convertToTraditional(outName);
-      saveAs(newEpub, outName + '.epub');
+      if (modified) {
+        zip.file(filename, content);
+        totalProcessed++;
+      }
 
-      $('completeStats').textContent = '\u5171\u8655\u7406 ' + convertedCount + ' \u500b\u6a94\u6848\uff0c\u7d04 ' + (totalChars / 10000).toFixed(1) + ' \u842c\u5b57';
-      setProgress(100, '\u5b8c\u6210\uff01');
-      $('exportReady').classList.add('hidden');
-      $('exportComplete').classList.remove('hidden');
-    } catch (error) {
-      console.error('\u8655\u7406\u5931\u6557:', error);
-      alert('\u8655\u7406\u5931\u6557\uff1a' + error.message);
-      $('btnExport').disabled = false;
-      $('btnExport').textContent = '\u4e0b\u8f09 EPUB';
-      $('exportProgress').classList.add('hidden');
+      // 讓 UI 有機會更新（每 10 個檔案 yield 一次）
+      if (i % 10 === 0) {
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+
+    // 4. 注入排版樣式
+    updateProgress(75, '套用排版設定...');
+    await injectStyleIntoCSS(zip);
+
+    // 5. 更新 OPF spine direction
+    updateProgress(80, '更新排版方向...');
+    await updateSpineDirection(zip);
+
+    // 6. 壓縮輸出
+    updateProgress(85, '重新打包 EPUB...');
+
+    // EPUB 規格：mimetype 必須是第一個檔案且不壓縮
+    // JSZip 沒有保證順序的好方法，但大多數閱讀器能容忍
+    // 確保 mimetype 存在
+    if (!zip.files['mimetype']) {
+      zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
+    }
+
+    const blob = await zip.generateAsync({
+      type: 'blob',
+      mimeType: 'application/epub+zip',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 6 }
+    }, (metadata) => {
+      const p = 85 + Math.floor(metadata.percent * 0.15);
+      updateProgress(p, '打包中... ' + Math.floor(metadata.percent) + '%');
+    });
+
+    // 7. 生成檔名
+    const originalName = file.name.replace(/\.epub$/i, '');
+    let outputName = originalName;
+    if (settings.convertToTraditional && converter) {
+      try { outputName = converter(originalName); } catch { /* 用原名 */ }
+    }
+
+    const suffixes = [];
+    if (settings.convertToTraditional) suffixes.push('繁');
+    if (settings.writingMode === 'vertical') suffixes.push('直排');
+    if (suffixes.length > 0) {
+      outputName += '（' + suffixes.join('・') + '）';
+    }
+
+    state.resultBlob = blob;
+    state.resultFilename = outputName + '.epub';
+
+    // 8. 自動下載
+    downloadBlob(state.resultBlob, state.resultFilename);
+
+    // 9. 顯示完成
+    updateProgress(100, '完成！');
+    const statsText = [];
+    if (totalProcessed > 0) statsText.push(`轉換了 ${totalProcessed} 個檔案`);
+    if (totalCharsConverted > 0) statsText.push(`約 ${(totalCharsConverted / 10000).toFixed(1)} 萬字`);
+    if (statsText.length === 0) statsText.push('已套用排版設定');
+
+    $('#complete-stats').textContent = statsText.join('，');
+    showStep('step-complete');
+    showToast('處理完成，檔案已下載！', 'success');
+
+  } catch (err) {
+    console.error('處理失敗:', err);
+    showToast('處理失敗：' + (err.message || '未知錯誤'), 'error');
+    showStep('step-settings');
+  }
+}
+
+/* ========== 下載 ========== */
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // 延遲釋放，避免下載中斷
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+/* ========== 檔案處理 ========== */
+async function handleFile(file) {
+  if (!file) return;
+
+  if (!file.name.toLowerCase().endsWith('.epub')) {
+    showToast('請上傳 .epub 格式的檔案', 'error');
+    return;
+  }
+
+  if (file.size > MAX_RECOMMENDED_SIZE) {
+    showToast(`檔案較大（${formatFileSize(file.size)}），處理時間可能較長`, 'info');
+  }
+
+  state.file = file;
+
+  // 顯示檔案資訊
+  $('#file-name').textContent = file.name;
+  $('#file-size').textContent = formatFileSize(file.size);
+  $('#file-info').hidden = false;
+  $('#drop-zone').style.display = 'none';
+
+  // 預先解析 metadata
+  try {
+    const zip = await JSZip.loadAsync(file);
+    const meta = await parseEpubMetadata(zip);
+    state.epubMeta = meta;
+
+    const infoLines = [];
+    if (meta.title) infoLines.push(`書名：${meta.title}`);
+    if (meta.author) infoLines.push(`作者：${meta.author}`);
+    if (meta.language) infoLines.push(`語言：${meta.language}`);
+    infoLines.push(`檔案數：${meta.fileCount} 個（${meta.textFileCount} 個內容檔）`);
+
+    $('#epub-info').innerHTML = infoLines.join('<br>');
+    showStep('step-settings');
+  } catch (err) {
+    console.error('EPUB 解析失敗:', err);
+    showToast('無法解析此 EPUB 檔案，請確認檔案是否損壞', 'error');
+    resetFile();
+  }
+}
+
+function resetFile() {
+  state.file = null;
+  state.zip = null;
+  state.resultBlob = null;
+  state.resultFilename = '';
+  state.epubMeta = {};
+
+  $('#file-info').hidden = true;
+  $('#drop-zone').style.display = '';
+  $('#epub-info').innerHTML = '';
+  const fileInput = $('#file-input');
+  if (fileInput) fileInput.value = '';
+  showStep('step-upload');
+}
+
+/* ========== 事件綁定 ========== */
+function initEvents() {
+  // 檔案上傳
+  const fileInput = $('#file-input');
+  const dropZone = $('#drop-zone');
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.add('dragging');
+  });
+
+  dropZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.remove('dragging');
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.remove('dragging');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  // 移除檔案
+  $('#btn-remove-file').addEventListener('click', resetFile);
+
+  // Toggle 開關
+  $('#toggle-convert').addEventListener('click', function() {
+    this.classList.toggle('active');
+    const isActive = this.classList.contains('active');
+    this.setAttribute('aria-pressed', isActive);
+    state.settings.convertToTraditional = isActive;
+  });
+
+  $('#toggle-punctuation').addEventListener('click', function() {
+    this.classList.toggle('active');
+    const isActive = this.classList.contains('active');
+    this.setAttribute('aria-pressed', isActive);
+    state.settings.convertPunctuation = isActive;
+  });
+
+  // 排版方向
+  $$('[data-writing]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('[data-writing]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.settings.writingMode = btn.dataset.writing;
+    });
+  });
+
+  // 字型風格
+  $$('[data-font]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('[data-font]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.settings.fontFamily = btn.dataset.font;
+    });
+  });
+
+  // 字體大小
+  $$('[data-size]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('[data-size]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.settings.fontSize = btn.dataset.size;
+    });
+  });
+
+  // 行距
+  $$('[data-lineheight]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('[data-lineheight]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.settings.lineHeight = btn.dataset.lineheight;
+    });
+  });
+
+  // 動作按鈕
+  $('#btn-reset').addEventListener('click', resetFile);
+
+  $('#btn-process').addEventListener('click', () => {
+    processEpub();
+  });
+
+  // 完成畫面按鈕
+  $('#btn-download-again').addEventListener('click', () => {
+    if (state.resultBlob) {
+      downloadBlob(state.resultBlob, state.resultFilename);
+      showToast('再次下載中...', 'success');
     }
   });
 
-  $('btnReset').addEventListener('click', function () {
-    state.file = null;
-    state.settings.convertToTraditional = true;
-    state.settings.convertPunctuation = true;
-    state.settings.fontFamily = 'sans';
-    state.settings.fontSize = 'medium';
-    state.settings.lineHeight = 'normal';
-    $('fileInfo').classList.add('hidden');
-    $('exportReady').classList.remove('hidden');
-    $('exportComplete').classList.add('hidden');
-    $('exportProgress').classList.add('hidden');
-    $('btnExport').disabled = false;
-    $('btnExport').innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> \u4e0b\u8f09 EPUB';
-    showStep(1);
-  });
+  $('#btn-new-file').addEventListener('click', resetFile);
+}
 
-  // ── Theme Toggle ──
-  $('themeToggle').addEventListener('click', function () {
-    var isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  });
+/* ========== 初始化 ========== */
+function init() {
+  // 檢查必要依賴
+  if (typeof JSZip === 'undefined') {
+    showToast('JSZip 載入失敗，請檢查網路連線', 'error');
+    return;
+  }
 
-  // ── Footer Year ──
-  var sy = 2026, cy = new Date().getFullYear();
-  $('footer-year').textContent = cy > sy ? sy + '\u2013' + cy : '' + sy;
+  // OpenCC 可能延遲載入，在使用時再檢查
+  initEvents();
+  showStep('step-upload');
+}
 
-  // ── Init ──
-  showStep(1);
-})();
+// DOM Ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}

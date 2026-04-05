@@ -47,30 +47,90 @@ const RefreshIcon = () => (
   </svg>
 )
 
-export default function ExportButton({ content, chapters, cover, settings, onReset }) {
+const BookIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" stroke="currentColor">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+  </svg>
+)
+
+const SplitIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" stroke="currentColor">
+    <rect x="2" y="3" width="8" height="18" rx="2"/>
+    <rect x="14" y="3" width="8" height="18" rx="2"/>
+  </svg>
+)
+
+// 根據階段估算整體進度百分比
+function getProgressPercent(stage) {
+  const stageMap = {
+    convert: 20,
+    font: 35,
+    structure: 40,
+    css: 45,
+    chapters: 70,
+    toc: 80,
+    opf: 85,
+    compress: 95,
+    done: 100,
+  }
+  return stageMap[stage] || 10
+}
+
+export default function ExportButton({ content, chapters, cover, settings, onReset, splitMode, setSplitMode, splitSuggested }) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
   const [progress, setProgress] = useState({ stage: '', message: '' })
-  const lastBlobRef = useRef(null)
-  const lastFilenameRef = useRef('')
+  const blobsRef = useRef([]) // [{blob, filename}]
+
+  // 簡轉繁處理
+  const processConversion = async (chaptersToConvert) => {
+    const totalCh = chaptersToConvert.length
+    const result = []
+    for (let i = 0; i < totalCh; i++) {
+      if (i % 20 === 0 || i === totalCh - 1) {
+        setProgress({ stage: 'convert', message: `正在轉換第 ${i + 1} / ${totalCh} 章（簡轉繁）...` })
+      }
+      result.push({
+        ...chaptersToConvert[i],
+        title: await convertToTraditional(chaptersToConvert[i].title),
+        content: await convertToTraditional(chaptersToConvert[i].content),
+      })
+      if (i % 20 === 0) await new Promise(r => setTimeout(r, 0))
+    }
+    return result
+  }
+
+  // 生成單本 EPUB
+  const generateSingleEpub = async (epubChapters, epubTitle, epubAuthor, outputFilename) => {
+    return await generateEpub({
+      title: epubTitle,
+      author: epubAuthor,
+      chapters: epubChapters,
+      cover,
+      writingMode: settings.writingMode,
+      fontFamily: settings.fontFamily,
+      embedFont: settings.embedFont,
+      fontSize: settings.fontSize,
+      lineHeight: settings.lineHeight,
+      textIndent: settings.textIndent,
+      filename: outputFilename,
+      onProgress: setProgress,
+      returnBlob: true,
+    })
+  }
 
   const handleExport = async () => {
     setIsGenerating(true)
     setProgress({ stage: 'convert', message: '準備中...' })
+    blobsRef.current = []
 
     try {
       let processedChapters = chapters
       let processedTitle = settings.title
 
       if (settings.convertToTraditional) {
-        setProgress({ stage: 'convert', message: '正在轉換簡體為繁體...' })
-        processedChapters = await Promise.all(
-          chapters.map(async (ch) => ({
-            ...ch,
-            title: await convertToTraditional(ch.title),
-            content: await convertToTraditional(ch.content),
-          }))
-        )
+        processedChapters = await processConversion(chapters)
         processedTitle = await convertToTraditional(settings.title)
       }
 
@@ -78,8 +138,8 @@ export default function ExportButton({ content, chapters, cover, settings, onRes
       if (settings.convertToTraditional && settings.author) {
         processedAuthor = await convertToTraditional(settings.author)
       }
-      
-      const outputFilename = generateFilename({
+
+      const baseFilename = generateFilename({
         title: processedTitle,
         author: processedAuthor,
         format: settings.filenameFormat || 'title-author',
@@ -87,28 +147,49 @@ export default function ExportButton({ content, chapters, cover, settings, onRes
         customTemplate: settings.filenameCustomTemplate || '',
       })
 
-      // Store filename for re-download
-      lastFilenameRef.current = outputFilename
+      if (splitMode === 'split') {
+        // 拆成上下冊
+        const midpoint = Math.ceil(processedChapters.length / 2)
+        const vol1Chapters = processedChapters.slice(0, midpoint)
+        const vol2Chapters = processedChapters.slice(midpoint)
 
-      const blob = await generateEpub({
-        title: processedTitle,
-        author: processedAuthor,
-        chapters: processedChapters,
-        cover,
-        writingMode: settings.writingMode,
-        fontFamily: settings.fontFamily,
-        embedFont: settings.embedFont,
-        fontSize: settings.fontSize,
-        lineHeight: settings.lineHeight,
-        textIndent: settings.textIndent,
-        filename: outputFilename,
-        onProgress: setProgress,
-        returnBlob: true, // Request blob to be returned for re-download
-      })
+        setProgress({ stage: 'structure', message: '正在生成上冊...' })
+        const blob1 = await generateSingleEpub(
+          vol1Chapters,
+          `${processedTitle} 上冊`,
+          processedAuthor,
+          `${baseFilename} 上冊`
+        )
 
-      // Store blob for re-download
-      if (blob) {
-        lastBlobRef.current = blob
+        setProgress({ stage: 'structure', message: '正在生成下冊...' })
+        const blob2 = await generateSingleEpub(
+          vol2Chapters,
+          `${processedTitle} 下冊`,
+          processedAuthor,
+          `${baseFilename} 下冊`
+        )
+
+        blobsRef.current = [
+          { blob: blob1, filename: `${baseFilename} 上冊.epub` },
+          { blob: blob2, filename: `${baseFilename} 下冊.epub` },
+        ]
+
+        // 自動下載兩個檔案（間隔 500ms 避免瀏覽器攔截）
+        if (blob1) saveAs(blob1, `${baseFilename} 上冊.epub`)
+        await new Promise(r => setTimeout(r, 500))
+        if (blob2) saveAs(blob2, `${baseFilename} 下冊.epub`)
+      } else {
+        // 整本輸出
+        const blob = await generateSingleEpub(
+          processedChapters,
+          processedTitle,
+          processedAuthor,
+          baseFilename
+        )
+
+        if (blob) {
+          blobsRef.current = [{ blob, filename: `${baseFilename}.epub` }]
+        }
       }
 
       setIsComplete(true)
@@ -120,41 +201,44 @@ export default function ExportButton({ content, chapters, cover, settings, onRes
     }
   }
 
-  const handleRedownload = () => {
-    if (lastBlobRef.current && lastFilenameRef.current) {
-      saveAs(lastBlobRef.current, `${lastFilenameRef.current}.epub`)
+  const handleRedownload = (index) => {
+    const item = blobsRef.current[index]
+    if (item) {
+      saveAs(item.blob, item.filename)
     }
   }
 
   const fontConfig = FONT_CONFIG[settings.fontFamily]
 
   if (isComplete) {
+    const isSplit = blobsRef.current.length > 1
     return (
       <div className="text-center py-12">
-        <div 
+        <div
           className="inline-flex mb-6"
           style={{ color: 'var(--accent-primary)' }}
         >
           <CheckCircleIcon />
         </div>
-        <h2 
+        <h2
           className="font-serif text-2xl font-semibold mb-4"
           style={{ color: 'var(--text-primary)' }}
         >
           EPUB 生成完成！
         </h2>
-        <p 
+        <p
           className="mb-8"
           style={{ color: 'var(--text-secondary)' }}
         >
-          檔案已自動下載到你的裝置
+          {isSplit ? '上下冊已自動下載到你的裝置' : '檔案已自動下載到你的裝置'}
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-          {lastBlobRef.current && (
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center flex-wrap">
+          {blobsRef.current.map((item, i) => (
             <button
-              onClick={handleRedownload}
+              key={i}
+              onClick={() => handleRedownload(i)}
               className="px-6 py-3 rounded-full text-sm font-medium transition-all flex items-center gap-2"
-              style={{ 
+              style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border)',
                 color: 'var(--text-secondary)'
@@ -171,13 +255,13 @@ export default function ExportButton({ content, chapters, cover, settings, onRes
               }}
             >
               <DownloadIcon />
-              再次下載
+              {isSplit ? `再次下載${i === 0 ? '上冊' : '下冊'}` : '再次下載'}
             </button>
-          )}
+          ))}
           <button
             onClick={onReset}
             className="px-6 py-3 rounded-full text-sm font-medium transition-all flex items-center gap-2"
-            style={{ 
+            style={{
               background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
               color: 'white',
               boxShadow: '0 4px 16px rgba(212, 165, 165, 0.3)'
@@ -193,10 +277,12 @@ export default function ExportButton({ content, chapters, cover, settings, onRes
     )
   }
 
+  const totalChars = chapters.reduce((sum, ch) => sum + ch.content.length, 0)
   const summaryItems = [
     { label: '書名', value: settings.title || '未命名' },
     { label: '作者', value: settings.author || '未填寫' },
     { label: '章節數', value: `${chapters.length} 章` },
+    { label: '總字數', value: `約 ${Math.round(totalChars / 10000)} 萬字` },
     { label: '封面', value: cover ? '已設定' : '無' },
     { label: '簡轉繁', value: settings.convertToTraditional ? '是' : '否' },
     { label: '排版', value: settings.writingMode === 'vertical' ? '直排' : '橫排' },
@@ -206,15 +292,15 @@ export default function ExportButton({ content, chapters, cover, settings, onRes
 
   return (
     <div className="text-center py-8">
-      <h2 
+      <h2
         className="font-serif text-2xl font-semibold mb-6"
         style={{ color: 'var(--text-primary)' }}
       >
         確認並輸出
       </h2>
-      
+
       {/* Summary */}
-      <div 
+      <div
         className="max-w-md mx-auto mb-8 p-6 rounded-2xl text-left space-y-3"
         style={{ background: 'var(--bg-secondary)' }}
       >
@@ -230,11 +316,71 @@ export default function ExportButton({ content, chapters, cover, settings, onRes
         ))}
       </div>
 
+      {/* 拆冊選擇 — 只在系統建議拆冊時顯示 */}
+      {splitSuggested && (
+        <div
+          className="max-w-md mx-auto mb-8 p-5 rounded-2xl text-left space-y-4"
+          style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)'
+          }}
+        >
+          <div>
+            <p
+              className="font-serif font-medium mb-1"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              這本書篇幅很大
+            </p>
+            <p
+              className="text-sm"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              共 {chapters.length} 章、約 {Math.round(totalChars / 10000)} 萬字。建議拆成上下冊，部分閱讀器對超大 EPUB 翻頁會比較慢。
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setSplitMode('single')}
+              className="flex-1 p-3 rounded-2xl border text-sm transition-all flex items-center justify-center gap-2"
+              style={{
+                borderColor: splitMode === 'single' ? 'var(--accent-primary)' : 'var(--border)',
+                background: splitMode === 'single' ? 'rgba(212, 165, 165, 0.1)' : 'transparent',
+                color: splitMode === 'single' ? 'var(--text-primary)' : 'var(--text-secondary)'
+              }}
+            >
+              <BookIcon />
+              整本輸出
+            </button>
+            <button
+              onClick={() => setSplitMode('split')}
+              className="flex-1 p-3 rounded-2xl border text-sm transition-all flex items-center justify-center gap-2"
+              style={{
+                borderColor: splitMode === 'split' ? 'var(--accent-primary)' : 'var(--border)',
+                background: splitMode === 'split' ? 'rgba(212, 165, 165, 0.1)' : 'transparent',
+                color: splitMode === 'split' ? 'var(--text-primary)' : 'var(--text-secondary)'
+              }}
+            >
+              <SplitIcon />
+              拆成上下冊
+            </button>
+          </div>
+          {splitMode === 'split' && (
+            <p
+              className="text-xs"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              上冊：第 1 ~ {Math.ceil(chapters.length / 2)} 章 / 下冊：第 {Math.ceil(chapters.length / 2) + 1} ~ {chapters.length} 章
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Progress */}
       {isGenerating && (
-        <div 
-          className="max-w-md mx-auto mb-6 p-4 rounded-2xl text-left"
-          style={{ 
+        <div
+          className="max-w-md mx-auto mb-6 p-4 rounded-2xl text-left space-y-3"
+          style={{
             background: 'var(--bg-secondary)',
             border: '1px solid var(--border)'
           }}
@@ -245,6 +391,19 @@ export default function ExportButton({ content, chapters, cover, settings, onRes
               {progress.message || '處理中...'}
             </span>
           </div>
+          {/* 進度條 */}
+          <div
+            className="h-1.5 rounded-full overflow-hidden"
+            style={{ background: 'var(--border)' }}
+          >
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width: `${getProgressPercent(progress.stage)}%`,
+                background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))'
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -252,9 +411,9 @@ export default function ExportButton({ content, chapters, cover, settings, onRes
         onClick={handleExport}
         disabled={isGenerating}
         className="px-12 py-4 rounded-full text-lg font-medium transition-all flex items-center gap-3 mx-auto"
-        style={{ 
-          background: isGenerating 
-            ? 'var(--bg-secondary)' 
+        style={{
+          background: isGenerating
+            ? 'var(--bg-secondary)'
             : 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
           color: isGenerating ? 'var(--text-muted)' : 'white',
           cursor: isGenerating ? 'wait' : 'pointer',
@@ -275,20 +434,23 @@ export default function ExportButton({ content, chapters, cover, settings, onRes
         ) : (
           <>
             <DownloadIcon />
-            下載 EPUB
+            {splitMode === 'split' ? '下載上下冊 EPUB' : '下載 EPUB'}
           </>
         )}
       </button>
 
-      <p 
+      <p
         className="text-sm mt-4"
         style={{ color: 'var(--text-muted)' }}
       >
-        輸出檔名：{settings.title || '未命名'}.epub
+        {splitMode === 'split'
+          ? `輸出檔名：${settings.title || '未命名'} 上冊.epub、${settings.title || '未命名'} 下冊.epub`
+          : `輸出檔名：${settings.title || '未命名'}.epub`
+        }
       </p>
 
       {settings.embedFont && (
-        <p 
+        <p
           className="text-xs mt-3 flex items-center justify-center gap-2"
           style={{ color: 'var(--text-muted)' }}
         >

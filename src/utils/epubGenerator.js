@@ -174,16 +174,21 @@ p {
 `
   zip.file('OEBPS/styles/main.css', css)
 
-  onProgress({ stage: 'chapters', message: '正在處理章節...' })
-
   // 章節檔案
   const chapterManifest = []
   const chapterSpine = []
-  
-  chapters.forEach((chapter, index) => {
+  const totalChapters = chapters.length
+
+  for (let index = 0; index < totalChapters; index++) {
+    const chapter = chapters[index]
+    if (index % 50 === 0 || index === totalChapters - 1) {
+      onProgress({ stage: 'chapters', message: `正在處理第 ${index + 1} / ${totalChapters} 章...` })
+      // 讓 UI 有機會更新
+      await new Promise(r => setTimeout(r, 0))
+    }
     const id = `chapter${index + 1}`
-    const filename = `${id}.xhtml`
-    
+    const chFilename = `${id}.xhtml`
+
     // 處理段落
     const paragraphs = chapter.content
       .split(/\n+/)
@@ -205,10 +210,10 @@ p {
 </body>
 </html>`
 
-    zip.file(`OEBPS/${filename}`, xhtml)
-    chapterManifest.push(`<item id="${id}" href="${filename}" media-type="application/xhtml+xml"/>`)
+    zip.file(`OEBPS/${chFilename}`, xhtml)
+    chapterManifest.push(`<item id="${id}" href="${chFilename}" media-type="application/xhtml+xml"/>`)
     chapterSpine.push(`<itemref idref="${id}"/>`)
-  })
+  }
 
   onProgress({ stage: 'toc', message: '正在建立目錄...' })
 

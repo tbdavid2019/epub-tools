@@ -186,18 +186,56 @@ export function decodeWithEncoding(buffer, encoding) {
 /**
  * 自動偵測編碼並解碼檔案
  * @param {File} file - 檔案物件
+ * @param {function} onProgress - 讀取進度回呼 (已讀取位元組數)
  * @returns {Promise<{text: string, encoding: string}>}
  */
-export async function readFileWithAutoEncoding(file) {
-  const buffer = await file.arrayBuffer()
+export async function readFileWithAutoEncoding(file, onProgress) {
+  let buffer
+
+  // 大檔案使用串流讀取，回報進度
+  if (onProgress && file.size > 1024 * 1024) {
+    buffer = await readFileWithProgress(file, onProgress)
+  } else {
+    buffer = await file.arrayBuffer()
+  }
+
   const encoding = detectEncoding(buffer)
   const text = decodeWithEncoding(buffer, encoding)
-  
+
   return {
     text,
     encoding,
     encodingLabel: getEncodingLabel(encoding)
   }
+}
+
+/**
+ * 使用串流方式讀取檔案，回報進度
+ * @param {File} file
+ * @param {function} onProgress - (bytesRead) => void
+ * @returns {Promise<ArrayBuffer>}
+ */
+async function readFileWithProgress(file, onProgress) {
+  const reader = file.stream().getReader()
+  const chunks = []
+  let bytesRead = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    chunks.push(value)
+    bytesRead += value.byteLength
+    onProgress(bytesRead)
+  }
+
+  // 合併所有 chunks
+  const result = new Uint8Array(bytesRead)
+  let offset = 0
+  for (const chunk of chunks) {
+    result.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return result.buffer
 }
 
 /**

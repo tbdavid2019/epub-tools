@@ -48,16 +48,24 @@ const InfoIcon = () => (
   </svg>
 )
 
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export default function FileUploader({ onUpload }) {
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [readProgress, setReadProgress] = useState(null) // { bytesRead, fileSize }
   const [encodingInfo, setEncodingInfo] = useState(null)
 
   const handleFile = useCallback(async (file) => {
     setError('')
     setEncodingInfo(null)
-    
+    setReadProgress(null)
+
     if (!file.name.toLowerCase().endsWith('.txt')) {
       setError('請上傳 .txt 格式的檔案')
       return
@@ -66,7 +74,10 @@ export default function FileUploader({ onUpload }) {
     setLoading(true)
 
     try {
-      const { text, encoding, encodingLabel } = await readFileWithAutoEncoding(file)
+      const { text, encoding, encodingLabel } = await readFileWithAutoEncoding(
+        file,
+        (bytesRead) => setReadProgress({ bytesRead, fileSize: file.size })
+      )
       setEncodingInfo({ encoding, label: encodingLabel })
       onUpload(file, text)
     } catch (err) {
@@ -74,6 +85,7 @@ export default function FileUploader({ onUpload }) {
       setError('檔案讀取失敗，請確認檔案格式')
     } finally {
       setLoading(false)
+      setReadProgress(null)
     }
   }, [onUpload])
 
@@ -156,15 +168,31 @@ export default function FileUploader({ onUpload }) {
             >
               <LoaderIcon />
             </div>
-            <p 
+            <p
               className="font-serif font-medium mb-2"
               style={{ color: 'var(--text-primary)' }}
             >
               正在讀取檔案...
             </p>
             <p style={{ color: 'var(--text-muted)' }}>
-              偵測編碼中
+              {readProgress
+                ? `已讀取 ${formatFileSize(readProgress.bytesRead)} / ${formatFileSize(readProgress.fileSize)}`
+                : '偵測編碼中'}
             </p>
+            {readProgress && (
+              <div
+                className="w-48 h-1.5 rounded-full mx-auto mt-3 overflow-hidden"
+                style={{ background: 'var(--border)' }}
+              >
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${Math.min(100, Math.round((readProgress.bytesRead / readProgress.fileSize) * 100))}%`,
+                    background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))'
+                  }}
+                />
+              </div>
+            )}
           </>
         ) : (
           <>

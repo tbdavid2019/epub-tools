@@ -50,6 +50,8 @@ export default function EpubTool() {
     textIndent: 'two',
   })
   const [step, setStep] = useState(1)
+  const [splitMode, setSplitMode] = useState('single') // 'single' | 'split'
+  const [splitSuggested, setSplitSuggested] = useState(false)
 
   const handleFileUpload = useCallback(async (uploadedFile, text) => {
     setFile(uploadedFile)
@@ -74,6 +76,15 @@ export default function EpubTool() {
   }
 
   const handleNext = () => {
+    if (step === 3) {
+      // 進入 Step 4 時，偵測是否建議拆冊
+      const totalChars = chapters.reduce((sum, ch) => sum + ch.content.length, 0)
+      const shouldSuggest = chapters.length > 500 || totalChars > 500000
+      setSplitSuggested(shouldSuggest)
+      if (!shouldSuggest) {
+        setSplitMode('single')
+      }
+    }
     if (step < 4) setStep(step + 1)
   }
 
@@ -93,6 +104,8 @@ export default function EpubTool() {
       lineHeight: 'normal',
       textIndent: 'two',
     })
+    setSplitMode('single')
+    setSplitSuggested(false)
     setStep(1)
   }
 
@@ -267,6 +280,9 @@ export default function EpubTool() {
               cover={cover}
               settings={settings}
               onReset={handleReset}
+              splitMode={splitMode}
+              setSplitMode={setSplitMode}
+              splitSuggested={splitSuggested}
             />
           )}
         </div>

@@ -7,7 +7,7 @@ const API_BASE = '/api/hyread-proxy';
 // ══════════════════════════════════════════════════
 
 let currentTab = 'new';
-let currentLib = 'ncl';
+let currentLib = 'taichunggov';
 let currentBooks = [];
 let sortAsc = true;
 let libraries = {};

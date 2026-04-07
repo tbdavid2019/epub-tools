@@ -554,6 +554,13 @@ a:hover { color: var(--color-sage-dark); }
   line-height: 1.7;
 }
 
+.tips-update {
+  font-size: 13px;
+  color: var(--text-hint);
+  text-align: right;
+  margin-top: var(--space-md);
+}
+
 /* ---- 8. Related ---- */
 .related-section {
   margin-top: var(--space-2xl);

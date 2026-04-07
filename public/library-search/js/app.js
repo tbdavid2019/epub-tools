@@ -116,7 +116,7 @@ async function loadFreeHits() {
       a.target = '_blank';
       a.rel = 'noopener';
       a.innerHTML = `
-        <span class="free-hit-badge">${book.source || '熱賣'} 免費借</span>
+        <span class="free-hit-badge">${book.source || '熱賣'}</span>
         <img class="book-cover" src="${book.thumbnail}" alt="${escapeHtml(book.title)}"
              onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 3 4%22><rect fill=%22%23E5E0DB%22 width=%223%22 height=%224%22/></svg>'">
         <div class="book-title">${escapeHtml(book.title)}</div>

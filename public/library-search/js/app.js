@@ -7,7 +7,7 @@ const API_BASE = '/api/hyread-proxy';
 // ══════════════════════════════════════════════════
 
 let currentTab = 'new';
-let currentLib = 'tpml';
+let currentLib = 'ncl';
 let currentBooks = [];
 let sortAsc = true;
 let libraries = {};

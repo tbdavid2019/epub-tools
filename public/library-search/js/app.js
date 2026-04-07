@@ -64,11 +64,12 @@ function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
 
-  // 計次新書提示只在 new tab 顯示
+  // 計次新書提示 + 圖書館選擇器顯隱
   const mocHint = document.getElementById('moc-hint');
   if (mocHint) mocHint.style.display = tab === 'new' ? '' : 'none';
+  const libSelector = document.getElementById('lib-selector');
+  if (libSelector) libSelector.style.display = tab === 'new' ? 'none' : '';
 
-  // 搜尋面板永遠顯示，圖書館選擇器在非搜尋模式顯示
   if (tab === 'free-hits') {
     loadFreeHits();
   } else {
@@ -408,9 +409,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // 初始載入（預設 Tab 是計次新書，顯示提示）
+  // 初始載入（預設 Tab 是計次新書，顯示提示、隱藏圖書館選擇器）
   const mocHint = document.getElementById('moc-hint');
   if (mocHint) mocHint.style.display = '';
+  const libSelector = document.getElementById('lib-selector');
+  if (libSelector) libSelector.style.display = 'none';
   lucide.createIcons();
   loadBooks();
 });

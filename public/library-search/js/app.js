@@ -190,6 +190,9 @@ function renderBooks() {
   if (currentBooks.length === 0) {
     container.innerHTML = '';
     emptyState.style.display = '';
+    emptyState.querySelector('p').textContent = currentTab === 'new'
+      ? '此圖書館未啟用計次服務，沒有計次新書。'
+      : '沒有找到書籍。';
     sortRow.style.display = 'none';
     return;
   }

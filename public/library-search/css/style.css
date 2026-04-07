@@ -490,6 +490,55 @@ hello-ruru-header { display: block; margin-bottom: var(--space-lg); }
   font-size: 14px;
 }
 
+/* ── 延伸閱讀 ── */
+.further-reading {
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+.further-reading-title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.further-reading-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.further-reading-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.further-reading-list li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-gold);
+  flex-shrink: 0;
+}
+.further-reading-list a {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+.further-reading-list a:hover {
+  color: var(--color-sage-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* ── 致敬 ── */
 .credits-section { margin-top: var(--space-xl); }
 .credits {

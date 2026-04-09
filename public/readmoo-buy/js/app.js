@@ -115,10 +115,7 @@
     /* 根據實際計算結果決定建議，不靠固定區間 */
     if (isCoupon50) {
       /* 折50券最划算：通常在 $200 以下 */
-      if (price <= 100) {
-        return '<strong>折50券</strong>直接折一半，省 $' + saved + '。便宜書用折50券最划算，其他券留著。';
-      }
-      return '<strong>折50券</strong>最省，省 $' + saved + '。$200 以下的書用折50券比打折券更划算。';
+      return '<strong>折50券</strong>最省，省 $' + saved + '。便宜書直接用折50券最划算，打折券和領書額度留給貴的書。';
     }
 
     if (isRedeem) {

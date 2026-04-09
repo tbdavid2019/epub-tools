@@ -517,6 +517,13 @@ a:hover { color: var(--color-sage-dark); }
   margin-top: 2px;
 }
 
+.cheat-sheet-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: var(--space-md);
+  line-height: 1.6;
+}
+
 /* ---- 7. Tips ---- */
 .tips-section {
   margin-top: var(--space-3xl);

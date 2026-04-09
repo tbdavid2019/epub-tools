@@ -33,8 +33,8 @@
       display.classList.remove('has-value');
     } else {
       var val = parseInt(currentInput, 10);
-      if (val > 999) {
-        hintEl.textContent = '最多 $999';
+      if (val > 9999) {
+        hintEl.textContent = '最多 $9999';
         hintEl.classList.add('hint-warn');
       } else if (val < 50 && currentInput.length >= 2) {
         hintEl.textContent = '最少 $50';
@@ -50,8 +50,8 @@
   /* ---- 按鍵處理 ---- */
   function handleDigit(digit) {
     var next = currentInput + digit;
-    if (parseInt(next, 10) > 999) return; /* 上限 */
-    if (next.length > 3) return;
+    if (parseInt(next, 10) > 9999) return; /* 上限 */
+    if (next.length > 4) return;
     currentInput = next;
     updateDisplay();
   }
@@ -86,11 +86,12 @@
     adviceEl.classList.remove('visible');
   }
 
-  /* ---- 計算五種方案 ---- */
+  /* ---- 計算六種方案 ---- */
   function calculate(price) {
     if (!price || price < 50) return null;
 
     var methods = [
+      { name: '7折券', cost: Math.round(price * 0.7), tag: '7折優惠券' },
       { name: '75折券', cost: Math.round(price * 0.75), tag: '375券（3本以上75折）' },
       { name: '8折券', cost: Math.round(price * 0.8), tag: '單本8折' },
       { name: '折50券', cost: Math.max(price - 50, 0), tag: price >= 250 ? '滿250折$50（紅利兌換）' : '不限金額折$50' },
@@ -242,7 +243,7 @@
 
     /* 監聽隱藏 input 的輸入 */
     hiddenInput.addEventListener('input', function () {
-      var val = this.value.replace(/\D/g, '').substring(0, 3);
+      var val = this.value.replace(/\D/g, '').substring(0, 4);
       currentInput = val;
       this.value = val;
       updateDisplay();

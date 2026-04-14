@@ -57,7 +57,16 @@ window.EncodingDetector = {
   detectEncoding: function (buffer) {
     var bytes = new Uint8Array(buffer);
     var bom = detectBOM(bytes);
-    if (bom) return bom;
+    if (bom) {
+      // FF FE 可能是假 BOM（實際是 UTF-8 檔案開頭碰巧有 FF FE）
+      // 跳過 BOM 後驗證：如果後面的資料是有效 UTF-8，優先用 UTF-8
+      if (bom === 'utf-16le' || bom === 'utf-16be') {
+        var skipLen = 2;
+        var afterBom = bytes.subarray(skipLen);
+        if (afterBom.length > 0 && isValidUTF8(afterBom)) return 'utf-8';
+      }
+      return bom;
+    }
     if (isValidUTF8(bytes)) return 'utf-8';
     var gbkScore = detectGBK(bytes);
     var big5Score = detectBig5(bytes);
@@ -69,7 +78,13 @@ window.EncodingDetector = {
   readFileWithAutoEncoding: function (file) {
     return file.arrayBuffer().then(function (buffer) {
       var encoding = window.EncodingDetector.detectEncoding(buffer);
-      var text = new TextDecoder(encoding, { fatal: false }).decode(buffer);
+      var bytes = new Uint8Array(buffer);
+      // 跳過 BOM bytes
+      var offset = 0;
+      if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) offset = 3; // UTF-8 BOM
+      else if ((bytes[0] === 0xFF && bytes[1] === 0xFE) || (bytes[0] === 0xFE && bytes[1] === 0xFF)) offset = 2;
+      var decodeBuffer = offset > 0 ? buffer.slice(offset) : buffer;
+      var text = new TextDecoder(encoding, { fatal: false }).decode(decodeBuffer);
       var labels = {
         'utf-8': 'UTF-8', 'utf-16le': 'UTF-16 LE', 'utf-16be': 'UTF-16 BE',
         'gbk': 'GBK（簡體中文）', 'big5': 'Big5（繁體中文）'

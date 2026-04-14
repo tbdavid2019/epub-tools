@@ -366,6 +366,10 @@ hello-ruru-header {
   grid-template-columns: 1fr 1fr;
 }
 
+.option-buttons.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .option-buttons.cols-4 {
   grid-template-columns: repeat(4, 1fr);
 }
@@ -717,6 +721,10 @@ hello-ruru-header {
 
   .card-header h2 {
     font-size: 20px;
+  }
+
+  .option-buttons.cols-3 {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .option-buttons.cols-4 {

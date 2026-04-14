@@ -234,6 +234,16 @@
       </div>
     </div>
 
+    <!-- Text Indent -->
+    <div class="setting-group">
+      <p class="setting-section-title">首行縮排</p>
+      <div class="option-buttons cols-3">
+        <button class="option-btn small-btn" data-indent="none">不縮排</button>
+        <button class="option-btn small-btn" data-indent="one">縮 1 字</button>
+        <button class="option-btn small-btn active" data-indent="two">縮 2 字</button>
+      </div>
+    </div>
+
     <!-- Cover Image -->
     <div class="setting-group">
       <p class="setting-section-title">封面圖片</p>
@@ -271,6 +281,15 @@
       </svg>
       字型、字級、行距會寫入 EPUB 的 CSS，但部分閱讀器可能會用自己的設定覆蓋
     </p>
+
+    <!-- 大檔案提示 -->
+    <div id="splitNotice" class="setting-group" hidden style="padding:16px;border-radius:16px;background:linear-gradient(135deg,rgba(212,165,165,0.08),rgba(184,169,201,0.08));border:1px solid rgba(212,165,165,0.2)">
+      <p style="font-size:14px;color:var(--text-heading,#333);font-weight:500;margin-bottom:4px">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor" style="vertical-align:-2px;margin-right:4px;color:var(--rose,#D4A5A5)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span id="splitNoticeText"></span>
+      </p>
+      <p style="font-size:13px;color:var(--text-muted,#888)">檔案較大，處理時間可能較長。手機使用者建議用桌機處理。</p>
+    </div>
 
     <!-- Action Buttons -->
     <div class="action-buttons">

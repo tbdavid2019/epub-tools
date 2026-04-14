@@ -24,6 +24,7 @@ const state = {
     fontFamily: 'noto-sans',
     fontSize: 'medium',
     lineHeight: 'normal',
+    textIndent: 'two',
   }
 };
 
@@ -43,6 +44,12 @@ const LINE_HEIGHT_MAP = {
   normal: '1.8',
   relaxed: '2.0',
   loose: '2.3',
+};
+
+const INDENT_MAP = {
+  none: '0',
+  one: '1em',
+  two: '2em',
 };
 
 const FONT_MAP = {
@@ -338,6 +345,13 @@ function generateStyleOverrides() {
   }
   css += `body { font-size: ${fontSize}; line-height: ${lineHeight}; }\n`;
 
+  const indent = INDENT_MAP[s.textIndent] || INDENT_MAP.two;
+  if (indent !== '0') {
+    css += `p { text-indent: ${indent}; }\n`;
+  } else {
+    css += `p { text-indent: 0; }\n`;
+  }
+
   if (isVertical) {
     css += `body {
   writing-mode: vertical-rl;
@@ -612,6 +626,21 @@ async function handleFile(file) {
 
     $('#epub-info').innerHTML = infoLines.join('<br>');
 
+    // 大檔案偵測提示
+    const LARGE_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    const LARGE_TEXT_FILES = 100;
+    const splitNotice = $('#splitNotice');
+    if (splitNotice) {
+      const isLarge = file.size >= LARGE_FILE_SIZE || meta.textFileCount >= LARGE_TEXT_FILES;
+      splitNotice.hidden = !isLarge;
+      if (isLarge) {
+        const reasons = [];
+        if (file.size >= LARGE_FILE_SIZE) reasons.push('檔案大小 ' + formatFileSize(file.size));
+        if (meta.textFileCount >= LARGE_TEXT_FILES) reasons.push('內容檔達 ' + meta.textFileCount + ' 個');
+        $('#splitNoticeText').textContent = '此書' + reasons.join('、') + '，屬於大型 EPUB。';
+      }
+    }
+
     // 偵測原書封面
     const cover = await detectCover(zip);
     state.originalCover = cover;
@@ -738,6 +767,15 @@ function initEvents() {
       $$('[data-lineheight]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.settings.lineHeight = btn.dataset.lineheight;
+    });
+  });
+
+  // 首行縮排
+  $$('[data-indent]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('[data-indent]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.settings.textIndent = btn.dataset.indent;
     });
   });
 

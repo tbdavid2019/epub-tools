@@ -25,7 +25,7 @@
   </style>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style-helloruru.css?v=3">
+  <link rel="stylesheet" href="style-helloruru.css?v=4">
 
   <!-- Lucide Icons -->
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
@@ -802,19 +802,19 @@
   </div>
 
   <!-- Scripts -->
-  <script src="i18n-zh-TW.js?v=3"></script>
-  <script src="crengine.js?v=3"></script>
-  <script src="markdown-parser.js?v=3"></script>
-  <script src="format-handlers.js?v=3"></script>
+  <script src="i18n-zh-TW.js?v=4"></script>
+  <script src="crengine.js?v=4"></script>
+  <script src="markdown-parser.js?v=4"></script>
+  <script src="format-handlers.js?v=4"></script>
   <script src="dither-worker.js"></script>
-  <script src="compat-shim.js?v=3"></script>
-  <script src="app.js?v=3"></script>
-  <script src="font-config.js?v=3"></script>
-  <script src="status-bar-themes.js?v=3"></script>
-  <script src="image-tools.js?v=3"></script>
-  <script src="text-tools.js?v=3"></script>
-  <script src="page-backgrounds.js?v=3"></script>
-  <script src="app-bridge.js?v=3"></script>
+  <script src="compat-shim.js?v=4"></script>
+  <script src="app.js?v=4"></script>
+  <script src="font-config.js?v=4"></script>
+  <script src="status-bar-themes.js?v=4"></script>
+  <script src="image-tools.js?v=4"></script>
+  <script src="text-tools.js?v=4"></script>
+  <script src="page-backgrounds.js?v=4"></script>
+  <script src="app-bridge.js?v=4"></script>
 
   <script>
     // Initialize Lucide icons
@@ -997,7 +997,7 @@
       var urls = {
         'GenWanMin2TW': 'https://lab.helloruru.com/fonts/xtc/GenWanMin2TW-Regular.otf',
         'LINESeedTW': 'https://lab.helloruru.com/fonts/xtc/LINESeedTW-Regular.ttf',
-        'GuanKiapTsingKhai': 'https://lab.helloruru.com/fonts/xtc/GuanKiapTsingKhai-TW.ttf',
+        'GuanKiapTsingKhai': 'https://lab.helloruru.com/fonts/xtc/GuanKiapTsingKhai.ttf',
       };
       if (!urls[fontKey]) { _coverFontsLoaded[fontKey] = true; return; }
       var face = new FontFace(fontKey, 'url(' + urls[fontKey] + ')');
@@ -1029,8 +1029,9 @@
       // 封面字型
       var fontKey = fontSelect?.value || 'GenWanMin2TW';
       var fontFamily = COVER_FONT_MAP[fontKey] || '"Noto Serif TC", serif';
-      loadCoverFont(fontKey); // 按需載入
+      loadCoverFont(fontKey); // 按需載入（載入完會回呼 generateAutoCover 重畫）
 
+      // 如果字型還在載入中，先用 fallback 畫，載入完會自動重畫
       var canvas = document.getElementById('coverAutoCanvas');
       if (!canvas) return;
       var w = 480, h = 800;

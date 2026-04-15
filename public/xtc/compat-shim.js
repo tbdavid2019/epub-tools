@@ -134,12 +134,13 @@
   // === 排版設定 ===
   // ==========================================================
   // textAlign（HTML 用 align-btn 按鈕組，app.js 找 select）
+  // 預設值需和 HTML 中 align-btn 的 active 一致（HTML 預設 left）
   shim('textAlign', 'select', {
     options: [
-      { value: 'justify', text: 'Justify', selected: true },
-      { value: 'left', text: 'Left' },
+      { value: 'left', text: 'Left', selected: true },
       { value: 'center', text: 'Center' },
-      { value: 'right', text: 'Right' }
+      { value: 'right', text: 'Right' },
+      { value: 'justify', text: 'Justify' }
     ]
   });
 

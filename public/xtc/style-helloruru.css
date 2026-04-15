@@ -225,12 +225,14 @@ h3 {
 
 .onboarding-steps {
   display: flex;
+  align-items: flex-start;
   gap: var(--space-lg);
   margin-bottom: var(--space-xl);
 }
 
 .onboarding-steps .step {
   flex: 1;
+  min-width: 0;
   padding: var(--space-md);
 }
 
@@ -441,6 +443,7 @@ button {
 
 .image-tool-tabs {
   display: flex;
+  align-items: center;
   gap: var(--space-xs);
   padding: var(--space-sm) var(--space-md);
   border-bottom: 1px solid var(--border-light);
@@ -519,6 +522,7 @@ button {
 
 .form-row {
   display: flex;
+  align-items: flex-start;
   gap: var(--space-md);
 }
 
@@ -550,7 +554,7 @@ button {
 /* Select */
 select {
   width: 100%;
-  padding: 10px var(--space-md);
+  padding: 10px 36px 10px var(--space-md);
   font-family: var(--font-family);
   font-size: 14px;
   font-weight: var(--font-weight-medium);
@@ -1105,7 +1109,8 @@ input[type="checkbox"]:checked::after {
 /* === 27. Mobile Note === */
 
 .mobile-note {
-  display: none; /* shown on mobile via media query */
+  display: none; /* shown on mobile via media query as flex */
+  align-items: flex-start;
   gap: var(--space-md);
   padding: var(--space-md);
   margin-top: var(--space-md);

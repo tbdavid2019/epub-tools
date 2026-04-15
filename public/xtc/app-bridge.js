@@ -19,6 +19,38 @@
   if (window.__appBridgeLoaded) return;
   window.__appBridgeLoaded = true;
 
+  /**
+   * 處理 HTML/XHTML 中的文字節點（不破壞標籤和屬性）
+   * 用正則把 > 和 < 之間的純文字抽出來跑 TextTools
+   */
+  async function processHtmlTextNodes(html, opts, totalChanges) {
+    // 分割 HTML：標籤和文字交替
+    var parts = html.split(/(<[^>]*>)/);
+    var changed = false;
+
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i];
+      // 跳過標籤、空白、純 ASCII（不需要處理）
+      if (!part || part.charAt(0) === '<' || !/[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/.test(part)) continue;
+
+      var result = await TextTools.processAll(part, {
+        s2tw: opts.s2tw, halfToFull: opts.halfToFull,
+        punctuation: opts.punctuation, cleanSpaces: opts.cleanSpaces
+      });
+
+      if (result.text !== part) {
+        parts[i] = result.text;
+        changed = true;
+        totalChanges.s2tw += result.changes.s2tw || 0;
+        totalChanges.halfToFull += result.changes.halfToFull || 0;
+        totalChanges.punctuation += result.changes.punctuation || 0;
+        totalChanges.cleanSpaces += result.changes.cleanSpaces || 0;
+      }
+    }
+
+    return changed ? parts.join('') : html;
+  }
+
   console.log('[app-bridge] 初始化橋接層...');
 
   // === Debounce 渲染（避免設定變更時重複渲染） ===
@@ -584,11 +616,12 @@
       bridgeSwitchToFile(0);
     }
 
-    // exportAllBtn 的顯示
+    // 多檔時顯示批量匯出按鈕
     var _exportAllBtn = document.getElementById('exportAllBtn');
-    if (_exportAllBtn) {
-      _exportAllBtn.style.display = loadedFiles.length > 1 ? 'inline-block' : 'none';
-    }
+    var _exportOneByOne = document.getElementById('exportAllOneByOne');
+    var showBatch = loadedFiles.length > 1;
+    if (_exportAllBtn) _exportAllBtn.style.display = showBatch ? 'inline-block' : 'none';
+    if (_exportOneByOne) _exportOneByOne.style.display = showBatch ? 'inline-block' : 'none';
   };
 
   /**
@@ -710,6 +743,60 @@
       var rawBytes = await fileData.file.arrayBuffer();
       var data = new Uint8Array(rawBytes);
 
+      // EPUB 檔案前處理：簡轉繁 + 標點台灣化（用 JSZip 解壓 → 修改 XHTML → 重新打包）
+      var isEpub = /\.epub$/i.test(fileData.name);
+      if (isEpub && typeof TextTools !== 'undefined' && typeof JSZip !== 'undefined') {
+        var doS2TW = document.getElementById('enableS2TW')?.checked !== false;
+        var doHalf = document.getElementById('enableHalfToFull')?.checked !== false;
+        var doPunct = document.getElementById('enablePunctTW')?.checked !== false;
+        var doClean = document.getElementById('enableCleanSpaces')?.checked !== false;
+        var anyEnabled = doS2TW || doHalf || doPunct || doClean;
+
+        if (anyEnabled) {
+          try {
+            console.log('[app-bridge] EPUB 文字處理開始...');
+            var zip = await JSZip.loadAsync(rawBytes);
+            var xhtmlFiles = [];
+            zip.forEach(function(path, entry) {
+              if (!entry.dir && /\.(xhtml|html|htm|xml)$/i.test(path) && !/META-INF/i.test(path)) {
+                xhtmlFiles.push(path);
+              }
+            });
+
+            var totalChanges = { s2tw: 0, halfToFull: 0, punctuation: 0, cleanSpaces: 0 };
+
+            for (var ei = 0; ei < xhtmlFiles.length; ei++) {
+              var xPath = xhtmlFiles[ei];
+              var xContent = await zip.file(xPath).async('string');
+
+              // 只處理文字節點的內容（避免破壞 HTML 標籤和屬性）
+              var processedContent = await processHtmlTextNodes(xContent, {
+                s2tw: doS2TW, halfToFull: doHalf,
+                punctuation: doPunct, cleanSpaces: doClean
+              }, totalChanges);
+
+              zip.file(xPath, processedContent);
+            }
+
+            // 重新打包 EPUB
+            var newEpubBlob = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
+            data = newEpubBlob;
+
+            var epubLog = [];
+            if (totalChanges.s2tw > 0) epubLog.push('簡轉繁 ' + totalChanges.s2tw + ' 字');
+            if (totalChanges.halfToFull > 0) epubLog.push('半全形 ' + totalChanges.halfToFull + ' 處');
+            if (totalChanges.punctuation > 0) epubLog.push('標點 ' + totalChanges.punctuation + ' 處');
+            if (totalChanges.cleanSpaces > 0) epubLog.push('空格 ' + totalChanges.cleanSpaces + ' 處');
+            if (epubLog.length > 0) {
+              console.log('[app-bridge] EPUB 文字處理完成：' + epubLog.join('、'));
+            }
+          } catch (epubTextErr) {
+            console.warn('[app-bridge] EPUB 文字處理失敗，使用原始檔案：', epubTextErr);
+            data = new Uint8Array(rawBytes);
+          }
+        }
+      }
+
       // TXT 檔案前處理：跳過 metadata + 清理空格 + 簡轉繁
       var isTxt = /\.(txt|md|markdown)$/i.test(fileData.name);
       if (isTxt && typeof TextTools !== 'undefined') {
@@ -816,7 +903,8 @@
       try {
         // 用前處理時已存好的文字（避免重複讀檔失敗）
         var rawText = window._processedTextContent || (await fileData.file.text());
-        var parsed = rawText ? { body: rawText } : TextTools.skipMetadata(rawText);
+        // 如果是已處理過的文字，不需要再 skipMetadata
+        var parsed = window._processedTextContent ? { body: rawText } : TextTools.skipMetadata(rawText);
         var mode = document.getElementById('chapterDetectMode')?.value || 'auto';
         var opts = {};
         if (mode === 'separator') opts.separator = document.getElementById('chapterSeparator')?.value || '';
@@ -1067,11 +1155,14 @@
         renderer.setFontFace(selectedFont);
       }
 
-      // 文字對齊：從隱藏的 textAlign select 取值
-      var textAlignEl = document.getElementById('textAlign');
-      if (textAlignEl) {
-        renderer.setTextAlign(getTextAlignValue());
-      }
+      // 文字對齊：先從 UI 按鈕讀，再同步到 shim
+      var activeAlignBtn = document.querySelector('.align-btn.active');
+      var alignVal = activeAlignBtn ? activeAlignBtn.getAttribute('data-align') : 'left';
+      var textAlignShim = document.getElementById('textAlign');
+      if (textAlignShim) textAlignShim.value = alignVal;
+      // CREngine: 0=left, 1=right, 2=center, 3=justify
+      var alignMap = { left: 0, right: 1, center: 2, justify: 3 };
+      renderer.setTextAlign(alignMap[alignVal] !== undefined ? alignMap[alignVal] : 0);
 
       // 斷字
       var hyphenationEl = document.getElementById('hyphenation');
@@ -1272,7 +1363,29 @@
     }
   });
 
-  // --- 4.9 進度條 checkbox 同步 ---
+  // --- 4.9 進度條主題切換 → 觸發重繪 ---
+  var _progressTheme = document.getElementById('progressTheme');
+  if (_progressTheme) {
+    _progressTheme.addEventListener('change', function () {
+      if (typeof renderCurrentPage === 'function' && window._currentEngine !== 'pdfjs') renderCurrentPage();
+    });
+  }
+
+  // --- 4.10 頁面背景切換 → 觸發重繪 ---
+  var _pageBgStyle = document.getElementById('pageBgStyle');
+  if (_pageBgStyle) {
+    _pageBgStyle.addEventListener('change', function () {
+      if (typeof renderCurrentPage === 'function' && window._currentEngine !== 'pdfjs') renderCurrentPage();
+    });
+  }
+  var _bgOpacitySlider = document.getElementById('bgOpacity');
+  if (_bgOpacitySlider) {
+    _bgOpacitySlider.addEventListener('change', function () {
+      if (typeof renderCurrentPage === 'function' && window._currentEngine !== 'pdfjs') renderCurrentPage();
+    });
+  }
+
+  // --- 4.11 進度條 checkbox 同步 ---
   var _showProgressLine = document.getElementById('showProgressLine');
   var _showPageNumber = document.getElementById('showPageNumber');
   var _showPercentage = document.getElementById('showPercentage');
@@ -1538,6 +1651,36 @@
     // 新版 exportPageBtn 已存在，確保事件正確
     _exportPageBtn.addEventListener('click', function () {
       if (typeof exportCurrentPage === 'function') exportCurrentPage();
+    });
+  }
+
+  // --- 6.2b 逐個下載按鈕（多檔案時逐一匯出 XTC）---
+  var _exportAllOneByOne = document.getElementById('exportAllOneByOne');
+  if (_exportAllOneByOne) {
+    _exportAllOneByOne.addEventListener('click', async function () {
+      if (!loadedFiles || loadedFiles.length === 0) return;
+      for (var fi = 0; fi < loadedFiles.length; fi++) {
+        await bridgeSwitchToFile(fi);
+        if (typeof exportXTC === 'function') {
+          await new Promise(function (resolve) {
+            var origDl = window.downloadFile;
+            window.downloadFile = function (data, filename) {
+              origDl(data, filename);
+              window.downloadFile = origDl;
+              resolve();
+            };
+            exportXTC();
+          });
+        }
+      }
+    });
+  }
+
+  // --- 6.2c ZIP 匯出按鈕 ---
+  var _exportAllBtnNew = document.getElementById('exportAllBtn');
+  if (_exportAllBtnNew) {
+    _exportAllBtnNew.addEventListener('click', function () {
+      if (typeof exportAllFiles === 'function') exportAllFiles();
     });
   }
 
@@ -1916,6 +2059,14 @@
   // === 七、章節目錄編輯 ===
   // ============================================
 
+  // HTML 實體解碼（章節名常含 &middot; 等實體）
+  var _decodeEl = document.createElement('textarea');
+  function decodeHtmlEntities(str) {
+    if (!str || str.indexOf('&') === -1) return str;
+    _decodeEl.innerHTML = str;
+    return _decodeEl.value;
+  }
+
   // 自訂章節清單（覆蓋 CREngine 的 TOC）
   window._customToc = null; // null = 用原始 TOC，陣列 = 用自訂的
 
@@ -1941,10 +2092,12 @@
       item.setAttribute('data-index', i);
       item.style.cssText = 'display:flex; align-items:center; gap:6px; padding:6px 0; border-bottom:1px solid rgba(212,165,165,0.1);';
 
-      // 章節名（可編輯）
+      // 章節名（可編輯）— 先解碼 HTML 實體
+      var rawTitle = ch.title || ch.name || '(未命名)';
+      var decodedTitle = decodeHtmlEntities(rawTitle);
       var nameInput = document.createElement('input');
       nameInput.type = 'text';
-      nameInput.value = ch.title || ch.name || '(未命名)';
+      nameInput.value = decodedTitle;
       nameInput.className = 'chapter-name-input';
       nameInput.style.cssText = 'flex:1; border:1px solid transparent; background:transparent; font-size:13px; font-family:inherit; padding:4px 6px; border-radius:6px; color:#4A4A4A;';
       nameInput.setAttribute('data-index', i);
@@ -2061,12 +2214,12 @@
     }
   }
 
-  // 覆寫原版的章節列表渲染
-  var _origShowChapters = window.showChapters;
+  // 覆寫原版的章節列表渲染（直接用可編輯版本，不走原版）
+  window.updateChapterList = function() {
+    renderChapterListUI();
+  };
   window.showChapters = function() {
-    if (typeof _origShowChapters === 'function') _origShowChapters();
-    // 用我們的可編輯版本替換
-    setTimeout(renderChapterListUI, 100);
+    renderChapterListUI();
   };
 
   // ============================================

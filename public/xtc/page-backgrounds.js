@@ -234,7 +234,7 @@
     var sizeKey = (options && options.gridSize) || 'medium';
     var step = GRID_SIZES[sizeKey] || GRID_SIZES.medium;
     var opacity = (options && options.opacity !== undefined) ? options.opacity / 100 : 0.25;
-    var gray = 210; // 很淡的灰，e-ink 上隱約可見
+    var gray = 140; // e-ink 上需要足夠深的灰才看得到
 
     // 垂直線
     for (var x = step; x < w; x += step) {
@@ -255,7 +255,7 @@
     var spacingKey = (options && options.dotSpacing) || 'medium';
     var step = DOT_SPACING[spacingKey] || DOT_SPACING.medium;
     var opacity = (options && options.opacity !== undefined) ? options.opacity / 100 : 0.35;
-    var gray = 200;
+    var gray = 130;
 
     for (var y = step; y < h; y += step) {
       for (var x = step; x < w; x += step) {
@@ -276,7 +276,7 @@
     var h = imageData.height;
     var spacing = (options && options.lineSpacing) || LINE_SPACING_DEFAULT;
     var opacity = (options && options.opacity !== undefined) ? options.opacity / 100 : 0.2;
-    var gray = 210;
+    var gray = 140;
     var margin = (options && options.margin) || 20; // 左右留白
 
     for (var y = spacing; y < h; y += spacing) {
@@ -291,7 +291,7 @@
     var w = imageData.width;
     var h = imageData.height;
     var opacity = (options && options.opacity !== undefined) ? options.opacity / 100 : 0.5;
-    var gray = 180;
+    var gray = 120;
     var margin = 12;
     var cornerLen = 20; // 角落裝飾線長度
 
@@ -300,7 +300,7 @@
 
     // 四角加粗裝飾（雙線）
     var innerM = margin + 4;
-    var darkerGray = 160;
+    var darkerGray = 80;
 
     // 左上角
     blendHLine(imageData, innerM, innerM + cornerLen, innerM, darkerGray, opacity);
@@ -323,8 +323,8 @@
     var w = imageData.width;
     var h = imageData.height;
     var opacity = (options && options.opacity !== undefined) ? options.opacity / 100 : 0.55;
-    var gray = 170;
-    var pawGray = 150; // 肉球稍深一點
+    var gray = 110;
+    var pawGray = 80; // 肉球要夠深才看得到
     var margin = 10;
     var pawScale = 3; // 6x6 放大 3 倍 = 18x18 像素
     var pawW = 6 * pawScale;
@@ -368,8 +368,8 @@
     var w = imageData.width;
     var h = imageData.height;
     var opacity = (options && options.opacity !== undefined) ? options.opacity / 100 : 0.5;
-    var gray = 175;
-    var floralGray = 160;
+    var gray = 110;
+    var floralGray = 80;
     var margin = 10;
     var flowerScale = 2; // 7x7 放大 2 倍 = 14x14
     var leafScale = 2;   // 5x7 放大 2 倍 = 10x14

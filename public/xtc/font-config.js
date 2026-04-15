@@ -20,7 +20,7 @@ var FONT_CONFIG = {
     recommendedSize: { min: 30, max: 36, default: 34 },
     hint: '原俠正楷適合文學類閱讀，建議字級 30-36px',
     variants: [
-      { weight: 400, style: 'normal', url: 'https://lab.helloruru.com/fonts/xtc/GuanKiapTsingKhai-TW.ttf' },
+      { weight: 400, style: 'normal', url: 'https://lab.helloruru.com/fonts/xtc/GuanKiapTsingKhai.ttf' },
     ],
   },
 

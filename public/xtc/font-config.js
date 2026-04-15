@@ -20,7 +20,7 @@ var FONT_CONFIG = {
     recommendedSize: { min: 30, max: 36, default: 34 },
     hint: '原俠正楷適合文學類閱讀，建議字級 30-36px',
     variants: [
-      { weight: 400, style: 'normal', url: 'https://lab.helloruru.com/fonts/xtc/GuanKiapTsingKhai.ttf' },
+      { weight: 400, style: 'normal', url: 'https://lab.helloruru.com/fonts/xtc/GuanKiapTsingKhai-TW.ttf' },
     ],
   },
 
@@ -33,7 +33,7 @@ var FONT_CONFIG = {
     recommendedSize: { min: 32, max: 38, default: 34 },
     hint: '粉圓體筆畫飽滿好讀，建議字級 32-38px',
     variants: [
-      { weight: 400, style: 'normal', url: 'https://fonts.gstatic.com/s/huninn/v1/2sDPZGBVm0R_gVFuZG3M.ttf' },
+      { weight: 400, style: 'normal', url: 'https://raw.githubusercontent.com/justfont/open-huninn-font/master/font/jf-openhuninn-2.0.ttf' },
     ],
   },
 
@@ -74,7 +74,7 @@ var FONT_CONFIG = {
     recommendedSize: { min: 32, max: 40, default: 34 },
     hint: '手寫體建議大一點才清楚，建議字級 32px 以上',
     variants: [
-      { weight: 400, style: 'normal', url: 'https://cdn.jsdelivr.net/gh/max32002/JasonHandWritingFonts@20240409/webfont/JasonHandwriting1.ttf' },
+      { weight: 400, style: 'normal', url: 'https://lab.helloruru.com/fonts/xtc/JasonHandwriting1.ttf' },
     ],
   },
 

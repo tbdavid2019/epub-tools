@@ -518,7 +518,8 @@
         if (Module && renderer) {
           var ptr = Module.allocateMemory(data.length);
           Module.HEAPU8.set(data, ptr);
-          renderer.registerFontFromMemory(ptr, data.length, fileName);
+          // 用 fontKey 註冊（跟 setFontFace 傳的一致）
+          renderer.registerFontFromMemory(ptr, data.length, fontKey);
           Module.freeMemory(ptr);
         }
 

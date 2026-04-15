@@ -543,6 +543,13 @@
   window.loadDefaultFonts = async function () {
     console.log('[app-bridge] 載入預設字型：NotoSerifTC');
     await window.loadGoogleFont('NotoSerifTC');
+
+    // 設定 fallback 字型鏈（缺字時依序嘗試）
+    // 思源宋體涵蓋最廣，當其他字型缺字時用它補
+    if (renderer && renderer.setFallbackFontFaces) {
+      renderer.setFallbackFontFaces('Noto Serif TC');
+      console.log('[app-bridge] Fallback 字型設定完成：Noto Serif TC');
+    }
   };
 
 
@@ -811,7 +818,20 @@
       var isTxt = /\.(txt|md|markdown)$/i.test(fileData.name);
       if (isTxt && typeof TextTools !== 'undefined') {
         try {
+          // 自動偵測編碼：先試 UTF-8，如果出現大量替換字元就試 GBK
           var textContent = new TextDecoder('utf-8').decode(data);
+          var replacementCount = (textContent.match(/\uFFFD/g) || []).length;
+          if (replacementCount > textContent.length * 0.01) {
+            // 超過 1% 是替換字元，很可能不是 UTF-8，試 GBK
+            try {
+              var gbkText = new TextDecoder('gbk').decode(data);
+              var gbkBad = (gbkText.match(/\uFFFD/g) || []).length;
+              if (gbkBad < replacementCount) {
+                textContent = gbkText;
+                console.log('[app-bridge] 偵測到 GBK 編碼，已自動轉換');
+              }
+            } catch (e) { /* GBK decoder 不支援就算了 */ }
+          }
 
           // 跳過開頭 metadata（書名、作者、標籤、簡介等）
           var parsed = TextTools.skipMetadata(textContent);

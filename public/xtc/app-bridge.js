@@ -1850,20 +1850,24 @@
         var data = new Uint8Array(await file.arrayBuffer());
         var ptr = Module.allocateMemory(data.length);
         Module.HEAPU8.set(data, ptr);
-        renderer.registerFontFromMemory(ptr, data.length, file.name);
+        // 註冊時用去掉副檔名的名字，跟 setFontFace 一致
+        var fontName = file.name.replace(/\.(ttf|otf)$/i, '');
+        renderer.registerFontFromMemory(ptr, data.length, fontName);
         Module.freeMemory(ptr);
 
         // 在 fontSelect 新增選項
         if (_fontSelect) {
           var option = document.createElement('option');
-          option.value = file.name.replace(/\.(ttf|otf)$/i, '');
+          option.value = fontName;
           option.textContent = file.name + '（自訂）';
           _fontSelect.appendChild(option);
           _fontSelect.value = option.value;
         }
 
         showProgress('自訂字型載入完成', 100);
-        debouncedRender();
+        // 直接套用（不走 debounce，確保字型立刻生效）
+        if (typeof applySettings === 'function') applySettings();
+        if (typeof renderCurrentPage === 'function') renderCurrentPage();
         hideProgress(1500);
 
       } catch (err) {

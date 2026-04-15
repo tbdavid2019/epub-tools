@@ -616,12 +616,9 @@
       bridgeSwitchToFile(0);
     }
 
-    // 多檔時顯示批量匯出按鈕
-    var _exportAllBtn = document.getElementById('exportAllBtn');
-    var _exportOneByOne = document.getElementById('exportAllOneByOne');
-    var showBatch = loadedFiles.length > 1;
-    if (_exportAllBtn) _exportAllBtn.style.display = showBatch ? 'inline-block' : 'none';
-    if (_exportOneByOne) _exportOneByOne.style.display = showBatch ? 'inline-block' : 'none';
+    // 多檔時顯示批次轉換按鈕
+    var _batchExportBtn = document.getElementById('batchExportBtn');
+    if (_batchExportBtn) _batchExportBtn.style.display = loadedFiles.length > 1 ? 'inline-flex' : 'none';
   };
 
   /**
@@ -1654,33 +1651,96 @@
     });
   }
 
-  // --- 6.2b 逐個下載按鈕（多檔案時逐一匯出 XTC）---
-  var _exportAllOneByOne = document.getElementById('exportAllOneByOne');
-  if (_exportAllOneByOne) {
-    _exportAllOneByOne.addEventListener('click', async function () {
-      if (!loadedFiles || loadedFiles.length === 0) return;
-      for (var fi = 0; fi < loadedFiles.length; fi++) {
-        await bridgeSwitchToFile(fi);
-        if (typeof exportXTC === 'function') {
-          await new Promise(function (resolve) {
-            var origDl = window.downloadFile;
-            window.downloadFile = function (data, filename) {
-              origDl(data, filename);
-              window.downloadFile = origDl;
-              resolve();
-            };
-            exportXTC();
+  // --- 6.2b 批次轉換（多檔一鍵轉 → ZIP 下載）---
+  var _batchExportBtnEl = document.getElementById('batchExportBtn');
+  if (_batchExportBtnEl) {
+    _batchExportBtnEl.addEventListener('click', async function () {
+      if (!loadedFiles || loadedFiles.length < 2) return;
+
+      var qualityModeVal = qualityModeEl ? qualityModeEl.value : 'fast';
+      var isHQ = qualityModeVal === 'hq';
+      var extension = isHQ ? 'xtch' : 'xtc';
+      var zip = new JSZip();
+      var totalFiles = loadedFiles.length;
+      var successCount = 0;
+      var failedFiles = [];
+
+      // 停用按鈕避免重複點擊
+      _batchExportBtnEl.disabled = true;
+      _batchExportBtnEl.innerHTML = '<i data-lucide="loader"></i> 轉換中...';
+
+      showProgress('批次轉換準備中...', 0);
+
+      for (var fi = 0; fi < totalFiles; fi++) {
+        var fileName = loadedFiles[fi].name;
+        var fileLabel = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
+
+        showProgress('正在轉換 ' + (fi + 1) + '/' + totalFiles + '：' + fileLabel, (fi / totalFiles) * 100);
+
+        try {
+          // 載入這個檔案
+          await bridgeSwitchToFile(fi);
+
+          // 等一下讓 CREngine 完成分頁
+          await new Promise(function (r) { setTimeout(r, 100); });
+
+          if (!renderer || totalPages === 0) {
+            failedFiles.push(fileName + '（載入失敗）');
+            continue;
+          }
+
+          // 逐頁渲染
+          var xtcData = await generateXTC(function (progress, page) {
+            var fileProgress = fi / totalFiles;
+            var pageProgress = (progress / 100) / totalFiles;
+            var overall = (fileProgress + pageProgress) * 100;
+            showProgress(
+              '正在轉換 ' + (fi + 1) + '/' + totalFiles + '：' + fileLabel +
+              '（第 ' + page + '/' + totalPages + ' 頁）',
+              overall
+            );
           });
+
+          // 加入 ZIP
+          var outName = fileName.replace(/\.[^.]+$/, '.' + extension);
+          zip.file(outName, xtcData);
+          successCount++;
+
+        } catch (err) {
+          console.error('[batch] 轉換失敗：' + fileName, err);
+          failedFiles.push(fileName + '（' + (err.message || '未知錯誤') + '）');
         }
       }
-    });
-  }
 
-  // --- 6.2c ZIP 匯出按鈕 ---
-  var _exportAllBtnNew = document.getElementById('exportAllBtn');
-  if (_exportAllBtnNew) {
-    _exportAllBtnNew.addEventListener('click', function () {
-      if (typeof exportAllFiles === 'function') exportAllFiles();
+      // 打包 ZIP 並下載
+      if (successCount > 0) {
+        showProgress('正在打包 ZIP...', 95);
+        try {
+          var zipBlob = await zip.generateAsync({ type: 'blob' });
+          var zipName = 'xtc_batch_' + successCount + 'books.zip';
+          triggerDownload(zipBlob, zipName);
+          showProgress('批次轉換完成！' + successCount + ' 本成功' + (failedFiles.length > 0 ? '、' + failedFiles.length + ' 本失敗' : ''), 100);
+        } catch (zipErr) {
+          showProgress('ZIP 打包失敗：' + zipErr.message, 0);
+        }
+      } else {
+        showProgress('全部轉換失敗', 0);
+      }
+
+      // 如果有失敗的，列出來
+      if (failedFiles.length > 0) {
+        console.warn('[batch] 失敗清單：', failedFiles);
+      }
+
+      // 恢復按鈕
+      _batchExportBtnEl.disabled = false;
+      _batchExportBtnEl.innerHTML = '<i data-lucide="archive"></i> 批次轉換全部';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+
+      hideProgress(3000);
+
+      // 切回第一個檔案
+      await bridgeSwitchToFile(0);
     });
   }
 
@@ -1959,8 +2019,8 @@
     if (_exportPageBtn) _exportPageBtn.disabled = false;
     var exportBtnEl = document.getElementById('exportBtn');
     if (exportBtnEl) exportBtnEl.disabled = false;
-    var exportAllBtnEl = document.getElementById('exportAllBtn');
-    if (exportAllBtnEl) exportAllBtnEl.disabled = false;
+    var batchBtn = document.getElementById('batchExportBtn');
+    if (batchBtn) batchBtn.disabled = false;
   }
 
   function disableExportButtons() {
@@ -1968,8 +2028,8 @@
     if (_exportPageBtn) _exportPageBtn.disabled = true;
     var exportBtnEl = document.getElementById('exportBtn');
     if (exportBtnEl) exportBtnEl.disabled = true;
-    var exportAllBtnEl = document.getElementById('exportAllBtn');
-    if (exportAllBtnEl) exportAllBtnEl.disabled = true;
+    var batchBtn = document.getElementById('batchExportBtn');
+    if (batchBtn) batchBtn.disabled = true;
   }
 
   function updateNavButtons() {

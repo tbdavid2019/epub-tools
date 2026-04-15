@@ -620,12 +620,12 @@ a:hover { color: var(--color-sage-dark); }
   font-weight: 500;
   border-radius: var(--radius-md);
   text-decoration: none;
-  transition: background-color 200ms ease, box-shadow 200ms ease;
+  transition: color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
 }
 .ap-card-btn:hover {
-  background: #6B8260;
-  color: #fff;
-  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 @media (max-width: 600px) {

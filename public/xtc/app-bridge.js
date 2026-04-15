@@ -1159,10 +1159,11 @@
       var fontWeightEl = document.getElementById('fontWeight');
       renderer.setFontWeight(parseInt(fontWeightEl ? fontWeightEl.value : 400) || 400);
 
-      // 字型：從 fontSelect 取值
+      // 字型：從 fontSelect 取值，用 CREngine 內部名
       var selectedFont = _fontSelect ? _fontSelect.value : '';
       if (selectedFont && selectedFont !== 'custom') {
-        renderer.setFontFace(selectedFont);
+        var creName = (typeof getFontCReName === 'function') ? getFontCReName(selectedFont) : selectedFont;
+        renderer.setFontFace(creName);
       }
 
       // 文字對齊：先從 UI 按鈕讀，再同步到 shim

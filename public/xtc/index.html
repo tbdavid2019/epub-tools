@@ -25,7 +25,7 @@
   </style>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style-helloruru.css?v=11">
+  <link rel="stylesheet" href="style-helloruru.css?v=12">
 
   <!-- Lucide Icons -->
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
@@ -230,6 +230,7 @@
                 <option value="JasonHandwriting1">清松手寫體（手寫・建議 32px 以上）</option>
                 <option value="Cubic11">俐方體 11 號（點陣・建議 33px）</option>
                 <option value="LINESeedTW">LINE Seed（現代無襯線・建議 28-36px）</option>
+                <option value="GenWanMin2TW">源雲明朝（古典明體・建議 28-36px）</option>
               </optgroup>
               <optgroup label="英文">
                 <option value="Literata">Literata</option>
@@ -806,19 +807,19 @@
   </div>
 
   <!-- Scripts -->
-  <script src="i18n-zh-TW.js?v=11"></script>
-  <script src="crengine.js?v=11"></script>
-  <script src="markdown-parser.js?v=11"></script>
-  <script src="format-handlers.js?v=11"></script>
+  <script src="i18n-zh-TW.js?v=12"></script>
+  <script src="crengine.js?v=12"></script>
+  <script src="markdown-parser.js?v=12"></script>
+  <script src="format-handlers.js?v=12"></script>
   <script src="dither-worker.js"></script>
-  <script src="compat-shim.js?v=11"></script>
-  <script src="app.js?v=11"></script>
-  <script src="font-config.js?v=11"></script>
-  <script src="status-bar-themes.js?v=11"></script>
-  <script src="image-tools.js?v=11"></script>
-  <script src="text-tools.js?v=11"></script>
-  <script src="page-backgrounds.js?v=11"></script>
-  <script src="app-bridge.js?v=11"></script>
+  <script src="compat-shim.js?v=12"></script>
+  <script src="app.js?v=12"></script>
+  <script src="font-config.js?v=12"></script>
+  <script src="status-bar-themes.js?v=12"></script>
+  <script src="image-tools.js?v=12"></script>
+  <script src="text-tools.js?v=12"></script>
+  <script src="page-backgrounds.js?v=12"></script>
+  <script src="app-bridge.js?v=12"></script>
 
   <script>
     // Initialize Lucide icons
@@ -848,12 +849,13 @@
       'JasonHandwriting1': { hint: '手寫體建議大一點才清楚，建議字級 32px 以上', defaultSize: 34 },
       'Cubic11': { hint: '點陣體建議用 33px（11 的整數倍最清晰）', defaultSize: 33 },
       'LINESeedTW': { hint: 'LINE Seed 現代感清晰好讀，建議字級 28-36px', defaultSize: 32 },
+      'GenWanMin2TW': { hint: '源雲明朝古典雅緻，適合文學作品，建議字級 28-36px', defaultSize: 32 },
       'Literata': { hint: 'Literata 經典英文襯線體，建議字級 28-34px', defaultSize: 30 },
       'Lora': { hint: 'Lora 優雅英文襯線體，建議字級 28-34px', defaultSize: 30 },
     };
 
     // 中文字型清單（斷字功能用）
-    const chineseFonts = ['GuanKiapTsingKhai', 'Huninn', 'NotoSerifTC', 'NotoSansTC', 'JasonHandwriting1', 'Cubic11', 'LINESeedTW'];
+    const chineseFonts = ['GuanKiapTsingKhai', 'Huninn', 'NotoSerifTC', 'NotoSansTC', 'JasonHandwriting1', 'Cubic11', 'LINESeedTW', 'GenWanMin2TW'];
 
     document.getElementById('fontSelect')?.addEventListener('change', function() {
       const rec = fontSizeRecommendations[this.value];

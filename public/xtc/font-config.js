@@ -3,9 +3,13 @@
  * 閱星曈轉檔工具 | HelloRuru Tools
  *
  * 字型載入策略：
- * - CDN 字型（Google Fonts / jsDelivr）：懶載入，選到才下載
  * - 自架字型（lab.helloruru.com）：懶載入，選到才下載
+ * - CDN 字型（GitHub raw）：懶載入，選到才下載
  * - 自訂上傳字型：使用者手動上傳 TTF/OTF
+ *
+ * creName = CREngine WASM 內部認的 font family name
+ * 必須跟字型檔 name table 裡的 family name 一致，
+ * setFontFace() 要傳這個名字才會生效。
  */
 
 var FONT_CONFIG = {
@@ -13,6 +17,7 @@ var FONT_CONFIG = {
 
   GuanKiapTsingKhai: {
     name: '原俠正楷',
+    creName: 'GuanKiapTsingKhai-TW',
     category: 'zh-TW',
     style: '楷體',
     license: 'SIL OFL',
@@ -26,6 +31,7 @@ var FONT_CONFIG = {
 
   Huninn: {
     name: 'jf open 粉圓',
+    creName: 'jf-openhuninn-2.0',
     category: 'zh-TW',
     style: '圓體',
     license: 'SIL OFL',
@@ -39,6 +45,7 @@ var FONT_CONFIG = {
 
   NotoSerifTC: {
     name: '思源宋體',
+    creName: 'Noto Serif TC',
     category: 'zh-TW',
     style: '明體',
     license: 'SIL OFL',
@@ -53,6 +60,7 @@ var FONT_CONFIG = {
 
   NotoSansTC: {
     name: '思源黑體',
+    creName: 'Noto Sans TC',
     category: 'zh-TW',
     style: '黑體',
     license: 'SIL OFL',
@@ -67,19 +75,21 @@ var FONT_CONFIG = {
 
   JasonHandwriting1: {
     name: '清松手寫體',
+    creName: 'JasonHandwriting1',
     category: 'zh-TW',
     style: '手寫體',
     license: 'SIL OFL',
     author: '游清松',
     recommendedSize: { min: 32, max: 40, default: 34 },
-    hint: '手寫體建議大一點才清楚，建議字級 32px 以上',
+    hint: '手寫體建議大一點才清楚，建議字級 32px 以上（約 19MB，首次載入較慢）',
     variants: [
-      { weight: 400, style: 'normal', url: 'https://lab.helloruru.com/fonts/xtc/JasonHandwriting1.ttf' },
+      { weight: 400, style: 'normal', url: 'https://raw.githubusercontent.com/max32002/JasonHandWritingFonts/master/tw/JasonHandwriting1-Regular.ttf' },
     ],
   },
 
   Cubic11: {
     name: '俐方體 11 號',
+    creName: 'Cubic 11',
     category: 'zh-TW',
     style: '點陣體',
     license: 'SIL OFL 1.1',
@@ -93,6 +103,7 @@ var FONT_CONFIG = {
 
   LINESeedTW: {
     name: 'LINE Seed',
+    creName: 'LINE Seed TW_TTF',
     category: 'zh-TW',
     style: '現代無襯線',
     license: 'SIL OFL 1.1',
@@ -105,206 +116,176 @@ var FONT_CONFIG = {
     ],
   },
 
-  // === 英文字型（保留 bigbag 原版） ===
+  GenWanMin2TW: {
+    name: '源雲明朝',
+    creName: 'GenWanMin2 TW',
+    category: 'zh-TW',
+    style: '古典明體',
+    license: 'SIL OFL',
+    author: 'ButTaiwan',
+    recommendedSize: { min: 28, max: 36, default: 32 },
+    hint: '源雲明朝古典雅緻，適合文學作品，建議字級 28-36px（約 22MB，首次載入較慢）',
+    variants: [
+      { weight: 400, style: 'normal', url: 'https://lab.helloruru.com/fonts/xtc/GenWanMin2TW-Regular.otf' },
+    ],
+  },
+
+  // === 英文字型 ===
 
   Literata: {
     name: 'Literata',
+    creName: 'Literata',
     category: 'en',
     style: 'Serif',
-    license: 'OFL',
-    recommendedSize: { min: 28, max: 34, default: 30 },
-    hint: 'Literata 經典英文襯線體，建議字級 28-34px',
+    license: 'SIL OFL',
+    author: 'TypeTogether',
+    recommendedSize: { min: 24, max: 34, default: 28 },
+    hint: 'Literata 經典英文襯線體，建議字級 24-34px',
     variants: [
       { weight: 400, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/literata/Literata%5Bopsz%2Cwght%5D.ttf' },
-      { weight: 700, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/literata/Literata%5Bopsz%2Cwght%5D.ttf' },
-      { weight: 400, style: 'italic', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/literata/Literata-Italic%5Bopsz%2Cwght%5D.ttf' },
     ],
   },
 
   Lora: {
     name: 'Lora',
+    creName: 'Lora',
     category: 'en',
     style: 'Serif',
-    license: 'OFL',
-    recommendedSize: { min: 28, max: 34, default: 30 },
-    hint: 'Lora 優雅英文襯線體，建議字級 28-34px',
+    license: 'SIL OFL',
+    author: 'Cyreal',
+    recommendedSize: { min: 24, max: 34, default: 28 },
+    hint: 'Lora 優雅英文襯線體，建議字級 24-34px',
     variants: [
       { weight: 400, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/lora/Lora%5Bwght%5D.ttf' },
-      { weight: 700, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/lora/Lora%5Bwght%5D.ttf' },
-      { weight: 400, style: 'italic', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/lora/Lora-Italic%5Bwght%5D.ttf' },
     ],
   },
 
   Merriweather: {
     name: 'Merriweather',
+    creName: 'Merriweather',
     category: 'en',
     style: 'Serif',
-    license: 'OFL',
-    recommendedSize: { min: 28, max: 34, default: 30 },
-    hint: 'Merriweather 適合長文閱讀，建議字級 28-34px',
+    license: 'SIL OFL',
+    author: 'Sorkin Type',
+    recommendedSize: { min: 24, max: 34, default: 28 },
+    hint: 'Merriweather 粗筆畫英文襯線體，e-ink 上清晰',
     variants: [
       { weight: 400, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/merriweather/Merriweather%5Bwght%5D.ttf' },
-      { weight: 700, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/merriweather/Merriweather%5Bwght%5D.ttf' },
-      { weight: 400, style: 'italic', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/merriweather/Merriweather-Italic%5Bwght%5D.ttf' },
     ],
   },
 
   SourceSerif4: {
     name: 'Source Serif 4',
+    creName: 'Source Serif 4',
     category: 'en',
     style: 'Serif',
-    license: 'OFL',
-    recommendedSize: { min: 28, max: 34, default: 30 },
-    hint: 'Source Serif 4 專為螢幕設計，建議字級 28-34px',
+    license: 'SIL OFL',
+    author: 'Adobe',
+    recommendedSize: { min: 24, max: 34, default: 28 },
+    hint: 'Source Serif 4 專業英文襯線體',
     variants: [
       { weight: 400, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/sourceserif4/SourceSerif4%5Bopsz%2Cwght%5D.ttf' },
-      { weight: 700, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/sourceserif4/SourceSerif4%5Bopsz%2Cwght%5D.ttf' },
     ],
   },
 
   NotoSerif: {
     name: 'Noto Serif',
+    creName: 'Noto Serif',
     category: 'en',
     style: 'Serif',
-    license: 'OFL',
-    recommendedSize: { min: 28, max: 34, default: 30 },
-    hint: 'Noto Serif 萬國字元支援最完整，建議字級 28-34px',
+    license: 'SIL OFL',
+    author: 'Google',
+    recommendedSize: { min: 24, max: 34, default: 28 },
     variants: [
       { weight: 400, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/notoserif/NotoSerif%5Bwdth%2Cwght%5D.ttf' },
-      { weight: 700, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/notoserif/NotoSerif%5Bwdth%2Cwght%5D.ttf' },
     ],
   },
 
   NotoSans: {
     name: 'Noto Sans',
+    creName: 'Noto Sans',
     category: 'en',
     style: 'Sans-serif',
-    license: 'OFL',
-    recommendedSize: { min: 28, max: 34, default: 30 },
-    hint: 'Noto Sans 乾淨無襯線體，建議字級 28-34px',
+    license: 'SIL OFL',
+    author: 'Google',
+    recommendedSize: { min: 24, max: 34, default: 28 },
     variants: [
       { weight: 400, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf' },
-      { weight: 700, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf' },
     ],
   },
 
   Roboto: {
     name: 'Roboto',
+    creName: 'Roboto',
     category: 'en',
     style: 'Sans-serif',
     license: 'Apache 2.0',
-    recommendedSize: { min: 28, max: 34, default: 30 },
-    hint: 'Roboto 通用無襯線體，建議字級 28-34px',
+    author: 'Google',
+    recommendedSize: { min: 24, max: 34, default: 28 },
     variants: [
       { weight: 400, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/Roboto%5Bwdth%2Cwght%5D.ttf' },
-      { weight: 700, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/Roboto%5Bwdth%2Cwght%5D.ttf' },
     ],
   },
 
   EBGaramond: {
     name: 'EB Garamond',
+    creName: 'EB Garamond',
     category: 'en',
     style: 'Serif',
-    license: 'OFL',
-    recommendedSize: { min: 30, max: 36, default: 32 },
-    hint: 'EB Garamond 經典印刷襯線，建議字級 30-36px',
+    license: 'SIL OFL',
+    author: 'Georg Duffner',
+    recommendedSize: { min: 24, max: 34, default: 28 },
     variants: [
       { weight: 400, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/ebgaramond/EBGaramond%5Bwght%5D.ttf' },
-      { weight: 700, style: 'normal', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/ebgaramond/EBGaramond%5Bwght%5D.ttf' },
-      { weight: 400, style: 'italic', url: 'https://raw.githubusercontent.com/google/fonts/main/ofl/ebgaramond/EBGaramond-Italic%5Bwght%5D.ttf' },
     ],
   },
 };
 
-/**
- * 取得字型建議字級
- * @param {string} fontKey - 字型 key（如 'NotoSerifTC'）
- * @returns {{ min: number, max: number, default: number, hint: string }}
- */
+// === 工具函式 ===
+
 function getFontRecommendation(fontKey) {
-  var font = FONT_CONFIG[fontKey];
-  if (!font) return { min: 28, max: 34, default: 30, hint: '建議字級 28-34px' };
-  return {
-    min: font.recommendedSize.min,
-    max: font.recommendedSize.max,
-    default: font.recommendedSize.default,
-    hint: font.hint,
-  };
+  var config = FONT_CONFIG[fontKey];
+  if (!config) return null;
+  return config.recommendedSize || null;
 }
 
-/**
- * 取得字型的 TTF URL（指定字重和樣式）
- * @param {string} fontKey
- * @param {number} weight
- * @param {string} style
- * @returns {string|null}
- */
-function getFontUrl(fontKey, weight, style) {
-  if (typeof weight === 'undefined') weight = 400;
-  if (typeof style === 'undefined') style = 'normal';
-  var font = FONT_CONFIG[fontKey];
-  if (!font) return null;
-  var variants = font.variants;
-  var variant = null;
-  // 精確比對
-  for (var i = 0; i < variants.length; i++) {
-    if (variants[i].weight === weight && variants[i].style === style) {
-      variant = variants[i];
-      break;
+function getFontUrl(fontKey, weight) {
+  var config = FONT_CONFIG[fontKey];
+  if (!config || !config.variants) return null;
+  weight = weight || 400;
+  for (var i = 0; i < config.variants.length; i++) {
+    if (config.variants[i].weight === weight) {
+      return config.variants[i].url;
     }
   }
-  // 同樣式不同字重
-  if (!variant) {
-    for (var j = 0; j < variants.length; j++) {
-      if (variants[j].style === style) {
-        variant = variants[j];
-        break;
-      }
-    }
-  }
-  // fallback 第一個
-  if (!variant) {
-    variant = variants[0];
-  }
-  return variant ? variant.url : null;
+  return config.variants[0] ? config.variants[0].url : null;
 }
 
-/**
- * 取得所有繁體中文字型 key
- * @returns {string[]}
- */
+function getFontCReName(fontKey) {
+  var config = FONT_CONFIG[fontKey];
+  return config ? (config.creName || fontKey) : fontKey;
+}
+
 function getChineseFontKeys() {
-  var keys = Object.keys(FONT_CONFIG);
-  var result = [];
-  for (var i = 0; i < keys.length; i++) {
-    if (FONT_CONFIG[keys[i]].category === 'zh-TW') {
-      result.push(keys[i]);
-    }
+  var keys = [];
+  for (var key in FONT_CONFIG) {
+    if (FONT_CONFIG[key].category === 'zh-TW') keys.push(key);
   }
-  return result;
+  return keys;
 }
 
-/**
- * 取得所有英文字型 key
- * @returns {string[]}
- */
 function getEnglishFontKeys() {
-  var keys = Object.keys(FONT_CONFIG);
-  var result = [];
-  for (var i = 0; i < keys.length; i++) {
-    if (FONT_CONFIG[keys[i]].category === 'en') {
-      result.push(keys[i]);
-    }
+  var keys = [];
+  for (var key in FONT_CONFIG) {
+    if (FONT_CONFIG[key].category === 'en') keys.push(key);
   }
-  return result;
+  return keys;
 }
 
-// ==================== 匯出 ====================
-
-if (typeof window !== 'undefined') {
-  window.FONT_CONFIG = FONT_CONFIG;
-  window.getFontRecommendation = getFontRecommendation;
-  window.getFontUrl = getFontUrl;
-  window.getChineseFontKeys = getChineseFontKeys;
-  window.getEnglishFontKeys = getEnglishFontKeys;
-}
+// 掛到全域
+window.FONT_CONFIG = FONT_CONFIG;
+window.getFontRecommendation = getFontRecommendation;
+window.getFontUrl = getFontUrl;
+window.getFontCReName = getFontCReName;
+window.getChineseFontKeys = getChineseFontKeys;
+window.getEnglishFontKeys = getEnglishFontKeys;

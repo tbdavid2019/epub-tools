@@ -1311,6 +1311,7 @@
       }
 
       if (typeof updateCanvasSize === 'function') updateCanvasSize();
+      debouncedRender();
     });
   }
 
@@ -1322,6 +1323,7 @@
       if (_devicePreset && _devicePreset.value === 'custom') {
         SCREEN_WIDTH = parseInt(_customWidth.value) || 480;
         if (typeof updateCanvasSize === 'function') updateCanvasSize();
+        debouncedRender();
       }
     });
   }
@@ -1330,6 +1332,7 @@
       if (_devicePreset && _devicePreset.value === 'custom') {
         SCREEN_HEIGHT = parseInt(_customHeight.value) || 800;
         if (typeof updateCanvasSize === 'function') updateCanvasSize();
+        debouncedRender();
       }
     });
   }
@@ -1554,11 +1557,20 @@
       return;
     }
 
-    var qualityModeVal = qualityModeEl ? qualityModeEl.value : 'fast';
-    var isHQ = qualityModeVal === 'hq';
-    var pageData = await renderPageForExport(currentPage);
-    var filename = 'page_' + (currentPage + 1) + '.' + (isHQ ? 'xth' : 'xtg');
-    downloadFile(pageData, filename);
+    showProgress('正在處理頁面...', 50);
+    try {
+      var qualityModeVal = qualityModeEl ? qualityModeEl.value : 'fast';
+      var isHQ = qualityModeVal === 'hq';
+      var pageData = await renderPageForExport(currentPage);
+      var filename = 'page_' + (currentPage + 1) + '.' + (isHQ ? 'xth' : 'xtg');
+      downloadFile(pageData, filename);
+      showProgress('頁面匯出完成！', 100);
+      hideProgress(2000);
+    } catch (err) {
+      console.error('[app-bridge] 頁面匯出失敗：', err);
+      showProgress('頁面匯出失敗：' + (err.message || String(err)), 0);
+      hideProgress(3000);
+    }
   };
 
   // 覆寫 renderCurrentPage 讓頁面資訊顯示中文

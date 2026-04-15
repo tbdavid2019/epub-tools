@@ -616,14 +616,16 @@
       bridgeSwitchToFile(0);
     }
 
-    // 多檔時顯示批次按鈕
+    // 多檔時顯示批次按鈕和提示
     var showBatch = loadedFiles.length > 1;
     var _batchExportBtn = document.getElementById('batchExportBtn');
     var _exportAllBtn = document.getElementById('exportAllBtn');
     var _exportOneByOne = document.getElementById('exportAllOneByOne');
+    var _batchHint = document.getElementById('batchHint');
     if (_batchExportBtn) _batchExportBtn.style.display = showBatch ? 'inline-flex' : 'none';
     if (_exportAllBtn) _exportAllBtn.style.display = showBatch ? 'inline-block' : 'none';
     if (_exportOneByOne) _exportOneByOne.style.display = showBatch ? 'inline-block' : 'none';
+    if (_batchHint) _batchHint.style.display = showBatch ? 'flex' : 'none';
   };
 
   /**

@@ -616,9 +616,14 @@
       bridgeSwitchToFile(0);
     }
 
-    // 多檔時顯示批次轉換按鈕
+    // 多檔時顯示批次按鈕
+    var showBatch = loadedFiles.length > 1;
     var _batchExportBtn = document.getElementById('batchExportBtn');
-    if (_batchExportBtn) _batchExportBtn.style.display = loadedFiles.length > 1 ? 'inline-flex' : 'none';
+    var _exportAllBtn = document.getElementById('exportAllBtn');
+    var _exportOneByOne = document.getElementById('exportAllOneByOne');
+    if (_batchExportBtn) _batchExportBtn.style.display = showBatch ? 'inline-flex' : 'none';
+    if (_exportAllBtn) _exportAllBtn.style.display = showBatch ? 'inline-block' : 'none';
+    if (_exportOneByOne) _exportOneByOne.style.display = showBatch ? 'inline-block' : 'none';
   };
 
   /**
@@ -1741,6 +1746,42 @@
 
       // 切回第一個檔案
       await bridgeSwitchToFile(0);
+    });
+  }
+
+  // --- 6.2c 逐個下載按鈕 ---
+  var _exportAllOneByOneEl = document.getElementById('exportAllOneByOne');
+  if (_exportAllOneByOneEl) {
+    _exportAllOneByOneEl.addEventListener('click', async function () {
+      if (!loadedFiles || loadedFiles.length === 0) return;
+      showProgress('逐個轉換中...', 0);
+      for (var fi = 0; fi < loadedFiles.length; fi++) {
+        showProgress('正在轉換 ' + (fi + 1) + '/' + loadedFiles.length + '：' + loadedFiles[fi].name, (fi / loadedFiles.length) * 100);
+        await bridgeSwitchToFile(fi);
+        await new Promise(function (r) { setTimeout(r, 100); });
+        if (typeof exportXTC === 'function') {
+          await new Promise(function (resolve) {
+            var origDl = window.downloadFile;
+            window.downloadFile = function (data, filename) {
+              origDl(data, filename);
+              window.downloadFile = origDl;
+              resolve();
+            };
+            exportXTC();
+          });
+        }
+      }
+      showProgress('全部下載完成！', 100);
+      hideProgress(2000);
+      await bridgeSwitchToFile(0);
+    });
+  }
+
+  // --- 6.2d 打包 ZIP 按鈕 ---
+  var _exportAllBtnEl = document.getElementById('exportAllBtn');
+  if (_exportAllBtnEl) {
+    _exportAllBtnEl.addEventListener('click', function () {
+      if (typeof exportAllFiles === 'function') exportAllFiles();
     });
   }
 

@@ -482,14 +482,41 @@
    * @param {boolean} options.punctuation - 標點台灣化（預設 true）
    * @returns {Promise<{text: string, chapters: Array, changes: object}>}
    */
+  /**
+   * 清理中文文字中的多餘空格
+   * 簡體電子書常見問題：中文字之間被插入全形或多個半形空格
+   * @param {string} text
+   * @returns {string}
+   */
+  function cleanSpaces(text) {
+    if (!text) return text;
+    var result = text;
+    // 中文字之間的全形空格（　）移除
+    result = result.replace(/([\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff，。！？；：、「」『』（）《》])\u3000([\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff，。！？；：、「」『』（）《》])/g, '$1$2');
+    // 中文字之間的多個半形空格壓成零（保留單個空格給中英混排）
+    result = result.replace(/([\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff，。！？；：、「」『』（）《》])\s{2,}([\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff，。！？；：、「」『』（）《》])/g, '$1$2');
+    // 標點符號前後的多餘空格
+    result = result.replace(/\s+([，。！？；：、」』）》])/g, '$1');
+    result = result.replace(/([「『（《])\s+/g, '$1');
+    return result;
+  }
+
   async function processAll(text, options) {
     var opt = options || {};
     var doS2TW = opt.s2tw !== false;
     var doHalf = opt.halfToFull !== false;
     var doPunct = opt.punctuation !== false;
+    var doClean = opt.cleanSpaces !== false;  // 預設開啟
 
     var result = text;
-    var changes = { s2tw: 0, halfToFull: 0, punctuation: 0 };
+    var changes = { s2tw: 0, halfToFull: 0, punctuation: 0, cleanSpaces: 0 };
+
+    // 0. 清理多餘空格（最先做）
+    if (doClean) {
+      var beforeClean = result;
+      result = cleanSpaces(result);
+      changes.cleanSpaces = beforeClean.length - result.length;
+    }
 
     // 1. 簡轉繁
     if (doS2TW) {
@@ -537,6 +564,7 @@
     simplifiedToTraditional: simplifiedToTraditional,
     halfToFull: halfToFull,
     convertPunctuation: convertPunctuation,
+    cleanSpaces: cleanSpaces,
     detectChapters: detectChapters,
     analyzeText: analyzeText,
     getExistingTOC: getExistingTOC,

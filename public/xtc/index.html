@@ -25,7 +25,7 @@
   </style>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style-helloruru.css?v=20">
+  <link rel="stylesheet" href="style-helloruru.css?v=21">
 
   <!-- Lucide Icons -->
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
@@ -265,6 +265,13 @@
               <i data-lucide="upload"></i> 上傳自訂字型（TTF/OTF）
             </button>
             <input type="file" id="fontFileInput" accept=".ttf,.otf" hidden>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enableAutoFallback" checked>
+              <span>自動補字</span>
+            </label>
+            <p class="form-hint"><i data-lucide="info"></i><span>字型缺字時自動用思源宋體補上。俐方體、清松手寫體等字集較小的字型建議開啟。思源宋體/黑體字集完整，不需要補。</span></p>
           </div>
         </section>
 
@@ -807,19 +814,19 @@
   </div>
 
   <!-- Scripts -->
-  <script src="i18n-zh-TW.js?v=20"></script>
-  <script src="crengine.js?v=20"></script>
-  <script src="markdown-parser.js?v=20"></script>
-  <script src="format-handlers.js?v=20"></script>
+  <script src="i18n-zh-TW.js?v=21"></script>
+  <script src="crengine.js?v=21"></script>
+  <script src="markdown-parser.js?v=21"></script>
+  <script src="format-handlers.js?v=21"></script>
   <script src="dither-worker.js"></script>
-  <script src="compat-shim.js?v=20"></script>
-  <script src="app.js?v=20"></script>
-  <script src="font-config.js?v=20"></script>
-  <script src="status-bar-themes.js?v=20"></script>
-  <script src="image-tools.js?v=20"></script>
-  <script src="text-tools.js?v=20"></script>
-  <script src="page-backgrounds.js?v=20"></script>
-  <script src="app-bridge.js?v=20"></script>
+  <script src="compat-shim.js?v=21"></script>
+  <script src="app.js?v=21"></script>
+  <script src="font-config.js?v=21"></script>
+  <script src="status-bar-themes.js?v=21"></script>
+  <script src="image-tools.js?v=21"></script>
+  <script src="text-tools.js?v=21"></script>
+  <script src="page-backgrounds.js?v=21"></script>
+  <script src="app-bridge.js?v=21"></script>
 
   <script>
     // Initialize Lucide icons

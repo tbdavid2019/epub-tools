@@ -754,6 +754,9 @@
           // 把處理過的文字轉回 bytes
           data = new TextEncoder().encode(textContent);
 
+          // 存起來給目錄偵測用（避免重複讀檔）
+          window._processedTextContent = textContent;
+
           // 自動填入封面的書名和作者
           if (window._detectedTitle) {
             var coverTitleInput = document.getElementById('coverTitleInput');
@@ -799,12 +802,21 @@
     updateBookInfo(info.title || fileData.name, info.author || info.authors || '未知作者', totalPages);
 
     // 取得目錄
+    // 先嘗試 CREngine getToc
+    var rawToc = null;
+    try {
+      rawToc = renderer.getToc();
+      if (typeof rawToc === 'string') rawToc = JSON.parse(rawToc);
+      if (!Array.isArray(rawToc)) rawToc = null;
+    } catch (e) { rawToc = null; }
+
     var isTxtFile = /\.(txt|md|markdown)$/i.test(fileData.name);
     if (isTxtFile && typeof TextTools !== 'undefined') {
       // TXT 用我們的偵測器（比 CREngine 內建的準確）
       try {
-        var rawText = await fileData.file.text();
-        var parsed = TextTools.skipMetadata(rawText);
+        // 用前處理時已存好的文字（避免重複讀檔失敗）
+        var rawText = window._processedTextContent || (await fileData.file.text());
+        var parsed = rawText ? { body: rawText } : TextTools.skipMetadata(rawText);
         var mode = document.getElementById('chapterDetectMode')?.value || 'auto';
         var opts = {};
         if (mode === 'separator') opts.separator = document.getElementById('chapterSeparator')?.value || '';
@@ -831,11 +843,17 @@
         currentToc = renderer.getToc() || [];
       }
     } else {
-      currentToc = renderer.getToc() || [];
+      currentToc = rawToc || [];
     }
+
+    console.log('[app-bridge] 目錄結果：' + currentToc.length + ' 章');
     updateChapterList();
     if (currentToc.length > 0) {
       showSection('chaptersSection');
+      // 用我們的可編輯版本
+      setTimeout(renderChapterListUI, 200);
+    } else {
+      showSection('chaptersSection'); // 即使空也顯示，讓使用者可以手動新增
     }
 
     // 啟用按鈕
@@ -2067,21 +2085,43 @@
   var _originalDrawStatusBar = window.drawStatusBar;
   var _originalDrawProgressBar = window.drawProgressBar;
 
-  // 覆寫預覽用的 drawStatusBar
+  // 取得頁面背景設定
+  function getPageBgOptions() {
+    var bgStyle = document.getElementById('pageBgStyle');
+    var bgOpacity = document.getElementById('bgOpacity');
+    return {
+      bgId: bgStyle ? bgStyle.value : 'none',
+      opacity: bgOpacity ? parseInt(bgOpacity.value) : 30,
+    };
+  }
+
+  // 覆寫預覽用的 drawStatusBar（先畫背景，再畫進度條）
   window.drawStatusBar = function (imageData) {
-    var theme = getSelectedTheme();
-    // 自訂主題：攔截，用新的繪製函式
-    if (typeof drawCustomStatusBar === 'function' && drawCustomStatusBar(imageData, currentPage, totalPages, getCurrentChapterInfo(), theme)) {
-      return; // 自訂主題處理完了，不走原版
+    // 1. 畫頁面背景/邊框
+    var bgOpts = getPageBgOptions();
+    if (bgOpts.bgId !== 'none' && typeof drawPageBackground === 'function') {
+      drawPageBackground(imageData, bgOpts.bgId, bgOpts);
     }
-    // 原版主題：照舊
+
+    // 2. 畫進度條
+    var theme = getSelectedTheme();
+    if (typeof drawCustomStatusBar === 'function' && drawCustomStatusBar(imageData, currentPage, totalPages, getCurrentChapterInfo(), theme)) {
+      return;
+    }
     if (typeof _originalDrawStatusBar === 'function') {
       _originalDrawStatusBar(imageData);
     }
   };
 
-  // 覆寫匯出用的 drawProgressBar
+  // 覆寫匯出用的 drawProgressBar（先畫背景，再畫進度條）
   window.drawProgressBar = function (imageData, pageNum) {
+    // 1. 畫頁面背景/邊框
+    var bgOpts = getPageBgOptions();
+    if (bgOpts.bgId !== 'none' && typeof drawPageBackground === 'function') {
+      drawPageBackground(imageData, bgOpts.bgId, bgOpts);
+    }
+
+    // 2. 畫進度條
     var theme = getSelectedTheme();
     var chapterInfo = (typeof getChapterInfoForPage === 'function') ? getChapterInfoForPage(pageNum) : {};
     if (typeof drawCustomStatusBar === 'function' && drawCustomStatusBar(imageData, pageNum, totalPages, chapterInfo, theme)) {

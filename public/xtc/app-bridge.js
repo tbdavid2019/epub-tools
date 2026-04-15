@@ -743,10 +743,9 @@
     window._currentPdfDoc = null;
 
     var loaded = false;
-    var isTxtFormat = /\.(txt|md|markdown)$/i.test(fileData.name);
 
-    // TXT 不走 handleCREngineNative（需要經過文字前處理 + 特殊字元替換）
-    if (!isTxtFormat && typeof handleCREngineNative === 'function') {
+    // 優先：format-handlers.js 的進階處理
+    if (typeof handleCREngineNative === 'function') {
       try {
         var result = await handleCREngineNative(fileData.file, renderer, Module);
         if (result.success) {
@@ -873,7 +872,7 @@
             console.log('[text-tools] 文字處理完成：' + changeLog.join('、'));
           }
 
-          // 把處理過的文字轉回 bytes（特殊字元在下面獨立處理）
+          // 把處理過的文字轉回 bytes
           data = new TextEncoder().encode(textContent);
 
           // 存起來給目錄偵測用（避免重複讀檔）
@@ -897,23 +896,6 @@
         } catch (textErr) {
           console.warn('[text-tools] 文字前處理失敗，使用原始檔案：', textErr);
           data = new Uint8Array(rawBytes);
-        }
-      }
-
-      // TXT 特殊字元替換（獨立於 TextTools，確保一定執行）
-      if (isTxt) {
-        try {
-          var txtStr = new TextDecoder('utf-8').decode(data);
-          txtStr = txtStr
-            .replace(/[\u00B7\u2027\u2219\u22C5\u2024\u2E31\uFF65]/g, '\u30FB')  // 各種 dot → ・
-            .replace(/\u2022/g, '\u25CF')   // bullet → 黑圓
-            .replace(/\u2013/g, '\uFF0D')   // en dash → 全形減號
-            .replace(/\u2015/g, '\u2014')   // horizontal bar → em dash
-            .replace(/[\u201C\u201D]/g, function(m) { return m === '\u201C' ? '\u300C' : '\u300D'; })
-            .replace(/[\u2018\u2019]/g, function(m) { return m === '\u2018' ? '\u300E' : '\u300F'; });
-          data = new TextEncoder().encode(txtStr);
-        } catch (replaceErr) {
-          console.warn('[app-bridge] 特殊字元替換失敗：', replaceErr);
         }
       }
 

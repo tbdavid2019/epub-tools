@@ -544,24 +544,39 @@
         continue;
       }
 
-      // 純裝飾行（短且全是符號/數字/空白）
-      if (line.length < 10 && /^[=\-\*_~#·・☆★\s\d\.]+$/.test(line)) {
-        continue;
-      }
+      // 章節標題 → 正文確定從這裡開始
+      var isChapter = /^[　\s]*(第[零一二三四五六七八九十百千\d]+[章節回卷篇集部話])/.test(line)
+        || /^[　\s]*(Chapter\s+\d+)/i.test(line)
+        || /^[　\s]*((?:序章|序幕|楔子|引子|前言|終章|尾聲|後記|番外))/i.test(line)
+        || /^[　\s]*(\d+[\.、]\s+\S)/.test(line)
+        || /^[　\s]*(【.+?】)/.test(line)
+        || /^[　\s]*([☆★✦✧❖◆◇●○■□][、，,.\s]*[^\r\n]+)$/.test(line);
 
-      // 短評語/推薦語（通常只有一兩個字加標點，出現在 metadata 區）
-      if (i < 20 && line.length <= 5 && /^[^\u4e00-\u9fff]*[\u4e00-\u9fff]{1,3}[！!？?。]*$/.test(line)) {
-        continue;
-      }
-
-      // 碰到章節標題或夠長的正文行 → 正文開始
-      var isChapter = /^[　\s]*(第[零一二三四五六七八九十百千\d]+[章節回卷篇])/.test(line);
-      var isLongText = line.length >= 20;
-      if (isChapter || isLongText) {
+      if (isChapter) {
         bodyStartLine = i;
         foundContent = true;
         break;
       }
+
+      // 在前 50 行內，如果不是章節標題，繼續跳過（都當 metadata 處理）
+      // 包括：純裝飾行、短評語、推薦語、各種雜訊
+      if (line.length < 30) {
+        continue; // 短行在 metadata 區全部跳過
+      }
+
+      // 長行（>=30字）且不是已知 metadata 格式 → 可能是正文或長簡介
+      // 再往後看幾行：如果連續有長行，就是正文開始
+      var longLineCount = 0;
+      for (var check = i; check < Math.min(i + 3, maxScan); check++) {
+        if (lines[check].trim().length >= 20) longLineCount++;
+      }
+      if (longLineCount >= 2) {
+        // 連續長行 = 正文開始
+        bodyStartLine = i;
+        foundContent = true;
+        break;
+      }
+      // 只有一行長的 → 可能是長版簡介，繼續跳
     }
 
     if (!foundContent) {

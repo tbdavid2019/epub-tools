@@ -1707,3 +1707,21 @@ html.dark .onboarding-overlay {
     border: none;
   }
 }
+
+/* ============================================
+   Preset Description Text
+   ============================================ */
+.preset-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand-brown);
+}
+
+.preset-desc {
+  display: block;
+  font-size: 11px;
+  color: var(--text-caption);
+  margin-top: 2px;
+  line-height: 1.3;
+}

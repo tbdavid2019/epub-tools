@@ -117,15 +117,18 @@
           <div class="preset-buttons">
             <button class="preset-btn" onclick="applyPreset('novel')">
               <i data-lucide="book-text"></i>
-              <span>小說模式</span>
+              <span class="preset-name">小說模式</span>
+              <span class="preset-desc">純文字書籍，字大好讀</span>
             </button>
             <button class="preset-btn" onclick="applyPreset('comic')">
               <i data-lucide="image"></i>
-              <span>漫畫模式</span>
+              <span class="preset-name">漫畫模式</span>
+              <span class="preset-desc">圖片為主，滿版灰階</span>
             </button>
             <button class="preset-btn" onclick="applyPreset('document')">
               <i data-lucide="file-text"></i>
-              <span>文件模式</span>
+              <span class="preset-name">文件模式</span>
+              <span class="preset-desc">PDF/DOC，字小塞更多</span>
             </button>
           </div>
         </section>
@@ -248,13 +251,14 @@
               <option value="2em">2em</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>斷字</label>
+          <div class="form-group" id="hyphenationGroup" style="display:none;">
+            <label>英文斷字</label>
             <select id="hyphenation">
-              <option value="none">關閉</option>
-              <option value="algorithmic" selected>演算法</option>
-              <option value="dictionary">字典</option>
+              <option value="none">不斷字</option>
+              <option value="algorithmic" selected>自動斷字</option>
+              <option value="dictionary">精準斷字（較慢）</option>
             </select>
+            <p class="form-hint"><i data-lucide="info"></i><span>英文單字太長時，在行尾加連字號換行。中文不需要此功能。</span></p>
           </div>
         </section>
 
@@ -275,15 +279,16 @@
             </div>
           </div>
           <div class="form-group">
-            <label>抖動處理</label>
+            <label>灰階模擬</label>
             <select id="ditherMode">
-              <option value="none">關閉</option>
-              <option value="image">僅圖片區域</option>
-              <option value="full" selected>全頁抖動</option>
+              <option value="none">關閉（純黑白）</option>
+              <option value="image">只處理圖片（文字保持銳利）</option>
+              <option value="full" selected>整頁處理（文字和圖片都有灰階）</option>
             </select>
+            <p class="form-hint"><i data-lucide="info"></i><span>墨水屏用黑白小點排列模擬灰色，讓圖片更有層次。</span></p>
           </div>
           <div class="form-group" id="ditherStrengthGroup">
-            <label>抖動強度：<span id="ditherStrengthValue">20</span>%</label>
+            <label>灰階強度：<span id="ditherStrengthValue">20</span>%</label>
             <input type="range" id="ditherStrength" min="0" max="100" value="20">
           </div>
           <div class="form-group">
@@ -692,18 +697,25 @@
       'Lora': { hint: 'Lora 優雅英文襯線體，建議字級 28-34px', defaultSize: 30 },
     };
 
+    // 中文字型清單（斷字功能用）
+    const chineseFonts = ['GuanKiapTsingKhai', 'Huninn', 'NotoSerifTC', 'NotoSansTC', 'JasonHandwriting1', 'Cubic11'];
+
     document.getElementById('fontSelect')?.addEventListener('change', function() {
       const rec = fontSizeRecommendations[this.value];
       const hintEl = document.getElementById('fontSizeHint');
       if (rec && hintEl) {
         hintEl.querySelector('span').textContent = rec.hint;
-        // Auto-adjust font size slider to recommended default
         const slider = document.getElementById('fontSize');
         const valueDisplay = document.getElementById('fontSizeValue');
         if (slider && valueDisplay) {
           slider.value = rec.defaultSize;
           valueDisplay.textContent = rec.defaultSize;
         }
+      }
+      // 中文字型隱藏斷字、英文字型顯示斷字
+      const hyphenGroup = document.getElementById('hyphenationGroup');
+      if (hyphenGroup) {
+        hyphenGroup.style.display = chineseFonts.includes(this.value) ? 'none' : 'block';
       }
     });
 

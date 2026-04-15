@@ -21,6 +21,15 @@
 
   console.log('[app-bridge] 初始化橋接層...');
 
+  // === Debounce 渲染（避免設定變更時重複渲染） ===
+  var _renderTimer = null;
+  window.debouncedRender = function () {
+    if (_renderTimer) clearTimeout(_renderTimer);
+    _renderTimer = setTimeout(function () {
+      debouncedRender();
+    }, 300);
+  };
+
   // ============================================
   // === 一、雙向同步橋接層 ===
   // ============================================
@@ -1017,8 +1026,7 @@
         }
 
         // 重新套用設定並渲染
-        if (typeof applySettings === 'function') applySettings();
-        if (typeof renderCurrentPage === 'function') renderCurrentPage();
+        debouncedRender();
       });
     }
   }
@@ -1124,8 +1132,7 @@
         if (window._currentEngine === 'pdfjs') {
           renderPdfCurrentPage();
         } else {
-          if (typeof applySettings === 'function') applySettings();
-          if (typeof renderCurrentPage === 'function') renderCurrentPage();
+          debouncedRender();
         }
       });
     }
@@ -1141,8 +1148,7 @@
     if (el) {
       el.addEventListener('change', function () {
         if (window._currentEngine !== 'pdfjs') {
-          if (typeof applySettings === 'function') applySettings();
-          if (typeof renderCurrentPage === 'function') renderCurrentPage();
+          debouncedRender();
         }
       });
     }
@@ -1436,16 +1442,14 @@
 
         if (success) {
           showProgress('字型載入完成', 100);
-          if (typeof applySettings === 'function') applySettings();
-          if (typeof renderCurrentPage === 'function') renderCurrentPage();
+          debouncedRender();
         } else {
           showProgress('字型載入失敗', 0);
         }
 
         hideProgress(1500);
       } else {
-        if (typeof applySettings === 'function') applySettings();
-        if (typeof renderCurrentPage === 'function') renderCurrentPage();
+        debouncedRender();
       }
     });
   }
@@ -1480,8 +1484,7 @@
         }
 
         showProgress('自訂字型載入完成', 100);
-        if (typeof applySettings === 'function') applySettings();
-        if (typeof renderCurrentPage === 'function') renderCurrentPage();
+        debouncedRender();
         hideProgress(1500);
 
       } catch (err) {
@@ -1573,8 +1576,7 @@
     if (_fontSelect) _fontSelect.dispatchEvent(new Event('change'));
     syncMarginsToDummy();
     syncDitherMode();
-    if (typeof applySettings === 'function') applySettings();
-    if (typeof renderCurrentPage === 'function') renderCurrentPage();
+    debouncedRender();
   };
 
   // --- 6.10 匯出/匯入設定 ---

@@ -872,6 +872,15 @@
             console.log('[text-tools] 文字處理完成：' + changeLog.join('、'));
           }
 
+          // 特殊字元替換（避免缺字顯示為 ?）
+          textContent = textContent
+            .replace(/\u00B7/g, '\u30FB')   // middle dot → 全形中點（字型覆蓋率更高）
+            .replace(/\u2027/g, '\u30FB')   // hyphenation point → 全形中點
+            .replace(/\u2022/g, '\u25CF')   // bullet → 黑圓
+            .replace(/\u2013/g, '\uFF0D')   // en dash → 全形減號
+            .replace(/\u2014/g, '\u2500')   // em dash → 橫線（─）
+            .replace(/\u2026/g, '\u2026');  // ellipsis 保持不變（大部分字型有）
+
           // 把處理過的文字轉回 bytes
           data = new TextEncoder().encode(textContent);
 

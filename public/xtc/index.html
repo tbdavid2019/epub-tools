@@ -99,6 +99,22 @@
           </div>
         </section>
 
+        <!-- 封面上傳 -->
+        <section class="panel-section" id="coverUploadSection">
+          <h3><i data-lucide="image"></i> 書籍封面</h3>
+          <div class="form-group">
+            <div id="coverPreview" class="cover-preview" style="display:none;">
+              <img id="coverPreviewImg" alt="封面預覽">
+              <button class="btn-text" onclick="removeCover()"><i data-lucide="x"></i> 移除封面</button>
+            </div>
+            <button class="btn-secondary" id="uploadCoverBtn" style="width:100%;">
+              <i data-lucide="image-plus"></i> 上傳封面圖片
+            </button>
+            <input type="file" id="coverUploadInput" accept="image/*" hidden>
+            <p class="form-hint"><i data-lucide="info"></i><span>選用。上傳後會作為 XTC 的第一頁封面。</span></p>
+          </div>
+        </section>
+
         <!-- File Upload -->
         <section class="panel-section">
           <h3><i data-lucide="file-up"></i> 上傳檔案</h3>
@@ -296,6 +312,50 @@
               <input type="checkbox" id="negativeMode">
               <span>負片模式（深色背景）</span>
             </label>
+          </div>
+        </section>
+
+        <!-- 文字處理（轉檔前處理） -->
+        <section class="panel-section">
+          <h3><i data-lucide="languages"></i> 文字處理</h3>
+          <p class="form-hint"><i data-lucide="info"></i><span>上傳 TXT/EPUB 後，轉檔前自動處理文字。</span></p>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enableS2TW" checked>
+              <span>簡體轉繁體（台灣用語）</span>
+            </label>
+            <p class="form-hint"><i data-lucide="info"></i><span>軟件→軟體、網絡→網路、內存→記憶體。首次使用會下載字典（約 800KB）。</span></p>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enableHalfToFull" checked>
+              <span>半形標點轉全形</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enablePunctTW" checked>
+              <span>標點符號台灣化</span>
+            </label>
+            <p class="form-hint"><i data-lucide="info"></i><span>" " → 「 」、' ' → 『 』</span></p>
+          </div>
+          <div class="form-group">
+            <label>目錄偵測</label>
+            <select id="chapterDetectMode">
+              <option value="auto" selected>自動偵測（推薦）</option>
+              <option value="emptyLines">依空行分章</option>
+              <option value="separator">自訂分隔符</option>
+              <option value="keyword">自訂關鍵字</option>
+              <option value="single">不分章</option>
+            </select>
+          </div>
+          <div class="form-group" id="chapterSeparatorGroup" style="display:none;">
+            <label>分隔符</label>
+            <input type="text" id="chapterSeparator" placeholder="例如 === 或 ---">
+          </div>
+          <div class="form-group" id="chapterKeywordGroup" style="display:none;">
+            <label>關鍵字</label>
+            <input type="text" id="chapterKeyword" placeholder="例如 第、Chapter">
           </div>
         </section>
 
@@ -549,6 +609,9 @@
           <button class="btn-primary btn-accent" id="exportXtcBtn">
             <i data-lucide="download"></i> 匯出 XTC
           </button>
+          <button class="btn-primary" id="exportAllBtn" style="display:none;">
+            <i data-lucide="archive"></i> 全部匯出（ZIP）
+          </button>
         </div>
       </div>
 
@@ -665,6 +728,7 @@
   <script src="font-config.js"></script>
   <script src="status-bar-themes.js"></script>
   <script src="image-tools.js"></script>
+  <script src="text-tools.js"></script>
   <script src="app-bridge.js"></script>
 
   <script>
@@ -782,6 +846,40 @@
 
     function closeLightbox() {
       document.getElementById('lightbox').style.display = 'none';
+    }
+
+    // 目錄偵測模式切換
+    document.getElementById('chapterDetectMode')?.addEventListener('change', function() {
+      var sepGroup = document.getElementById('chapterSeparatorGroup');
+      var kwGroup = document.getElementById('chapterKeywordGroup');
+      if (sepGroup) sepGroup.style.display = this.value === 'separator' ? 'block' : 'none';
+      if (kwGroup) kwGroup.style.display = this.value === 'keyword' ? 'block' : 'none';
+    });
+
+    // 封面上傳
+    document.getElementById('uploadCoverBtn')?.addEventListener('click', function() {
+      document.getElementById('coverUploadInput')?.click();
+    });
+    document.getElementById('coverUploadInput')?.addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var img = document.getElementById('coverPreviewImg');
+        var preview = document.getElementById('coverPreview');
+        if (img) img.src = ev.target.result;
+        if (preview) preview.style.display = 'block';
+        document.getElementById('uploadCoverBtn').style.display = 'none';
+        window._customCoverData = ev.target.result; // 存起來給轉檔用
+      };
+      reader.readAsDataURL(file);
+    });
+    function removeCover() {
+      var preview = document.getElementById('coverPreview');
+      var btn = document.getElementById('uploadCoverBtn');
+      if (preview) preview.style.display = 'none';
+      if (btn) btn.style.display = 'block';
+      window._customCoverData = null;
     }
   </script>
 </body>

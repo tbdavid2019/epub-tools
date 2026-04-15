@@ -25,7 +25,7 @@
   </style>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style-helloruru.css?v=24">
+  <link rel="stylesheet" href="style-helloruru.css?v=25">
 
   <!-- Lucide Icons -->
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
@@ -734,6 +734,35 @@
   </main>
 
   <!-- Tutorial Section -->
+  <!-- 什麼時候該轉 XTC -->
+  <section class="tutorial-section" id="why-xtc">
+    <h2><i data-lucide="book-open-check"></i> 什麼時候該轉 XTC？什麼時候直接丟 EPUB？</h2>
+    <div class="tutorial-cards">
+      <div class="card-a tutorial-card">
+        <div class="tutorial-icon"><i data-lucide="zap"></i></div>
+        <h3>直接放 EPUB</h3>
+        <p class="tutorial-tag">適合大多數情況</p>
+        <p>閱星曈本身就能讀 EPUB。把 EPUB 丟到 MicroSD 卡就能看，不需要轉檔。適合用內建字型、不挑排版的讀者。</p>
+      </div>
+      <div class="card-a tutorial-card">
+        <div class="tutorial-icon"><i data-lucide="sparkles"></i></div>
+        <h3>轉成 XTC</h3>
+        <p class="tutorial-tag">追求閱讀體驗</p>
+        <p>XTC 是預先渲染好的格式，翻頁更快、字型自由選（原俠正楷、粉圓等），字級和排版在轉檔時就調好，不受閱星曈內建設定限制。</p>
+      </div>
+      <div class="card-a tutorial-card">
+        <div class="tutorial-icon"><i data-lucide="file-text"></i></div>
+        <h3>TXT / PDF / MOBI</h3>
+        <p class="tutorial-tag">必須轉 XTC</p>
+        <p>閱星曈只能讀 EPUB 和 XTC。如果你的書是 TXT、PDF、MOBI 或其他格式，就需要用這個工具轉成 XTC 才能放到閱星曈上看。</p>
+      </div>
+    </div>
+    <div style="max-width:720px; margin:24px auto 0; padding:0 16px;">
+      <p style="font-size:14px; color:#6D5954; line-height:1.8; text-align:center;">XTC 的缺點：檔案比 EPUB 大（每頁是圖片），轉好後不能在閱星曈上改字級。如果你經常換字型大小，建議直接用 EPUB。</p>
+    </div>
+  </section>
+
+  <!-- 傳書教學 -->
   <section class="tutorial-section" id="tutorial">
     <h2><i data-lucide="help-circle"></i> 轉好的檔案怎麼放到閱星曈？</h2>
     <div class="tutorial-cards">
@@ -807,19 +836,19 @@
   </div>
 
   <!-- Scripts -->
-  <script src="i18n-zh-TW.js?v=24"></script>
-  <script src="crengine.js?v=24"></script>
-  <script src="markdown-parser.js?v=24"></script>
-  <script src="format-handlers.js?v=24"></script>
+  <script src="i18n-zh-TW.js?v=25"></script>
+  <script src="crengine.js?v=25"></script>
+  <script src="markdown-parser.js?v=25"></script>
+  <script src="format-handlers.js?v=25"></script>
   <script src="dither-worker.js"></script>
-  <script src="compat-shim.js?v=24"></script>
-  <script src="app.js?v=24"></script>
-  <script src="font-config.js?v=24"></script>
-  <script src="status-bar-themes.js?v=24"></script>
-  <script src="image-tools.js?v=24"></script>
-  <script src="text-tools.js?v=24"></script>
-  <script src="page-backgrounds.js?v=24"></script>
-  <script src="app-bridge.js?v=24"></script>
+  <script src="compat-shim.js?v=25"></script>
+  <script src="app.js?v=25"></script>
+  <script src="font-config.js?v=25"></script>
+  <script src="status-bar-themes.js?v=25"></script>
+  <script src="image-tools.js?v=25"></script>
+  <script src="text-tools.js?v=25"></script>
+  <script src="page-backgrounds.js?v=25"></script>
+  <script src="app-bridge.js?v=25"></script>
 
   <script>
     // Initialize Lucide icons

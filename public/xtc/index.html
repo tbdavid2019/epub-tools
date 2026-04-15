@@ -113,11 +113,24 @@
           <div id="coverAutoPreview" class="cover-preview">
             <div class="form-group">
               <label>書名</label>
-              <input type="text" id="coverTitleInput" placeholder="輸入書名" oninput="generateAutoCover(this.value, document.getElementById('coverAuthorInput')?.value)">
+              <input type="text" id="coverTitleInput" placeholder="輸入書名" oninput="refreshCover()">
             </div>
             <div class="form-group">
               <label>作者</label>
-              <input type="text" id="coverAuthorInput" placeholder="輸入作者名（選填）" oninput="generateAutoCover(document.getElementById('coverTitleInput')?.value, this.value)">
+              <input type="text" id="coverAuthorInput" placeholder="輸入作者名（選填）" oninput="refreshCover()">
+            </div>
+            <div class="form-group">
+              <label>封面字型</label>
+              <select id="coverFontSelect" onchange="refreshCover()">
+                <option value="GenWanMin2TW" selected>源雲明朝（古典優雅）</option>
+                <option value="NotoSerifTC">思源宋體（典雅）</option>
+                <option value="NotoSansTC">思源黑體（俐落）</option>
+                <option value="GenSenRounded">源泉圓體（溫柔）</option>
+                <option value="LINESeedTW">LINE Seed（現代）</option>
+                <option value="GuanKiapTsingKhai">原俠正楷（楷書）</option>
+                <option value="Huninn">粉圓體（可愛）</option>
+              </select>
+              <p class="form-hint"><i data-lucide="info"></i><span>封面字型獨立於內文字型，轉檔後直接燒進封面圖。</span></p>
             </div>
             <canvas id="coverAutoCanvas" width="480" height="800" style="max-width:120px; border-radius:8px; box-shadow:0 2px 8px rgba(212,165,165,0.1);"></canvas>
             <p class="form-hint"><i data-lucide="info"></i><span>輸入書名即時預覽封面。上傳 EPUB 時會自動帶入。</span></p>
@@ -918,15 +931,57 @@
     }
     window._coverMode = 'auto';
 
+    // 封面字型 CSS 名對照表（給 Canvas 用）
+    var COVER_FONT_MAP = {
+      'GenWanMin2TW': '"GenWanMin2TW", "Noto Serif TC", serif',
+      'NotoSerifTC': '"Noto Serif TC", serif',
+      'NotoSansTC': '"Noto Sans TC", sans-serif',
+      'GenSenRounded': '"GenSenRounded", "Noto Sans TC", sans-serif',
+      'LINESeedTW': '"LINESeedTW", "Noto Sans TC", sans-serif',
+      'GuanKiapTsingKhai': '"GuanKiapTsingKhai", serif',
+      'Huninn': '"Huninn", sans-serif',
+    };
+
+    // 封面字型載入（CSS @font-face 按需注入）
+    var _coverFontsLoaded = {};
+    function loadCoverFont(fontKey) {
+      if (_coverFontsLoaded[fontKey]) return;
+      var urls = {
+        'GenWanMin2TW': 'https://lab.helloruru.com/fonts/xtc/GenWanMin2TW-Regular.otf',
+        'LINESeedTW': 'https://lab.helloruru.com/fonts/xtc/LINESeedTW-Regular.ttf',
+        'GuanKiapTsingKhai': 'https://lab.helloruru.com/fonts/xtc/GuanKiapTsingKhai-TW.ttf',
+      };
+      if (!urls[fontKey]) { _coverFontsLoaded[fontKey] = true; return; }
+      var face = new FontFace(fontKey, 'url(' + urls[fontKey] + ')');
+      face.load().then(function(f) {
+        document.fonts.add(f);
+        _coverFontsLoaded[fontKey] = true;
+        generateAutoCover(); // 字型載入完重畫
+      }).catch(function(err) {
+        console.warn('[cover] 字型載入失敗:', fontKey, err);
+        _coverFontsLoaded[fontKey] = true; // 失敗也標記，避免重複嘗試
+      });
+    }
+
+    // refreshCover：從 UI 讀值重新生成
+    function refreshCover() {
+      generateAutoCover();
+    }
+
     // 自動生成封面（Canvas 繪製）
     function generateAutoCover(title, author) {
-      // 優先用輸入框的值
       var titleInput = document.getElementById('coverTitleInput');
       var authorInput = document.getElementById('coverAuthorInput');
+      var fontSelect = document.getElementById('coverFontSelect');
       title = title || (titleInput?.value) || (document.getElementById('bookTitle')?.textContent) || '';
       author = author || (authorInput?.value) || (document.getElementById('bookAuthor')?.textContent) || '';
       if (title === '—' || !title) title = '書名';
       if (author === '—') author = '';
+
+      // 封面字型
+      var fontKey = fontSelect?.value || 'GenWanMin2TW';
+      var fontFamily = COVER_FONT_MAP[fontKey] || '"Noto Serif TC", serif';
+      loadCoverFont(fontKey); // 按需載入
 
       var canvas = document.getElementById('coverAutoCanvas');
       if (!canvas) return;
@@ -956,7 +1011,7 @@
 
       // 書名字級根據長度調整
       var titleSize = title.length <= 6 ? 56 : title.length <= 12 ? 44 : 36;
-      ctx.font = '700 ' + titleSize + 'px "GenSenRounded", "Noto Sans TC", sans-serif';
+      ctx.font = '700 ' + titleSize + 'px ' + fontFamily;
 
       // 簡易換行
       var maxWidth = w - 120;
@@ -983,7 +1038,7 @@
       // 作者名
       if (author && author.length > 0) {
         ctx.fillStyle = '#6D5954';
-        ctx.font = '500 24px "GenSenRounded", "Noto Sans TC", sans-serif';
+        ctx.font = '500 24px ' + fontFamily;
         ctx.fillText(author, w / 2, h * 0.62);
       }
 

@@ -1,6 +1,6 @@
 // ============================================
 // status-bar-themes.js — 書頁進度條主題擴充
-// 閱星瞳轉檔工具 | HelloRuru Tools
+// 閱星曈轉檔工具 | HelloRuru Tools
 //
 // 在原版 Theme 1（細線）、Theme 2（條狀）基礎上
 // 新增 3 款台灣特色主題，用 Canvas 像素繪製

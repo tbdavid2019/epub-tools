@@ -1,5 +1,5 @@
 // image-tools.js — 圖片工具模組
-// 閱星瞳轉檔工具 | HelloRuru Tools
+// 閱星曈轉檔工具 | HelloRuru Tools
 //
 // 功能：
 //   1. 待機畫面 / 桌布制圖（XTG/XTH 匯出）

@@ -1,6 +1,6 @@
 // ============================================
 // app-bridge.js — 橋接原版 app.js 與新版 UI
-// 閱星瞳轉檔工具 | HelloRuru Tools
+// 閱星曈轉檔工具 | HelloRuru Tools
 //
 // 載入順序：app.js → app-bridge.js
 // 本檔負責：

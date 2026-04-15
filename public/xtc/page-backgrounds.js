@@ -1,6 +1,6 @@
 // ============================================
 // page-backgrounds.js — 書頁背景 / 邊框裝飾模組
-// 閱星瞳轉檔工具 | HelloRuru Tools
+// 閱星曈轉檔工具 | HelloRuru Tools
 //
 // 在 CREngine 渲染文字「之後」疊加裝飾背景，
 // 使用 alpha blending 只影響淺色（白/淺灰）區域，

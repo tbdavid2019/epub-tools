@@ -1,6 +1,6 @@
 /**
  * font-config.js — 繁體中文字型載入設定
- * 閱星瞳轉檔工具 | HelloRuru Tools
+ * 閱星曈轉檔工具 | HelloRuru Tools
  *
  * 字型載入策略：
  * - CDN 字型（Google Fonts / jsDelivr）：懶載入，選到才下載

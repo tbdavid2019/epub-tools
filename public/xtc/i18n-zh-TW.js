@@ -1,7 +1,7 @@
-// i18n-zh-TW.js — 閱星瞳轉檔工具繁體中文語系
+// i18n-zh-TW.js — 閱星曈轉檔工具繁體中文語系
 var zhTW = {
   // App
-  appTitle: '閱星瞳轉檔工具',
+  appTitle: '閱星曈轉檔工具',
   appSubtitle: 'EPUB · PDF · MOBI · TXT · Markdown · DOC → XTC',
 
   // Mode
@@ -168,7 +168,7 @@ var zhTW = {
 
   // Onboarding
   onboardStep1Title: '選擇裝置',
-  onboardStep1Desc: '先選你的閱星瞳型號（X4 或 X3）',
+  onboardStep1Desc: '先選你的閱星曈型號（X4 或 X3）',
   onboardStep2Title: '上傳書籍',
   onboardStep2Desc: '拖放或點擊上傳你的電子書',
   onboardStep3Title: '匯出 XTC',
@@ -187,11 +187,11 @@ var zhTW = {
   presetOneClick: '一鍵最佳配置',
 
   // Tutorial
-  tutorialTitle: '轉好的檔案怎麼放到閱星瞳？',
+  tutorialTitle: '轉好的檔案怎麼放到閱星曈？',
   tutorialMethod1Title: 'MicroSD 卡（最穩定）',
-  tutorialMethod1Desc: '用退卡針取出記憶卡 → 插入讀卡器 → 把 XTC 檔案拖進去 → 插回閱星瞳',
+  tutorialMethod1Desc: '用退卡針取出記憶卡 → 插入讀卡器 → 把 XTC 檔案拖進去 → 插回閱星曈',
   tutorialMethod2Title: 'WiFi 無線傳書',
-  tutorialMethod2Desc: '閱星瞳開啟 WiFi 熱點（E-Paper / 密碼 12345678）→ 手機連上 → 瀏覽器開 192.168.3.3 → 上傳檔案',
+  tutorialMethod2Desc: '閱星曈開啟 WiFi 熱點（E-Paper / 密碼 12345678）→ 手機連上 → 瀏覽器開 192.168.3.3 → 上傳檔案',
   tutorialMethod3Title: '官方 App / CrossPoint Sync',
   tutorialMethod3Desc: '下載 XTEink App 或 CrossPoint Sync → 同一個 WiFi 下自動連線 → 一鍵傳書',
 

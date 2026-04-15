@@ -83,7 +83,7 @@ var FONT_CONFIG = {
     recommendedSize: { min: 32, max: 40, default: 34 },
     hint: '手寫體建議大一點才清楚，建議字級 32px 以上（約 19MB，首次載入較慢）',
     variants: [
-      { weight: 400, style: 'normal', url: 'https://raw.githubusercontent.com/max32002/JasonHandWritingFonts/master/tw/JasonHandwriting1-Regular.ttf' },
+      { weight: 400, style: 'normal', url: 'https://lab.helloruru.com/fonts/xtc/JasonHandwriting1-Regular.ttf' },
     ],
   },
 

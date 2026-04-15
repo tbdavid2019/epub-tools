@@ -1168,6 +1168,16 @@
       var alignMap = { left: 0, right: 1, center: 2, justify: 3 };
       renderer.setTextAlign(alignMap[alignVal] !== undefined ? alignMap[alignVal] : 0);
 
+      // 首行縮排：透過 CSS stylesheet 注入
+      var indentEl = document.getElementById('indent');
+      var indentVal = indentEl ? indentEl.value : '1em';
+      if (renderer.setStyleSheet) {
+        var indentCss = indentVal === '0'
+          ? 'p { text-indent: 0; }'
+          : 'p { text-indent: ' + indentVal + '; }';
+        renderer.setStyleSheet(indentCss);
+      }
+
       // 斷字
       var hyphenationEl = document.getElementById('hyphenation');
       if (hyphenationEl) {
@@ -1873,7 +1883,16 @@
     _fileInput.setAttribute('accept', getAllAcceptedExtensions());
   }
 
-  // --- 6.7 斷字 change ---
+  // --- 6.7 首行縮排 change ---
+  var _indent = document.getElementById('indent');
+  if (_indent) {
+    _indent.addEventListener('change', function () {
+      if (typeof applySettings === 'function') applySettings();
+      if (typeof renderCurrentPage === 'function' && window._currentEngine !== 'pdfjs') renderCurrentPage();
+    });
+  }
+
+  // --- 6.8 斷字 change ---
   var _hyphenation = document.getElementById('hyphenation');
   if (_hyphenation) {
     _hyphenation.addEventListener('change', function () {

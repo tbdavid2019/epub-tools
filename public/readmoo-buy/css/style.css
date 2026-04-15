@@ -623,7 +623,8 @@ a:hover { color: var(--color-sage-dark); }
   transition: background-color 200ms ease, box-shadow 200ms ease;
 }
 .ap-card-btn:hover {
-  background: var(--color-sage-dark);
+  background: #6B8260;
+  color: #fff;
   box-shadow: var(--shadow-sm);
 }
 

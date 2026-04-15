@@ -103,15 +103,26 @@
         <section class="panel-section" id="coverUploadSection">
           <h3><i data-lucide="image"></i> 書籍封面</h3>
           <div class="form-group">
+            <label>封面來源</label>
+            <select id="coverMode" onchange="updateCoverMode(this.value)">
+              <option value="auto" selected>自動生成（書名 + 作者）</option>
+              <option value="upload">上傳自訂封面</option>
+              <option value="none">不要封面</option>
+            </select>
+          </div>
+          <div id="coverAutoPreview" class="cover-preview">
+            <canvas id="coverAutoCanvas" width="480" height="800" style="max-width:120px; border-radius:8px; box-shadow:0 2px 8px rgba(212,165,165,0.1);"></canvas>
+            <p class="form-hint"><i data-lucide="info"></i><span>會用書名和作者自動生成封面，轉檔時作為第一頁。</span></p>
+          </div>
+          <div id="coverUploadArea" style="display:none;">
             <div id="coverPreview" class="cover-preview" style="display:none;">
-              <img id="coverPreviewImg" alt="封面預覽">
-              <button class="btn-text" onclick="removeCover()"><i data-lucide="x"></i> 移除封面</button>
+              <img id="coverPreviewImg" alt="封面預覽" style="max-width:120px; border-radius:8px;">
+              <button class="btn-text" onclick="removeCover()"><i data-lucide="x"></i> 移除</button>
             </div>
             <button class="btn-secondary" id="uploadCoverBtn" style="width:100%;">
               <i data-lucide="image-plus"></i> 上傳封面圖片
             </button>
             <input type="file" id="coverUploadInput" accept="image/*" hidden>
-            <p class="form-hint"><i data-lucide="info"></i><span>選用。上傳後會作為 XTC 的第一頁封面。</span></p>
           </div>
         </section>
 
@@ -887,6 +898,90 @@
       if (btn) btn.style.display = 'block';
       window._customCoverData = null;
     }
+
+    // 封面模式切換
+    function updateCoverMode(mode) {
+      var autoArea = document.getElementById('coverAutoPreview');
+      var uploadArea = document.getElementById('coverUploadArea');
+      if (autoArea) autoArea.style.display = mode === 'auto' ? 'block' : 'none';
+      if (uploadArea) uploadArea.style.display = mode === 'upload' ? 'block' : 'none';
+      window._coverMode = mode;
+      if (mode === 'auto') generateAutoCover();
+    }
+    window._coverMode = 'auto';
+
+    // 自動生成封面（Canvas 繪製）
+    function generateAutoCover(title, author) {
+      title = title || (document.getElementById('bookTitle')?.textContent) || '書名';
+      author = author || (document.getElementById('bookAuthor')?.textContent) || '';
+      if (title === '—') title = '書名';
+      if (author === '—') author = '';
+
+      var canvas = document.getElementById('coverAutoCanvas');
+      if (!canvas) return;
+      var w = 480, h = 800;
+      canvas.width = w;
+      canvas.height = h;
+      var ctx = canvas.getContext('2d');
+
+      // 背景：溫暖米白
+      ctx.fillStyle = '#F5F0EB';
+      ctx.fillRect(0, 0, w, h);
+
+      // 頂部裝飾線（品牌漸層）
+      var grad = ctx.createLinearGradient(60, 0, w - 60, 0);
+      grad.addColorStop(0, '#DFC6C6');
+      grad.addColorStop(1, '#6D5954');
+      ctx.fillStyle = grad;
+      ctx.fillRect(60, 120, w - 120, 3);
+
+      // 底部裝飾線
+      ctx.fillRect(60, h - 120, w - 120, 3);
+
+      // 書名（置中，自動換行）
+      ctx.fillStyle = '#333333';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // 書名字級根據長度調整
+      var titleSize = title.length <= 6 ? 56 : title.length <= 12 ? 44 : 36;
+      ctx.font = '700 ' + titleSize + 'px "GenSenRounded", "Noto Sans TC", sans-serif';
+
+      // 簡易換行
+      var maxWidth = w - 120;
+      var lines = [];
+      var currentLine = '';
+      for (var i = 0; i < title.length; i++) {
+        var testLine = currentLine + title[i];
+        if (ctx.measureText(testLine).width > maxWidth && currentLine.length > 0) {
+          lines.push(currentLine);
+          currentLine = title[i];
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+
+      var titleY = h * 0.4;
+      var lineSpacing = titleSize * 1.4;
+      var startY = titleY - ((lines.length - 1) * lineSpacing) / 2;
+      for (var l = 0; l < lines.length; l++) {
+        ctx.fillText(lines[l], w / 2, startY + l * lineSpacing);
+      }
+
+      // 作者名
+      if (author && author.length > 0) {
+        ctx.fillStyle = '#6D5954';
+        ctx.font = '500 24px "GenSenRounded", "Noto Sans TC", sans-serif';
+        ctx.fillText(author, w / 2, h * 0.62);
+      }
+
+      // 存起來給轉檔用
+      window._autoCoverCanvas = canvas;
+    }
+
+    // 頁面載入時先畫一個預設封面
+    generateAutoCover();
   </script>
 </body>
 </html>

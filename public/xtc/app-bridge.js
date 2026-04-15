@@ -743,9 +743,10 @@
     window._currentPdfDoc = null;
 
     var loaded = false;
+    var isTxtFormat = /\.(txt|md|markdown)$/i.test(fileData.name);
 
-    // 優先：format-handlers.js 的進階處理
-    if (typeof handleCREngineNative === 'function') {
+    // TXT 不走 handleCREngineNative（需要經過文字前處理 + 特殊字元替換）
+    if (!isTxtFormat && typeof handleCREngineNative === 'function') {
       try {
         var result = await handleCREngineNative(fileData.file, renderer, Module);
         if (result.success) {
@@ -1615,114 +1616,8 @@
     }
   };
 
-  // 覆寫 renderCurrentPage — 中文頁面資訊 + 自動補字
+  // 覆寫 renderCurrentPage 讓頁面資訊顯示中文
   var _origRenderCurrentPage = window.renderCurrentPage;
-
-  /**
-   * 自動補字：用選的字型渲染後，偵測缺字（?），用思源宋體補上。
-   * 只在選的字型不是思源宋體/思源黑體時觸發（這兩個字集完整不需要補）。
-   */
-  function renderWithFallback() {
-    if (!wasmReady || !renderer) return;
-
-    var canvas = document.getElementById('previewCanvas');
-    if (!canvas) return;
-    var ctx2 = canvas.getContext('2d');
-
-    var selectedFont = _fontSelect ? _fontSelect.value : 'NotoSerifTC';
-    var creName = (typeof getFontCReName === 'function') ? getFontCReName(selectedFont) : selectedFont;
-    var fallbackCre = 'Noto Serif TC';
-
-    // 補字只在手動觸發時執行（window._doFallbackOnce 為 true）
-    var fullCoverageFonts = ['NotoSerifTC', 'NotoSansTC'];
-    var needFallback = window._doFallbackOnce && fullCoverageFonts.indexOf(selectedFont) === -1;
-    window._doFallbackOnce = false; // 用完就關
-
-    // 第一層：用選的字型渲染
-    renderer.goToPage(currentPage);
-    renderer.renderCurrentPage();
-    var buf1 = renderer.getFrameBuffer();
-    if (!buf1 || buf1.length === 0) return;
-
-    var imgA = new ImageData(new Uint8ClampedArray(buf1), SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    if (needFallback && loadedFonts.has('NotoSerifTC')) {
-      // 第二層：切到思源宋體渲染同一頁
-      renderer.setFontFace(fallbackCre);
-      renderer.goToPage(currentPage);
-      renderer.renderCurrentPage();
-      var buf2 = renderer.getFrameBuffer();
-
-      if (buf2 && buf2.length > 0) {
-        var imgB = new ImageData(new Uint8ClampedArray(buf2), SCREEN_WIDTH, SCREEN_HEIGHT);
-
-        // 逐像素比對：找 imgA 中「?」字元的位置，用 imgB 補上
-        // 偵測策略：掃描每一行，如果 imgA 某區域是 ? 的形狀（
-        // 簡化版：如果 imgA 和 imgB 在同一位置都有黑色像素，保留 imgA；
-        // 如果 imgA 是白色但 imgB 有黑色，代表 imgA 缺字，用 imgB 補。
-        // 但這樣會把兩個字型疊在一起... 需要更精確的偵測。
-        //
-        // 更好的策略：找 ? 字元的像素模式。
-        // CREngine 缺字時渲染的是 U+FFFD（□）或 ?（問號）。
-        // 我們偵測：如果一個字元區域裡出現了 ? 的形狀，就用 imgB 取代。
-        //
-        // 最實用的簡化版：比對兩張圖，imgA 中出現大量白色（缺字→空白）
-        // 而 imgB 同位置有內容的區域，用 imgB 覆蓋。
-
-        var dA = imgA.data;
-        var dB = imgB.data;
-        var w = SCREEN_WIDTH;
-        var h = SCREEN_HEIGHT;
-
-        // 以 8px 為一個小格子掃描
-        var blockSize = 8;
-        for (var by = 0; by < h; by += blockSize) {
-          for (var bx = 0; bx < w; bx += blockSize) {
-            var darkA = 0, darkB = 0;
-            var maxY = Math.min(by + blockSize, h);
-            var maxX = Math.min(bx + blockSize, w);
-
-            for (var py = by; py < maxY; py++) {
-              for (var px = bx; px < maxX; px++) {
-                var idx = (py * w + px) * 4;
-                if (dA[idx] < 128) darkA++;
-                if (dB[idx] < 128) darkB++;
-              }
-            }
-
-            // imgA 幾乎全白但 imgB 有內容 → 缺字，用 imgB 補
-            if (darkA <= 1 && darkB >= 3) {
-              for (var py2 = by; py2 < maxY; py2++) {
-                for (var px2 = bx; px2 < maxX; px2++) {
-                  var idx2 = (py2 * w + px2) * 4;
-                  dA[idx2]     = dB[idx2];
-                  dA[idx2 + 1] = dB[idx2 + 1];
-                  dA[idx2 + 2] = dB[idx2 + 2];
-                }
-              }
-            }
-          }
-        }
-      }
-
-      // 切回選的字型（下次翻頁用）
-      renderer.setFontFace(creName);
-    }
-
-    // 負片模式
-    var negMode = document.getElementById('negativeMode');
-    if (negMode && negMode.checked && typeof applyNegative === 'function') {
-      applyNegative(imgA);
-    }
-
-    // 進度條 + 背景
-    if (typeof drawStatusBar === 'function') {
-      drawStatusBar(imgA);
-    }
-
-    ctx2.putImageData(imgA, 0, 0);
-  }
-
   window.renderCurrentPage = function () {
     // PDF 走獨立管線
     if (window._currentEngine === 'pdfjs') {
@@ -1730,8 +1625,10 @@
       return;
     }
 
-    // 用自動補字版渲染
-    renderWithFallback();
+    // 呼叫原版渲染
+    if (_origRenderCurrentPage) {
+      _origRenderCurrentPage.call(window);
+    }
 
     // 覆寫頁面資訊為中文
     var pageInfoEl = document.getElementById('pageInfo');
@@ -2063,23 +1960,6 @@
     });
   }
 
-  // --- 6.7b 預覽補字按鈕 ---
-  var _fallbackBtn = document.getElementById('fallbackPreviewBtn');
-  if (_fallbackBtn) {
-    _fallbackBtn.addEventListener('click', function () {
-      if (!renderer || totalPages === 0) {
-        bridgeAlert('請先載入檔案。');
-        return;
-      }
-      var selectedFont = _fontSelect ? _fontSelect.value : 'NotoSerifTC';
-      if (['NotoSerifTC', 'NotoSansTC'].indexOf(selectedFont) !== -1) {
-        bridgeAlert('目前字型字集完整，不需要補字。');
-        return;
-      }
-      window._doFallbackOnce = true;
-      renderCurrentPage();
-    });
-  }
 
   // --- 6.8 斷字 change ---
   var _hyphenation = document.getElementById('hyphenation');

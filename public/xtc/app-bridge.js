@@ -58,7 +58,12 @@
   window.debouncedRender = function () {
     if (_renderTimer) clearTimeout(_renderTimer);
     _renderTimer = setTimeout(function () {
-      debouncedRender();
+      if (typeof applySettings === 'function') applySettings();
+      if (typeof renderCurrentPage === 'function' && window._currentEngine !== 'pdfjs') {
+        renderCurrentPage();
+      } else if (window._currentEngine === 'pdfjs' && typeof renderPdfCurrentPage === 'function') {
+        renderPdfCurrentPage();
+      }
     }, 300);
   };
 

@@ -16,6 +16,7 @@ window.ChapterDetector = {
 
     if (mode === 'emptyLines') return this._detectByEmptyLines(text);
     if (mode === 'separator' && options.separator) return this._detectBySeparator(text, options.separator);
+    if (mode === 'keyword' && options.keyword) return this._detectByKeyword(text, options.keyword);
     if (mode === 'single') return [{ title: '全文', content: text }];
     return this._detectByPatterns(text);
   },
@@ -31,10 +32,10 @@ window.ChapterDetector = {
 
     var patterns = [
       { regex: /^[　\s]*([☆★✦✧❖◆◇●○■□▲△▼▽♦♠♣♥♡※＊✿❀❁✾✽❃❋✯✰⊙◎►◀▶◁☉✠✡✢✣✤✥✩✪✫✬✭✮][、，,.\s]*[^\r\n]+?)$/gm, name: '符號標記' },
-      { regex: /^[　\s]*(第[零一二三四五六七八九十百千\d]+[章節回卷篇集部])/gm, name: '中文章節' },
+      { regex: /^[　\s]*(第[零一二三四五六七八九十百千\d]+[章節回卷篇集部話])/gm, name: '中文章節' },
       { regex: /^[　\s]*[^\w\s\u4e00-\u9fff]+\s*(\d+\s*章)/gm, name: '符號章節' },
       { regex: /^[　\s]*(Chapter\s+\d+)/gim, name: 'Chapter' },
-      { regex: /^[　\s]*(\d+[\.、]\s*.+?)$/gm, name: '數字編號' },
+      { regex: /^[　\s]*(\d+[\.、話]\s*.+?)$/gm, name: '數字編號' },
     ];
 
     for (var p = 0; p < patterns.length; p++) {
@@ -128,11 +129,11 @@ window.ChapterDetector = {
       /^[　\s]*(\[\d+\].*?)$/gm,
       // 符號標記（☆★✿◆■ 等網路小說格式）
       /^[　\s]*([☆★✦✧❖◆◇●○■□▲△▼▽♦♠♣♥♡※＊✿❀❁✾✽❃❋✯✰⊙◎►◀▶◁☉✠✡✢✣✤✥✩✪✫✬✭✮][、，,.\s]*[^\r\n]+?)$/gm,
-      /^[　\s]*(第[零一二三四五六七八九十百千\d]+[章節回卷篇集部].*?)$/gm,
+      /^[　\s]*(第[零一二三四五六七八九十百千\d]+[章節回卷篇集部話].*?)$/gm,
       /^[　\s]*[^\w\s\u4e00-\u9fff]+\s*(\d+\s*章.*?)$/gm,
       /^[　\s]*(Chapter\s+\d+.*?)$/gim,
       /^[　\s]*(CHAPTER\s+\d+.*?)$/gm,
-      /^[　\s]*(\d+[\.、]\s*.+?)$/gm,
+      /^[　\s]*(\d+[\.、話]\s*.+?)$/gm,
       /^[　\s]*([①②③④⑤⑥⑦⑧⑨⑩].+?)$/gm,
       /^[　\s]*(卷[零一二三四五六七八九十百千\d]+.*?)$/gm,
     ];
@@ -211,5 +212,50 @@ window.ChapterDetector = {
       var title = (firstLine.length <= 50 && firstLine.length > 0) ? firstLine : '章節 ' + (index + 1);
       return { title: title, content: block };
     });
+  },
+
+  /**
+   * 依自訂關鍵字偵測章節
+   * 找出包含關鍵字的短行（<=40字）作為章節標題
+   */
+  _detectByKeyword: function (text, keyword) {
+    if (!keyword || !keyword.trim()) return [{ title: '全文', content: text }];
+
+    var escaped = keyword.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var regex = new RegExp('^[　\\s]*([^\\r\\n]*' + escaped + '[^\\r\\n]*?)$', 'gm');
+    var found = Array.from(text.matchAll(regex));
+    var matches = [];
+    for (var i = 0; i < found.length; i++) {
+      var lineStart = text.lastIndexOf('\n', found[i].index) + 1;
+      var lineEnd = text.indexOf('\n', found[i].index);
+      var fullLine = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd).trim();
+      if (fullLine.length > 40) continue;
+      matches.push({ title: found[i][1].trim(), index: found[i].index });
+    }
+
+    // 去重
+    matches = matches.filter(function (m, idx, arr) {
+      if (idx === 0) return true;
+      return Math.abs(m.index - arr[idx - 1].index) > 5;
+    });
+
+    if (matches.length === 0) return [{ title: '全文', content: text }];
+
+    var chapters = [];
+    for (var j = 0; j < matches.length; j++) {
+      var start = matches[j].index;
+      var end = j < matches.length - 1 ? matches[j + 1].index : text.length;
+      chapters.push({ title: matches[j].title, content: text.slice(start, end).trim() });
+    }
+
+    // 序言
+    if (matches.length > 0 && matches[0].index > 100) {
+      var preface = text.slice(0, matches[0].index).trim();
+      if (preface.length > 50) {
+        chapters.unshift({ title: '序', content: preface });
+      }
+    }
+
+    return chapters;
   }
 };

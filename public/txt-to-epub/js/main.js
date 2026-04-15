@@ -212,8 +212,9 @@
       var mode = btn.dataset.mode;
       state.detectionMode = mode;
       $('separatorWrap').classList.toggle('hidden', mode !== 'separator');
+      $('keywordWrap').classList.toggle('hidden', mode !== 'keyword');
 
-      if (mode !== 'separator') {
+      if (mode !== 'separator' && mode !== 'keyword') {
         chapterShowAll = false;
         state.chapters = window.ChapterDetector.detectChapters(state.content, mode);
         renderChapters();
@@ -226,6 +227,14 @@
     if (!sep) return;
     chapterShowAll = false;
     state.chapters = window.ChapterDetector.detectChapters(state.content, 'separator', { separator: sep });
+    renderChapters();
+  });
+
+  $('btnApplyKeyword').addEventListener('click', function () {
+    var kw = $('keywordInput').value.trim();
+    if (!kw) return;
+    chapterShowAll = false;
+    state.chapters = window.ChapterDetector.detectChapters(state.content, 'keyword', { keyword: kw });
     renderChapters();
   });
 

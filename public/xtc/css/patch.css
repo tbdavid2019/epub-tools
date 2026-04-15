@@ -1,0 +1,793 @@
+/* === patch.css — 補齊所有缺失的 class 定義 === */
+/* 修正 index.html 用到但 CSS 模組沒定義的 class */
+
+/* ============================================
+   Onboarding Overlay
+   ============================================ */
+.onboarding-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(30, 24, 27, 0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg, 24px);
+}
+
+.onboarding-card {
+  max-width: 520px;
+  width: 100%;
+  padding: var(--space-xl, 32px);
+}
+
+.onboarding-steps {
+  display: flex;
+  gap: var(--space-lg, 24px);
+  margin: var(--space-lg, 24px) 0;
+}
+
+.onboarding-steps .step {
+  flex: 1;
+  text-align: center;
+}
+
+.onboarding-steps .step-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-sm, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 165, 165, 0.1);
+  border-radius: 50%;
+  color: var(--color-brand-brown, #6D5954);
+}
+
+.onboarding-steps .step-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.onboarding-steps .step h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-brand-brown, #6D5954);
+  margin: 0 0 var(--space-xs, 4px);
+}
+
+.onboarding-steps .step p {
+  font-size: 13px;
+  color: var(--text-body, #4A4A4A);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.onboarding-actions {
+  display: flex;
+  gap: var(--space-sm, 8px);
+  justify-content: center;
+}
+
+/* ============================================
+   Cards
+   ============================================ */
+.card-a {
+  background: var(--bg-card, #FFFFFF);
+  border-radius: 24px;
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(212,165,165,0.08));
+}
+
+.card-b {
+  background: linear-gradient(135deg, rgba(212,165,165,0.06), rgba(184,169,201,0.06));
+  border: 1px solid rgba(212,165,165,0.15);
+  border-radius: 24px;
+}
+
+.card-c {
+  background: var(--bg-card, #FFFFFF);
+  border-radius: 24px;
+  box-shadow: var(--shadow-md, 0 4px 16px rgba(212,165,165,0.10));
+  transform: rotate(-0.5deg);
+  position: relative;
+}
+
+.card-c::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, var(--color-brand-pink, #DFC6C6), var(--color-brand-brown, #6D5954));
+  border-radius: 24px 24px 0 0;
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--color-rose, #D4A5A5), var(--color-lavender, #B8A9C9));
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 44px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-primary.btn-accent {
+  background: linear-gradient(135deg, var(--color-coral, #E8A87C), var(--color-rose, #D4A5A5));
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--color-brand-brown, #6D5954);
+  border: 1.5px solid var(--color-brand-pink, #DFC6C6);
+  border-radius: 24px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(212, 165, 165, 0.08);
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  color: var(--color-brand-brown, #6D5954);
+  border: 1.5px solid var(--color-brand-pink, #DFC6C6);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-icon:hover {
+  background: rgba(212, 165, 165, 0.08);
+}
+
+.btn-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--color-brand-brown, #6D5954);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.btn-text:hover {
+  color: var(--color-rose, #D4A5A5);
+}
+
+.btn-text svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ============================================
+   Tool Tabs (書籍轉檔 / 圖片工具)
+   ============================================ */
+.tool-tabs {
+  display: flex;
+  gap: var(--space-sm, 8px);
+  padding: var(--space-md, 16px);
+  border-bottom: 1px solid rgba(212, 165, 165, 0.15);
+}
+
+.tool-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  justify-content: center;
+  background: transparent;
+  border: 1.5px solid rgba(212, 165, 165, 0.2);
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-caption, #888);
+  cursor: pointer;
+  min-height: 44px;
+  transition: all 0.2s;
+}
+
+.tool-tab.active {
+  background: linear-gradient(135deg, rgba(212,165,165,0.12), rgba(184,169,201,0.12));
+  border-color: var(--color-brand-pink, #DFC6C6);
+  color: var(--color-brand-brown, #6D5954);
+}
+
+.tool-tab svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Image tool sub-tabs */
+.image-tool-tabs {
+  display: flex;
+  gap: var(--space-xs, 4px);
+  padding: var(--space-sm, 8px) var(--space-md, 16px);
+}
+
+.img-tab {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(212, 165, 165, 0.2);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-caption, #888);
+  cursor: pointer;
+  text-align: center;
+  min-height: 36px;
+  transition: all 0.2s;
+}
+
+.img-tab.active {
+  background: rgba(212, 165, 165, 0.1);
+  border-color: var(--color-rose, #D4A5A5);
+  color: var(--color-brand-brown, #6D5954);
+}
+
+/* ============================================
+   Preview Area
+   ============================================ */
+.preview-canvas-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: var(--space-md, 16px);
+  position: relative;
+}
+
+.preview-canvas-wrapper canvas {
+  max-width: 100%;
+  height: auto;
+  box-shadow: var(--shadow-md, 0 4px 16px rgba(212,165,165,0.10));
+  border-radius: 8px;
+}
+
+.preview-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 8px);
+}
+
+.preview-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 8px);
+}
+
+.page-info {
+  font-size: 14px;
+  color: var(--text-body, #4A4A4A);
+  font-weight: 500;
+  min-width: 120px;
+  text-align: center;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: var(--space-2xl, 48px) var(--space-lg, 24px);
+  color: var(--text-caption, #888);
+}
+
+.empty-state .empty-icon,
+.empty-state svg {
+  width: 48px;
+  height: 48px;
+  color: var(--color-brand-pink, #DFC6C6);
+  margin-bottom: var(--space-md, 16px);
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  color: var(--color-brand-brown, #6D5954);
+  margin: 0 0 var(--space-sm, 8px);
+}
+
+.empty-state p {
+  font-size: 14px;
+  margin: 0 0 var(--space-xs, 4px);
+}
+
+.privacy-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted, #AAAAAA);
+  margin-top: var(--space-md, 16px) !important;
+}
+
+.privacy-note svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Export progress */
+.export-progress {
+  padding: var(--space-md, 16px);
+}
+
+.progress-bar {
+  height: 6px;
+  background: rgba(212, 165, 165, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: var(--space-sm, 8px);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, var(--color-rose, #D4A5A5), var(--color-lavender, #B8A9C9));
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.progress-text {
+  font-size: 13px;
+  color: var(--text-caption, #888);
+  text-align: center;
+}
+
+/* Mobile note */
+.mobile-note {
+  display: none;
+  gap: var(--space-sm, 8px);
+  padding: var(--space-md, 16px);
+  margin: var(--space-md, 16px);
+  background: rgba(212, 165, 165, 0.06);
+  border-radius: 12px;
+  font-size: 13px;
+  color: var(--text-body, #4A4A4A);
+  line-height: 1.6;
+}
+
+.mobile-note svg {
+  width: 20px;
+  height: 20px;
+  color: var(--color-rose, #D4A5A5);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.mobile-note strong {
+  color: var(--color-brand-brown, #6D5954);
+}
+
+@media (max-width: 767px) {
+  .mobile-note {
+    display: flex;
+  }
+}
+
+/* ============================================
+   Sidebar Toggle
+   ============================================ */
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 8px);
+  padding: var(--space-md, 16px);
+  border-bottom: 1px solid rgba(212, 165, 165, 0.15);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-brand-brown, #6D5954);
+  cursor: pointer;
+}
+
+.sidebar-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ============================================
+   Quality Toggle
+   ============================================ */
+.quality-toggle {
+  display: flex;
+  gap: var(--space-sm, 8px);
+}
+
+.quality-btn {
+  flex: 1;
+  background: transparent;
+  border: 1.5px solid rgba(212, 165, 165, 0.2);
+  border-radius: 12px;
+  padding: var(--space-sm, 8px) var(--space-md, 16px);
+  text-align: center;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.quality-btn.active {
+  border-color: var(--color-rose, #D4A5A5);
+  background: rgba(212, 165, 165, 0.08);
+}
+
+.quality-btn strong {
+  display: block;
+  font-size: 14px;
+  color: var(--color-brand-brown, #6D5954);
+}
+
+.quality-btn small {
+  display: block;
+  font-size: 11px;
+  color: var(--text-caption, #888);
+  margin-top: 2px;
+}
+
+/* ============================================
+   Align Buttons
+   ============================================ */
+.align-buttons {
+  display: flex;
+  gap: var(--space-xs, 4px);
+}
+
+.align-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  background: transparent;
+  border: 1px solid rgba(212, 165, 165, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-caption, #888);
+  transition: all 0.2s;
+}
+
+.align-btn.active {
+  border-color: var(--color-rose, #D4A5A5);
+  background: rgba(212, 165, 165, 0.08);
+  color: var(--color-brand-brown, #6D5954);
+}
+
+.align-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ============================================
+   Orientation Buttons
+   ============================================ */
+.orientation-buttons {
+  display: flex;
+  gap: var(--space-xs, 4px);
+}
+
+.orient-btn {
+  flex: 1;
+  height: 36px;
+  background: transparent;
+  border: 1px solid rgba(212, 165, 165, 0.2);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-caption, #888);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.orient-btn.active {
+  border-color: var(--color-rose, #D4A5A5);
+  background: rgba(212, 165, 165, 0.08);
+  color: var(--color-brand-brown, #6D5954);
+}
+
+/* ============================================
+   Margin Grid
+   ============================================ */
+.margin-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--space-xs, 4px);
+  align-items: center;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.margin-input {
+  width: 50px;
+  text-align: center;
+  border: 1px solid rgba(212, 165, 165, 0.2);
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.margin-center {
+  font-size: 11px;
+  color: var(--text-muted, #AAAAAA);
+  text-align: center;
+}
+
+/* ============================================
+   Preset Buttons
+   ============================================ */
+.preset-buttons {
+  display: flex;
+  gap: var(--space-sm, 8px);
+}
+
+.preset-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1.5px solid rgba(212, 165, 165, 0.2);
+  border-radius: 12px;
+  padding: var(--space-sm, 8px);
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--color-brand-brown, #6D5954);
+  cursor: pointer;
+  min-height: 44px;
+  transition: all 0.2s;
+}
+
+.preset-btn:hover {
+  border-color: var(--color-rose, #D4A5A5);
+  background: rgba(212, 165, 165, 0.06);
+}
+
+.preset-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================
+   Checkbox Label
+   ============================================ */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 8px);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-body, #4A4A4A);
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-rose, #D4A5A5);
+  cursor: pointer;
+}
+
+/* ============================================
+   Tutorial Section
+   ============================================ */
+.tutorial-section {
+  max-width: 960px;
+  margin: var(--space-2xl, 48px) auto;
+  padding: 0 var(--space-lg, 24px);
+}
+
+.tutorial-section h2 {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--color-brand-brown, #6D5954);
+  text-align: center;
+  margin-bottom: var(--space-xl, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm, 8px);
+}
+
+.tutorial-section h2 svg {
+  color: var(--color-rose, #D4A5A5);
+}
+
+.tutorial-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg, 24px);
+}
+
+.tutorial-card {
+  padding: var(--space-lg, 24px);
+  text-align: center;
+}
+
+.tutorial-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-md, 16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 165, 165, 0.1);
+  border-radius: 50%;
+  color: var(--color-brand-brown, #6D5954);
+}
+
+.tutorial-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.tutorial-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-brand-brown, #6D5954);
+  margin: 0 0 var(--space-xs, 4px);
+}
+
+.tutorial-tag {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--color-rose, #D4A5A5);
+  background: rgba(212, 165, 165, 0.1);
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-bottom: var(--space-sm, 8px);
+}
+
+.tutorial-card p:last-child {
+  font-size: 13px;
+  color: var(--text-body, #4A4A4A);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ============================================
+   Lightbox
+   ============================================ */
+.lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(30, 24, 27, 0.95);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox canvas {
+  max-width: 95vw;
+  max-height: 90vh;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================
+   Config Actions
+   ============================================ */
+.config-actions {
+  display: flex;
+  gap: var(--space-md, 16px);
+  justify-content: center;
+}
+
+/* ============================================
+   Form Row
+   ============================================ */
+.form-row {
+  display: flex;
+  gap: var(--space-sm, 8px);
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+/* ============================================
+   Site Footer
+   ============================================ */
+.site-footer {
+  text-align: center;
+  padding: var(--space-xl, 32px) var(--space-lg, 24px);
+  font-size: 14px;
+  color: var(--text-muted, #AAAAAA);
+}
+
+.site-footer .footer-line {
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-rose, #D4A5A5), transparent);
+  margin: 0 auto var(--space-md, 16px);
+}
+
+.site-footer p {
+  margin: 0 0 var(--space-xs, 4px);
+}
+
+.site-footer .footer-credits {
+  font-size: 12px;
+}
+
+.site-footer a {
+  color: var(--color-brand-brown, #6D5954);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}

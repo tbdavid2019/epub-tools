@@ -142,6 +142,43 @@ body {
   color: rgba(255, 255, 255, 0.92);
   font-weight: 500;
 }
+.site-version {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+.site-version span {
+  background: rgba(255, 255, 255, 0.18);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+/* 刷機按鈕上方的版本徽章 */
+.version-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  margin: 0 0 14px 0;
+  background: linear-gradient(135deg, rgba(232, 168, 124, 0.12), rgba(212, 165, 165, 0.12));
+  border: 1px solid rgba(232, 168, 124, 0.30);
+  border-radius: 20px;
+  font-size: 13px;
+}
+.version-label {
+  color: var(--text-muted);
+}
+.version-number {
+  color: var(--coral-deep);
+  font-weight: 500;
+  font-family: "Consolas", "Monaco", monospace;
+  letter-spacing: 0.4px;
+}
 
 /* ===== 主容器 ===== */
 .container {

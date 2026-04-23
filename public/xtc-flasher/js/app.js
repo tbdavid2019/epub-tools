@@ -67,6 +67,36 @@ if (!("serial" in navigator)) {
   log("瀏覽器支援 Web Serial API，可以開始。");
 }
 
+// ========== 載入版本資訊 ==========
+async function loadVersion() {
+  try {
+    // cache bust 強制取最新
+    const resp = await fetch(`./version.json?t=${Date.now()}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const v = await resp.json();
+
+    const versionText = v.version || "unknown";
+    const smallEl = $("fw-version");
+    const bigEl = $("fw-version-big");
+    if (smallEl) smallEl.textContent = versionText;
+    if (bigEl) bigEl.textContent = versionText;
+
+    log(`版本：${versionText}（${v.build_date}）`);
+    log(`字型：${v.font}`);
+    if (v.changelog && v.changelog.length) {
+      log("更新內容：");
+      v.changelog.forEach(c => log(`  • ${c}`));
+    }
+  } catch (err) {
+    const smallEl = $("fw-version");
+    const bigEl = $("fw-version-big");
+    if (smallEl) smallEl.textContent = "讀取失敗";
+    if (bigEl) bigEl.textContent = "讀取失敗";
+    log(`⚠️ 版本讀取失敗：${err.message}`);
+  }
+}
+loadVersion();
+
 // ========== 連線建立 ==========
 async function connect() {
   setStatus("請在彈窗中選擇 X3 / X4 的 USB 連線埠……", "running");
@@ -174,13 +204,33 @@ async function flashZhTw(device) {
     setStatus(`載入 ${device.toUpperCase()} 韌體檔案中…`, "running");
     log(`載入韌體：${device}-zhtw`);
 
-    // 下載所有 bin 成 binary string
+    // 先抓版本資訊做大小對照
+    let expectedFirmwareSize = null;
+    try {
+      const vResp = await fetch(`./version.json?t=${Date.now()}`);
+      const v = await vResp.json();
+      expectedFirmwareSize = device === "x3" ? v.x3_firmware_bytes : v.x4_firmware_bytes;
+    } catch (_) {}
+
+    // 下載所有 bin 成 binary string（加 cache-bust 強制抓最新）
     const fileArray = [];
     for (const p of parts) {
-      const resp = await fetch(p.path);
+      const resp = await fetch(`${p.path}?t=${Date.now()}`, { cache: "no-store" });
       if (!resp.ok) throw new Error(`下載失敗：${p.path}（HTTP ${resp.status}）`);
       const buf = await resp.arrayBuffer();
       const bytes = new Uint8Array(buf);
+
+      // firmware.bin 大小驗證（偵測瀏覽器快取了舊版）
+      if (p.path.endsWith("firmware.bin") && expectedFirmwareSize) {
+        if (bytes.length !== expectedFirmwareSize) {
+          throw new Error(
+            `bin 版本不一致！下載到 ${bytes.length} bytes，但版本資訊預期 ${expectedFirmwareSize} bytes。` +
+            `請按 Ctrl+Shift+Delete 清除快取或用無痕視窗重開。`
+          );
+        }
+        log(`  ✓ firmware.bin 大小驗證通過（${bytes.length} bytes）`);
+      }
+
       // esptool-js writeFlash 需要 binary string
       let binStr = "";
       for (let i = 0; i < bytes.length; i++) binStr += String.fromCharCode(bytes[i]);

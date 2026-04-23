@@ -1,0 +1,13 @@
+{
+  "version": "2026.04.23-v2-jfopenhuninn",
+  "build_date": "2026-04-23 17:48",
+  "changelog": [
+    "UI 字型改為 jf open 粉圓（解決繁中缺字）",
+    "22 處英文介面翻譯為繁中",
+    "方向 C 前綴 key 修正",
+    "字集：教育部常用 4808 + 次常用前 2000 + 程式繁中字（共 7600 字）"
+  ],
+  "x3_firmware_bytes": 7398592,
+  "x4_firmware_bytes": 7374448,
+  "font": "jf-openhuninn (SIL OFL)"
+}

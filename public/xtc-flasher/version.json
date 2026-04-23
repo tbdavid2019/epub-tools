@@ -1,15 +1,16 @@
 {
-  "version": "2026.04.23-v7-13pt-with-punct",
-  "build_date": "2026-04-23 20:30",
+  "version": "2026.04.23-v9-home-stats",
+  "build_date": "2026-04-23 21:00",
   "changelog": [
-    "退回 13pt（v6 改 16pt 導致 UI 選項框上下寬度跑掉）",
-    "保留 v6 的中文標點符號修正（解決字疊問題的真正根因）",
-    "字集：教育部常用 4808 + 程式字 805 + 標點符號 500 + ASCII",
-    "字型：原俠正楷 T-Bold 粗體（SIL OFL）",
-    "字型大小：13pt（UI + Small/Medium/Large）+ 22pt（X Large）"
+    "主畫面新增閱讀統計 Bar（書封下方、選單上方）",
+    "顯示：書架總本數 + 本月完成書 / 日期 + 時間",
+    "Wi-Fi 連線自動 NTP 對時（台灣 UTC+8）",
+    "主畫面專用字型：jf open 粉圓（SIL OFL）",
+    "下劃線預設偏移 +7（對齊原俠正楷 baseline，嚕寶實測）",
+    "保留名言、書封、選單，只加不刪"
   ],
-  "x3_firmware_bytes": 6578480,
-  "x4_firmware_bytes": 6554352,
-  "font": "GuanKiapTsingKhai-Tbold 原俠正楷粗體 (SIL OFL) with punctuation",
+  "x3_firmware_bytes": 6628128,
+  "x4_firmware_bytes": 6604016,
+  "font": "原俠正楷 T-Bold（閱讀）+ jf 粉圓（主畫面統計）",
   "font_sizes": ["13pt", "22pt"]
 }

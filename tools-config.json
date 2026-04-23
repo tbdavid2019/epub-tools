@@ -199,6 +199,16 @@
       "ready": true,
       "color": "sage",
       "external": true
+    },
+    {
+      "id": "xtc-flasher",
+      "name": "XTC 刷機工具",
+      "description": "閱星曈 X3 / X4 電子書閱讀器繁中韌體刷機工具。純瀏覽器 Web Serial，不用安裝驅動，支援備份與還原。",
+      "path": "/xtc-flasher/",
+      "icon": "zap",
+      "ready": true,
+      "color": "coral",
+      "external": true
     }
   ]
 }

@@ -1,0 +1,448 @@
+/* XTC Flasher — HelloRuru DS 2.2 經典版套皮 */
+
+/* ===== GenSenRounded 子集化字體（DS 2.2 規範）===== */
+@font-face {
+  font-family: 'GenSenRounded';
+  src: url('https://lab.helloruru.com/fonts/GenSenRounded-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'GenSenRounded';
+  src: url('https://lab.helloruru.com/fonts/GenSenRounded-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'GenSenRounded';
+  src: url('https://lab.helloruru.com/fonts/GenSenRounded-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* ===== DS 2.2 色彩變數 ===== */
+:root {
+  /* 商標色 */
+  --brand-pink: #DFC6C6;
+  --brand-brown: #6D5954;
+
+  /* 主色 */
+  --rose: #D4A5A5;
+  --lavender: #B8A9C9;
+  --coral: #E8A87C;
+
+  /* 粉色系 */
+  --blush: #F5D0C5;
+  --rose-gray: #C9929A;
+  --nadeshiko: #E8B4B8;
+  --sakura: #FEDFE1;
+
+  /* 紫色系 */
+  --aubergine: #9B7E93;
+  --wisteria: #C4B7D7;
+
+  /* 中性色 */
+  --sage: #A8B5A0;
+  --mist: #E8E4E1;
+  --warm-gray: #B5ADA7;
+  --charcoal: #5C5856;
+
+  /* 珊瑚系 */
+  --coral-deep: #D09060;
+  --coral-light: #F2C8A8;
+  --coral-bg: rgba(232, 168, 124, 0.10);
+
+  /* 文字 */
+  --text-h1: #333333;
+  --text-body: #4A4A4A;
+  --text-muted: #888888;
+  --text-light: #AAAAAA;
+
+  /* 背景 */
+  --bg-page: #FAFAFA;
+  --bg-card: #FFFFFF;
+
+  /* 陰影（暖色，不是純黑） */
+  --shadow-sm: 0 2px 8px rgba(212, 165, 165, 0.08);
+  --shadow-md: 0 4px 16px rgba(212, 165, 165, 0.10);
+  --shadow-lg: 0 8px 32px rgba(212, 165, 165, 0.14);
+
+  /* 漸層 */
+  --gradient-brand: linear-gradient(135deg, #DFC6C6, #6D5954);
+  --gradient-main: linear-gradient(135deg, #D4A5A5, #B8A9C9);
+  --gradient-divider: linear-gradient(90deg, transparent, #DFC6C6, #6D5954, #DFC6C6, transparent);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'GenSenRounded', 'Noto Sans TC', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--text-body);
+  background: var(--bg-page);
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(212, 165, 165, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(184, 169, 201, 0.06) 0%, transparent 40%);
+}
+
+/* ===== 頂部品牌橫幅 ===== */
+.topbar {
+  background: var(--gradient-main);
+  padding: 48px 16px 56px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.topbar::before {
+  content: "";
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 160px;
+  height: 160px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  filter: blur(20px);
+}
+.topbar::after {
+  content: "";
+  position: absolute;
+  bottom: -40px;
+  left: -40px;
+  width: 200px;
+  height: 200px;
+  background: rgba(255, 223, 225, 0.10);
+  border-radius: 50%;
+  filter: blur(30px);
+}
+.topbar-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+.site-title {
+  margin: 0 0 8px 0;
+  font-size: 40px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 12px rgba(109, 89, 84, 0.25);
+}
+.site-sub {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 500;
+}
+
+/* ===== 主容器 ===== */
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+/* ===== 卡片（DS 2.2 A 款 / B 款）===== */
+.card {
+  background: var(--bg-card);
+  border-radius: 24px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  border: 1px solid rgba(223, 198, 198, 0.20);
+}
+
+/* B 款：淡粉款，重點用 */
+.card-warning {
+  background: linear-gradient(135deg, #FFF4F1, #FDF8F5);
+  border: 1px solid rgba(232, 168, 124, 0.30);
+  box-shadow: var(--shadow-md);
+}
+
+/* 便利貼款（C 款）—— 警告區 */
+.card-note {
+  background: linear-gradient(135deg, #FEF9F7, #FDF8F5);
+  border: 1px solid rgba(223, 198, 198, 0.35);
+  position: relative;
+}
+.card-note::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 24px;
+  right: 24px;
+  height: 4px;
+  background: var(--gradient-brand);
+  border-radius: 0 0 4px 4px;
+}
+
+/* 狀態卡片 */
+.card-status {
+  background: linear-gradient(135deg, #FBF8FC, #FDF8F5);
+  border-left: 4px solid var(--lavender);
+}
+
+.card h2 {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--brand-brown);
+  letter-spacing: 0.5px;
+}
+
+.card ul, .card ol {
+  margin: 12px 0;
+  padding-left: 24px;
+}
+.card li {
+  margin: 8px 0;
+  line-height: 1.8;
+}
+
+/* ===== 提示文字 ===== */
+.hint {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 8px 0 16px 0;
+  line-height: 1.7;
+}
+.hint.small { font-size: 13px; }
+.hint b { color: var(--rose-gray); font-weight: 500; }
+
+/* ===== 按鈕（DS 2.2 圓角 24px）===== */
+.btn {
+  font-family: 'GenSenRounded', 'Noto Sans TC', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 14px 28px;
+  border-radius: 24px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  min-height: 48px;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: saturate(0.6);
+}
+
+/* 主按鈕（珊瑚色，DS 規範重點用）*/
+.btn-primary {
+  background: linear-gradient(135deg, var(--coral), var(--coral-deep));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(232, 168, 124, 0.35);
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(232, 168, 124, 0.45);
+  transform: translateY(-1px);
+}
+
+/* 次要按鈕（玫瑰粉）*/
+.btn-secondary {
+  background: linear-gradient(135deg, var(--rose), var(--rose-gray));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(212, 165, 165, 0.30);
+}
+.btn-secondary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(212, 165, 165, 0.40);
+  transform: translateY(-1px);
+}
+
+.btn-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ===== 檔案選擇器 ===== */
+.file-input {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px 16px;
+  border: 1px solid var(--mist);
+  border-radius: 12px;
+  font-size: 14px;
+  background: #fff;
+  font-family: inherit;
+  color: var(--text-body);
+}
+.file-input:hover {
+  border-color: var(--brand-pink);
+}
+
+/* ===== 狀態顯示 ===== */
+#status-line {
+  font-size: 15px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #FDF8F5;
+  color: var(--text-body);
+  border-left: 3px solid var(--mist);
+  transition: all 0.3s ease;
+}
+.status-idle {
+  background: #FDF8F5;
+  color: var(--text-muted);
+  border-left-color: var(--mist) !important;
+}
+.status-running {
+  background: rgba(196, 183, 215, 0.15);
+  color: var(--aubergine);
+  border-left-color: var(--lavender) !important;
+}
+.status-success {
+  background: rgba(168, 181, 160, 0.15);
+  color: #5A8F5A;
+  border-left-color: var(--sage) !important;
+}
+.status-error {
+  background: rgba(201, 146, 154, 0.15);
+  color: var(--rose-gray);
+  border-left-color: var(--rose-gray) !important;
+}
+
+/* ===== 進度條 ===== */
+.progress-wrap {
+  margin-top: 24px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #FFF8F5, #FDF4F4);
+  border-radius: 16px;
+  border: 1px solid rgba(232, 168, 124, 0.20);
+  box-shadow: inset 0 1px 4px rgba(109, 89, 84, 0.06);
+}
+.progress-bar {
+  height: 16px;
+  background: #F5F0ED;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  box-shadow: inset 0 2px 4px rgba(109, 89, 84, 0.10);
+  position: relative;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--rose), var(--coral), var(--coral-deep));
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  width: 0%;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(232, 168, 124, 0.35);
+}
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.progress-text {
+  font-size: 14px;
+  color: var(--brand-brown);
+  text-align: center;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* ===== Log ===== */
+.log-wrap { margin-top: 20px; }
+.log-header {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+#log {
+  background: #2C2426;
+  color: #EDE8E9;
+  padding: 16px 20px;
+  border-radius: 12px;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  max-height: 260px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+
+/* ===== 隱藏 ===== */
+.hidden { display: none !important; }
+
+/* ===== Code inline ===== */
+code {
+  background: var(--coral-bg);
+  color: var(--coral-deep);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-family: "Consolas", "Monaco", monospace;
+  font-weight: 500;
+}
+
+/* ===== Footer（DS 2.2 居中漸層淡線）===== */
+.footer {
+  text-align: center;
+  padding: 48px 16px 40px;
+  color: var(--text-muted);
+  font-size: 14px;
+  background: transparent;
+  position: relative;
+}
+.footer::before {
+  content: "";
+  display: block;
+  width: 120px;
+  height: 1px;
+  margin: 0 auto 24px;
+  background: var(--gradient-divider);
+  opacity: 0.6;
+}
+.footer p {
+  margin: 6px 0;
+  line-height: 1.7;
+}
+.footer a {
+  color: var(--brand-brown);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--brand-pink);
+}
+.footer a:hover {
+  color: var(--rose-gray);
+  border-bottom-color: var(--rose-gray);
+}
+.footer .copyright {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 12px;
+}
+
+/* ===== 響應式（DS 2.2 斷點）===== */
+@media (max-width: 767px) {
+  .site-title { font-size: 30px; }
+  .site-sub { font-size: 14px; }
+  .topbar { padding: 36px 16px 40px; }
+  .container { padding: 20px 16px 36px; }
+  .card {
+    padding: 20px 20px;
+    border-radius: 20px;
+  }
+  .card h2 { font-size: 18px; }
+  .btn-row { flex-direction: column; align-items: stretch; }
+  .btn { width: 100%; }
+}

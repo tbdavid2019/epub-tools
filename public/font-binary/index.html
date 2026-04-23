@@ -233,6 +233,67 @@ input:focus, select:focus {
   border-color: transparent;
 }
 
+.slider-wrap {
+  background: rgba(212,165,165,0.06);
+  padding: 20px;
+  border-radius: 16px;
+  margin-top: 8px;
+}
+
+.slider-wrap input[type="range"] {
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(90deg, var(--rose), var(--lavender));
+  border-radius: 6px;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.slider-wrap input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid var(--brand-brown);
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(109,89,84,0.25);
+  transition: transform 0.15s;
+}
+
+.slider-wrap input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.slider-wrap input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid var(--brand-brown);
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(109,89,84,0.25);
+}
+
+.slider-value {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--brand-brown);
+}
+
+.slider-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
 .run-btn {
   width: 100%;
   padding: 16px;
@@ -397,13 +458,12 @@ footer a:hover { text-decoration: underline; }
 
     <div id="binPanel">
       <label style="margin-top:24px;">選字級（寬高自動套用）</label>
-      <div class="preset-row">
-        <button type="button" class="preset-btn active" data-pt="42" data-w="44" data-h="51">小字 42pt (44×51)</button>
-        <button type="button" class="preset-btn" data-pt="48" data-w="50" data-h="51">中字 48pt (50×51)</button>
-        <button type="button" class="preset-btn" data-pt="51" data-w="52" data-h="51">大字 51pt (52×51)</button>
-        <button type="button" class="preset-btn" data-pt="56" data-w="58" data-h="58">特大 56pt (58×58)</button>
-        <button type="button" class="preset-btn" data-pt="64" data-w="68" data-h="68">超大 64pt (68×68)</button>
-        <button type="button" class="preset-btn" data-pt="68" data-w="72" data-h="72">最大 68pt (72×72)</button>
+      <div class="slider-wrap">
+        <input type="range" id="binSlider" min="12" max="72" value="42" step="1">
+        <div class="slider-value">
+          <span id="binPtText">42</span> pt
+          <span class="slider-sub">→ <span id="binDimText">44 × 51</span> px</span>
+        </div>
       </div>
 
       <div class="field" style="margin-top:16px;">
@@ -417,12 +477,12 @@ footer a:hover { text-decoration: underline; }
 
     <div id="epdfontPanel" style="display:none;">
       <label style="margin-top:24px;">選字級</label>
-      <div class="preset-row">
-        <button type="button" class="preset-btn" data-epdpt="32">小字 32號</button>
-        <button type="button" class="preset-btn active" data-epdpt="38">標準 38號（樣本驗證）</button>
-        <button type="button" class="preset-btn" data-epdpt="42">中字 42號</button>
-        <button type="button" class="preset-btn" data-epdpt="48">大字 48號</button>
-        <button type="button" class="preset-btn" data-epdpt="56">特大 56號</button>
+      <div class="slider-wrap">
+        <input type="range" id="epdSlider" min="16" max="56" value="38" step="1">
+        <div class="slider-value">
+          <span id="epdPtText">38</span> 號
+          <span class="slider-sub">→ pixel_size <span id="epdPxText">48</span></span>
+        </div>
       </div>
 
       <label style="margin-top:24px;">字集</label>
@@ -544,23 +604,45 @@ function getActiveFormat() {
   return document.querySelector('#formatRow .preset-btn.active').dataset.format;
 }
 
+// .bin 字級 → 寬高公式（從官方樣本表反推）
+// pt 42→44×51, 48→50×51, 51→52×51, 56→58×58, 64→68×68, 68→72×72
+// outerW = pt + 2~4 (小字 +2，大字 +4)
+// outerH = max(51, pt × 1.06 + 4)
+function binDimsForPt(pt) {
+  const w = pt < 50 ? pt + 2 : pt + 4;
+  const h = Math.max(51, Math.round(pt * 1.06 + 4));
+  return { w, h };
+}
+
 function getActiveBinPreset() {
-  const btn = document.querySelector('#binPanel .preset-row .preset-btn.active');
-  return {
-    pt: parseInt(btn.dataset.pt),
-    w: parseInt(btn.dataset.w),
-    h: parseInt(btn.dataset.h)
-  };
+  const pt = parseInt($('binSlider').value);
+  const { w, h } = binDimsForPt(pt);
+  return { pt, w, h };
 }
 
 function getActiveEpdfontPreset() {
-  const ptBtn = document.querySelector('#epdfontPanel [data-epdpt].active');
+  const pt = parseInt($('epdSlider').value);
   const csBtn = document.querySelector('#epdfontPanel [data-charset].active');
   return {
-    pt: parseInt(ptBtn.dataset.epdpt),
+    pt,
     charset: csBtn.dataset.charset
   };
 }
+
+// Slider 即時更新顯示
+$('binSlider').addEventListener('input', () => {
+  const pt = parseInt($('binSlider').value);
+  const { w, h } = binDimsForPt(pt);
+  $('binPtText').textContent = pt;
+  $('binDimText').textContent = `${w} × ${h}`;
+});
+
+$('epdSlider').addEventListener('input', () => {
+  const pt = parseInt($('epdSlider').value);
+  const px = Math.round(pt * 48 / 38);
+  $('epdPtText').textContent = pt;
+  $('epdPxText').textContent = px;
+});
 
 // ---- 內建：官方 .epdfont 78 個 range ----
 const EPDFONT_DEFAULT_RANGES = [

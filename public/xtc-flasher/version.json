@@ -1,13 +1,15 @@
 {
-  "version": "2026.04.23-v2-jfopenhuninn",
-  "build_date": "2026-04-23 17:48",
+  "version": "2026.04.23-v3-yuanxia-dual",
+  "build_date": "2026-04-23 18:38",
   "changelog": [
-    "UI 字型改為 jf open 粉圓（解決繁中缺字）",
-    "22 處英文介面翻譯為繁中",
-    "方向 C 前綴 key 修正",
-    "字集：教育部常用 4808 + 次常用前 2000 + 程式繁中字（共 7600 字）"
+    "UI + 閱讀字型統一改為原俠正楷（SIL OFL，繁中楷書）",
+    "保留兩種字型大小：13pt（Small/Medium/Large）+ 22pt（X Large）",
+    "刪除原本多種混用字型（倉耳硬核體、倉耳玄三、釘釘進步體、倉耳漁陽體），解決 Flash 過擠問題",
+    "Flash 使用率：86% → 75%，開書載入更快",
+    "前版本：v2 jf 粉圓（已替換）"
   ],
-  "x3_firmware_bytes": 7398592,
-  "x4_firmware_bytes": 7374448,
-  "font": "jf-openhuninn (SIL OFL)"
+  "x3_firmware_bytes": 6505264,
+  "x4_firmware_bytes": 6481120,
+  "font": "GuanKiapTsingKhai 原俠正楷 (SIL OFL)",
+  "font_sizes": ["13pt", "22pt"]
 }

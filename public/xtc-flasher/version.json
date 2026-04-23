@@ -1,15 +1,15 @@
 {
-  "version": "2026.04.23-v4-yuanxia-tbold-ceilfix",
-  "build_date": "2026-04-23 18:46",
+  "version": "2026.04.23-v5-yuanxia-spacing-fix",
+  "build_date": "2026-04-23 18:58",
   "changelog": [
-    "字型改用原俠正楷 T-Bold 粗體版（筆畫較粗，閱讀更清楚）",
-    "修復字間距問題：advance_x 計算由 floor 改為 ceil（字不再擠在一起）",
-    "保留兩種字型大小：13pt（Small/Medium/Large）+ 22pt（X Large）",
-    "Flash 使用率仍維持約 75%",
-    "前版本：v3 原俠正楷 Regular（字間距有問題）"
+    "真正修復字疊在一起：每個字 advance_x 強制 +2px padding",
+    "根本原因：原俠正楷字型本身的 em 寬度等於字寬（沒留字間距），照字型預設會擠在一起",
+    "保留原俠正楷 T-Bold 粗體、13pt + 22pt 雙尺寸",
+    "Flash 使用率仍維持 75% 左右",
+    "前版本：v4（floor→ceil 只推 1px，不夠）"
   ],
   "x3_firmware_bytes": 6515296,
   "x4_firmware_bytes": 6491152,
-  "font": "GuanKiapTsingKhai-Tbold 原俠正楷粗體 (SIL OFL)",
+  "font": "GuanKiapTsingKhai-Tbold 原俠正楷粗體 (SIL OFL) +2px spacing",
   "font_sizes": ["13pt", "22pt"]
 }

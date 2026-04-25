@@ -565,7 +565,7 @@ footer a:hover { text-decoration: underline; }
 <div class="container">
   <header>
     <h1>閱星曈字體轉換器</h1>
-    <p class="subtitle">TTF / OTF 字體 → .bin / .epdfont｜閱星曈墨水屏專用</p>
+    <p class="subtitle">TTF / OTF 字體 → .bin｜閱星曈 XTC 墨水屏專用</p>
   </header>
 
   <div class="layout">
@@ -587,14 +587,10 @@ footer a:hover { text-decoration: underline; }
   </div>
 
   <div class="card">
-    <label>第二步：選輸出格式</label>
-    <div class="preset-row" id="formatRow">
-      <button type="button" class="preset-btn active" data-format="bin">.bin（XTC 墨水屏）</button>
-      <button type="button" class="preset-btn" data-format="epdfont">.epdfont（刷機版・實驗中）</button>
-    </div>
+    <label>第二步：選字級（XTC 墨水屏 .bin 格式）</label>
 
     <div id="binPanel">
-      <label style="margin-top:24px;">選字級（寬高自動套用）</label>
+      <label style="margin-top:8px;">字級（寬高自動套用）</label>
       <div class="slider-wrap">
         <input type="range" id="binSlider" min="12" max="72" value="42" step="1">
         <div class="slider-value">
@@ -612,32 +608,6 @@ footer a:hover { text-decoration: underline; }
       </div>
     </div>
 
-    <div id="epdfontPanel" style="display:none;">
-      <div style="background: linear-gradient(135deg, rgba(232,168,124,0.12), rgba(212,165,165,0.10));
-                  border: 1px solid rgba(232,168,124,0.4);
-                  border-radius: 16px; padding: 16px 20px; margin-top: 20px; font-size: 14px; line-height: 1.7;">
-        <strong style="color: #B8723C;">實驗中・建議用 .bin 格式</strong><br>
-        <span style="color: var(--text-body);">.epdfont 內部結構是逆向工程出來的，目前轉檔後刷進閱星曈裝置可能造成系統崩潰、書打不開。已知官方版的 .epdfont 檔（從官方工具下載）能正常使用。</span><br>
-        <span style="color: var(--text-muted);">→ 建議轉成 <strong>.bin 格式</strong>（XTC 墨水屏專用、結構穩定），或直接用官方工具：
-          <a href="http://47.110.70.84:3000/" target="_blank" rel="noopener" style="color: var(--brand-brown);">http://47.110.70.84:3000/</a>
-        </span>
-      </div>
-      <label style="margin-top:24px;">選字級</label>
-      <div class="slider-wrap">
-        <input type="range" id="epdSlider" min="16" max="56" value="38" step="1">
-        <div class="slider-value">
-          <span id="epdPtText">38</span> 號
-          <span class="slider-sub">→ PIL pt <span id="epdPxText">64</span>（pixel_size 固定 48）</span>
-        </div>
-      </div>
-
-      <label style="margin-top:24px;">字集</label>
-      <div class="preset-row">
-        <button type="button" class="preset-btn active" data-charset="common">常用字（~20K，跟官方一樣）</button>
-        <button type="button" class="preset-btn" data-charset="big5">繁中常用（~5K，最小檔）</button>
-        <button type="button" class="preset-btn" data-charset="all">全 BMP（~65K，最大檔）</button>
-      </div>
-    </div>
 
     <div class="field" style="margin-top:24px;">
       <label for="fontName">字體名（檔名用）</label>
@@ -645,7 +615,7 @@ footer a:hover { text-decoration: underline; }
     </div>
 
     <div class="note">
-      <strong>提示</strong>：寬高由系統依字級自動套用，符合閱星曈裝置實際吃的尺寸。.bin 和 .epdfont 的字級規格不同，分別選用對應格式即可。
+      <strong>提示</strong>：寬高由系統依字級自動套用，符合閱星曈裝置實際吃的尺寸。把轉好的 .bin 放進裝置的字體目錄即可使用。
     </div>
   </div>
 
@@ -723,8 +693,8 @@ footer a:hover { text-decoration: underline; }
     <label style="font-weight:700; color:var(--brand-brown); margin-bottom:12px;">怎麼用</label>
     <ol style="padding-left:20px; font-size:15px;">
       <li>選一個 TTF 或 OTF 字體檔（建議 SIL OFL 授權的免費字體）</li>
-      <li>選輸出格式：<strong>.bin</strong>（XTC 墨水屏）或 <strong>.epdfont</strong>（刷機版）</li>
-      <li>選字級（.epdfont 還可選字集大小）</li>
+      <li>選字級（寬高自動依字級套用）</li>
+      <li>選排版方向（橫排 / 豎排）</li>
       <li>填字體名（用在輸出檔名上）</li>
       <li>按「開始轉換」，下載字體檔</li>
       <li>把檔案放進閱星曈裝置的字體目錄</li>
@@ -795,21 +765,8 @@ document.querySelectorAll('.preset-row').forEach(row => {
     if (!e.target.classList.contains('preset-btn')) return;
     row.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
     e.target.classList.add('active');
-    // 格式切換時切 panel
-    if (e.target.dataset.format) {
-      togglePanels(e.target.dataset.format);
-    }
   });
 });
-
-function togglePanels(format) {
-  $('binPanel').style.display = format === 'bin' ? '' : 'none';
-  $('epdfontPanel').style.display = format === 'epdfont' ? '' : 'none';
-}
-
-function getActiveFormat() {
-  return document.querySelector('#formatRow .preset-btn.active').dataset.format;
-}
 
 // .bin 字級 → 寬高
 // 官方樣本字級用查表（pixel-perfect），其他字級用比例公式
@@ -834,15 +791,6 @@ function getActiveBinPreset() {
   return { pt, w, h };
 }
 
-function getActiveEpdfontPreset() {
-  const pt = parseInt($('epdSlider').value);
-  const csBtn = document.querySelector('#epdfontPanel [data-charset].active');
-  return {
-    pt,
-    charset: csBtn.dataset.charset
-  };
-}
-
 // Slider 即時更新顯示
 $('binSlider').addEventListener('input', () => {
   const pt = parseInt($('binSlider').value);
@@ -851,42 +799,10 @@ $('binSlider').addEventListener('input', () => {
   $('binDimText').textContent = `${w} × ${h}`;
 });
 
-$('epdSlider').addEventListener('input', () => {
-  const pt = parseInt($('epdSlider').value);
-  const pilPt = Math.round(pt * 79 / 38);
-  $('epdPtText').textContent = pt;
-  $('epdPxText').textContent = pilPt;  // 顯示 PIL pt（實際渲染字級），pixel_size 固定 48 不顯示
-});
-
-// ---- 內建：官方 .epdfont 78 個 range ----
-const EPDFONT_DEFAULT_RANGES = [
-  [0x0020,0x007E],[0x00A0,0x017F],[0x01CE,0x01DC],[0x02B0,0x02F7],
-  [0x0391,0x03C9],[0x0401,0x0451],[0x2000,0x20C0],[0x2100,0x2199],
-  [0x21B6,0x22A5],[0x22BF,0x232C],[0x2373,0x2424],[0x244A,0x244A],
-  [0x2460,0x2642],[0x2660,0x26CB],[0x26E4,0x26E7],[0x2702,0x271A],
-  [0x273D,0x2740],[0x2756,0x27A1],[0x3000,0x3129],[0x3220,0x325F],
-  [0x3280,0x33FF],[0x4E00,0x508D],[0x50A3,0x5121],[0x513F,0x5AF1],
-  [0x5B09,0x5B17],[0x5B32,0x5D82],[0x5D99,0x5D9D],[0x5DB7,0x64E6],
-  [0x6500,0x66BE],[0x66D9,0x6AAC],[0x6B20,0x6FEF],[0x7011,0x7206],
-  [0x721D,0x74BA],[0x74D2,0x7A57],[0x7A70,0x7C4D],[0x7C73,0x7D0A],
-  [0x7D20,0x7D2F],[0x7D6E,0x7D77],[0x7DA6,0x7DAE],[0x7E3B,0x7E47],
-  [0x7E82,0x7E82],[0x7E9B,0x81CC],[0x81E3,0x8944],[0x895E,0x8986],
-  [0x89C1,0x8A07],[0x8A3E,0x8A48],[0x8A79,0x8A93],[0x8B07,0x8B07],
-  [0x8B26,0x8B26],[0x8B66,0x8B6C],[0x8BA0,0x8C98],[0x8D1D,0x8ECE],
-  [0x8F66,0x91DC],[0x9274,0x9274],[0x928E,0x928E],[0x92AE,0x92AE],
-  [0x92C8,0x92C8],[0x933E,0x933E],[0x936A,0x936A],[0x938F,0x938F],
-  [0x93CA,0x93D6],[0x943E,0x943E],[0x946B,0x946B],[0x9485,0x957F],
-  [0x95E8,0x97B4],[0x97E6,0x97F6],[0x9875,0x98A7],[0x98CE,0x98E8],
-  [0x990D,0x9910],[0x992E,0x992E],[0x9954,0x99A8],[0x9A6C,0x9B54],
-  [0x9C7C,0x9CE2],[0x9E1F,0x9F51],[0x9F7F,0x9FA0],[0xFE30,0xFE6B],
-  [0xFF01,0xFF9F],[0xFFE0,0xFFEE]
-];
-
 // ---- 跑 encoder ----
 runBtn.addEventListener('click', () => {
   if (!ttfBuffer) return;
 
-  const format = getActiveFormat();
   const fontName = $('fontName').value.trim() || detectedName || 'font';
 
   hideError();
@@ -931,26 +847,15 @@ runBtn.addEventListener('click', () => {
     }
   };
 
-  let payload;
-  if (format === 'bin') {
-    const { pt, w: outerW, h: outerH } = getActiveBinPreset();
-    const vertical = $('orientation').value === 'vertical';
-    payload = {
-      format: 'bin',
-      ttfBuffer: bufferCopy,
-      fontSizePt: pt, outerW, outerH,
-      threshold: 240,
-      vertical, fontName
-    };
-  } else {
-    const { pt, charset } = getActiveEpdfontPreset();
-    payload = {
-      format: 'epdfont',
-      ttfBuffer: bufferCopy,
-      fontSizePt: pt, charset, fontName,
-      defaultRanges: EPDFONT_DEFAULT_RANGES
-    };
-  }
+  const { pt, w: outerW, h: outerH } = getActiveBinPreset();
+  const vertical = $('orientation').value === 'vertical';
+  const payload = {
+    format: 'bin',
+    ttfBuffer: bufferCopy,
+    fontSizePt: pt, outerW, outerH,
+    threshold: 240,
+    vertical, fontName
+  };
   w.postMessage(payload, [bufferCopy]);
 });
 
@@ -998,36 +903,15 @@ let previewScreen = 'portrait';
 let previewWriting = 'horizontal';
 
 function getCellSize() {
-  const format = getActiveFormat();
-  let outerW, outerH, fontSizePt, labelPt;
-  if (format === 'bin') {
-    const p = getActiveBinPreset();
-    outerW = p.w; outerH = p.h; fontSizePt = p.pt; labelPt = p.pt;
-  } else {
-    // .epdfont：slider 上顯示的是「檔名號碼」（如 17 號 / 38 號）
-    // 實際渲染 pt = 號碼 × 64/38（跟 worker.js EPDFONT_PIL_PT_RATIO 同步）
-    labelPt = parseInt($('epdSlider').value);
-    fontSizePt = Math.round(labelPt * 79 / 38);
-    // cell 大小用實際渲染後的字高（從字體 metric 算）
-    if (opentypeFont) {
-      const scale = fontSizePt / opentypeFont.unitsPerEm;
-      const ascent = Math.round(opentypeFont.ascender * scale);
-      const descent = Math.round(-opentypeFont.descender * scale);
-      outerH = ascent + descent;
-      outerW = Math.round(fontSizePt * 1.0);  // 中文方塊字寬約 = pt
-    } else {
-      outerH = Math.round(fontSizePt * 1.18);
-      outerW = fontSizePt;
-    }
-  }
-  return { outerW, outerH, fontSizePt, labelPt, format };
+  const p = getActiveBinPreset();
+  return { outerW: p.w, outerH: p.h, fontSizePt: p.pt };
 }
 
 function renderPreview() {
   if (!opentypeFont) return;
 
   const screen = SCREEN_DIMS[previewScreen];
-  const { outerW, outerH, fontSizePt, labelPt, format } = getCellSize();
+  const { outerW, outerH, fontSizePt } = getCellSize();
 
   // 換行符或 ｜ 都當段落分隔
   const rawText = $('previewText').value || '閱星曈';
@@ -1038,11 +922,10 @@ function renderPreview() {
   $('previewEmpty').style.display = 'none';
   $('previewWrap').style.display = '';
 
-  const fmtName = format === 'bin' ? '.bin' : '.epdfont';
   const screenName = previewScreen === 'portrait' ? '直版' : '橫版';
   const writingName = previewWriting === 'horizontal' ? '橫排' : '直排';
   $('previewMeta').innerHTML =
-    `<strong>${screenName} ${screen.w}×${screen.h}</strong>　${writingName}　${fmtName} 字級 <strong>${labelPt}</strong>${format === 'epdfont' ? `（PIL pt=${fontSizePt}）` : ''}　每字 <strong>${outerW}×${outerH} px</strong>`;
+    `<strong>${screenName} ${screen.w}×${screen.h}</strong>　${writingName}　字級 <strong>${fontSizePt}</strong>　每字 <strong>${outerW}×${outerH} px</strong>`;
 }
 
 function drawScreen(paragraphs, font, fontSizePt, cellW, cellH, screen, writing) {
@@ -1142,11 +1025,11 @@ bindToggleRow('previewScreenRow', 'screen', (v) => { previewScreen = v; renderPr
 bindToggleRow('previewWritingRow', 'writing', (v) => { previewWriting = v; renderPreview(); });
 
 // 任何控制變動都重繪預覽
-['binSlider', 'epdSlider', 'orientation', 'previewText'].forEach(id => {
+['binSlider', 'orientation', 'previewText'].forEach(id => {
   const el = $(id);
   if (el) el.addEventListener('input', renderPreview);
 });
-document.querySelectorAll('#formatRow, #epdfontPanel .preset-row').forEach(row => {
+document.querySelectorAll('.preset-row').forEach(row => {
   row.addEventListener('click', () => setTimeout(renderPreview, 0));
 });
 

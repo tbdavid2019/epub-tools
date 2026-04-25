@@ -28,7 +28,9 @@ function progress(current, total) {
 }
 
 // ============ .bin encoder ============
-const BIN_GLYPH_COUNT = 0xFFFE;
+// 從 14 個官方 .bin 樣本實測：檔案大小 = slot_size × 65536（不是 0xFFFE=65534）
+// 例：宇文天穹 32 38×43.bin = 215 × 65536 = 14,090,240 byte ✓
+const BIN_GLYPH_COUNT = 0x10000;
 
 async function runBin({ ttfBuffer, fontSizePt, outerW, outerH, threshold = 240, vertical = false, fontName = 'font' }) {
   const font = opentype.parse(ttfBuffer);

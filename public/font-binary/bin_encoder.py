@@ -20,7 +20,8 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-GLYPH_COUNT = 0xFFFE
+# 從 14 個官方 .bin 樣本實測：實際是 65536 個 slot（0x10000），不是 0xFFFE
+GLYPH_COUNT = 0x10000
 
 
 def render_glyph(font: ImageFont.FreeTypeFont, codepoint: int, w: int, h: int, x_off: int, y_off: int, threshold: int = 240) -> bytes:

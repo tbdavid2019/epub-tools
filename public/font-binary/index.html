@@ -618,7 +618,7 @@ footer a:hover { text-decoration: underline; }
         <input type="range" id="epdSlider" min="16" max="56" value="38" step="1">
         <div class="slider-value">
           <span id="epdPtText">38</span> 號
-          <span class="slider-sub">→ pixel_size <span id="epdPxText">48</span></span>
+          <span class="slider-sub">→ PIL pt <span id="epdPxText">64</span>（pixel_size 固定 48）</span>
         </div>
       </div>
 
@@ -844,9 +844,9 @@ $('binSlider').addEventListener('input', () => {
 
 $('epdSlider').addEventListener('input', () => {
   const pt = parseInt($('epdSlider').value);
-  const px = Math.round(pt * 48 / 38);
+  const pilPt = Math.round(pt * 64 / 38);
   $('epdPtText').textContent = pt;
-  $('epdPxText').textContent = px;
+  $('epdPxText').textContent = pilPt;  // 顯示 PIL pt（實際渲染字級），pixel_size 固定 48 不顯示
 });
 
 // ---- 內建：官方 .epdfont 78 個 range ----
@@ -990,24 +990,35 @@ let previewWriting = 'horizontal';
 
 function getCellSize() {
   const format = getActiveFormat();
-  let outerW, outerH, fontSizePt;
+  let outerW, outerH, fontSizePt, labelPt;
   if (format === 'bin') {
     const p = getActiveBinPreset();
-    outerW = p.w; outerH = p.h; fontSizePt = p.pt;
+    outerW = p.w; outerH = p.h; fontSizePt = p.pt; labelPt = p.pt;
   } else {
-    fontSizePt = parseInt($('epdSlider').value);
-    const pixelSize = Math.round(fontSizePt * 48 / 38);
-    outerW = pixelSize;
-    outerH = Math.round(pixelSize * 1.18);
+    // .epdfont：slider 上顯示的是「檔名號碼」（如 17 號 / 38 號）
+    // 實際渲染 pt = 號碼 × 64/38（跟 worker.js EPDFONT_PIL_PT_RATIO 同步）
+    labelPt = parseInt($('epdSlider').value);
+    fontSizePt = Math.round(labelPt * 64 / 38);
+    // cell 大小用實際渲染後的字高（從字體 metric 算）
+    if (opentypeFont) {
+      const scale = fontSizePt / opentypeFont.unitsPerEm;
+      const ascent = Math.round(opentypeFont.ascender * scale);
+      const descent = Math.round(-opentypeFont.descender * scale);
+      outerH = ascent + descent;
+      outerW = Math.round(fontSizePt * 1.0);  // 中文方塊字寬約 = pt
+    } else {
+      outerH = Math.round(fontSizePt * 1.18);
+      outerW = fontSizePt;
+    }
   }
-  return { outerW, outerH, fontSizePt, format };
+  return { outerW, outerH, fontSizePt, labelPt, format };
 }
 
 function renderPreview() {
   if (!opentypeFont) return;
 
   const screen = SCREEN_DIMS[previewScreen];
-  const { outerW, outerH, fontSizePt, format } = getCellSize();
+  const { outerW, outerH, fontSizePt, labelPt, format } = getCellSize();
 
   // 換行符或 ｜ 都當段落分隔
   const rawText = $('previewText').value || '閱星曈';
@@ -1022,7 +1033,7 @@ function renderPreview() {
   const screenName = previewScreen === 'portrait' ? '直版' : '橫版';
   const writingName = previewWriting === 'horizontal' ? '橫排' : '直排';
   $('previewMeta').innerHTML =
-    `<strong>${screenName} ${screen.w}×${screen.h}</strong>　${writingName}　${fmtName} 字級 <strong>${fontSizePt}</strong>　每字 <strong>${outerW}×${outerH} px</strong>`;
+    `<strong>${screenName} ${screen.w}×${screen.h}</strong>　${writingName}　${fmtName} 字級 <strong>${labelPt}</strong>${format === 'epdfont' ? `（PIL pt=${fontSizePt}）` : ''}　每字 <strong>${outerW}×${outerH} px</strong>`;
 }
 
 function drawScreen(paragraphs, font, fontSizePt, cellW, cellH, screen, writing) {

@@ -44,8 +44,8 @@ def all_bmp_ranges() -> list[tuple[int, int]]:
     return [(0x0020, 0xFFFD)]
 
 
-PIL_PT_RATIO = 64 / 38      # XTEink pt → PIL pt（從官方樣本反推）
-PIXEL_SIZE_RATIO = 48 / 38  # XTEink pt → header pixel_size
+PIL_PT_RATIO = 64 / 38      # XTEink pt → PIL pt（從官方 38 號樣本反推）
+DEVICE_CELL_SIZE = 48       # 裝置字格大小（兩個官方樣本實測都是 48，固定）
 
 
 def encode(ttf_path: Path, font_size_pt: int, out_path: Path, charset: str = "common") -> None:
@@ -59,7 +59,7 @@ def encode(ttf_path: Path, font_size_pt: int, out_path: Path, charset: str = "co
         raise ValueError(f"unknown charset: {charset}")
 
     pil_pt = round(font_size_pt * PIL_PT_RATIO)
-    pixel_size = round(font_size_pt * PIXEL_SIZE_RATIO)
+    pixel_size = DEVICE_CELL_SIZE
     font = ImageFont.truetype(str(ttf_path), pil_pt)
     asc, des = font.getmetrics()
 
@@ -154,7 +154,7 @@ def encode(ttf_path: Path, font_size_pt: int, out_path: Path, charset: str = "co
         fp.write(struct.pack("<I", glyph_count))
         fp.write(struct.pack("<I", len(range_table) + 1))  # 官方慣例：N+1
         fp.write(struct.pack("<I", 0))
-        fp.write(struct.pack("<I", pixel_size + 36))   # field20: 推測 line_height
+        fp.write(struct.pack("<I", asc + des))         # field20: line_height（行高），用 PIL 字體實測 ascent+descent
         fp.write(struct.pack("<I", 0))
         fp.write(struct.pack("<i", -des))              # field28: 負 descent
         fp.write(struct.pack("<I", 1))                 # field32: version

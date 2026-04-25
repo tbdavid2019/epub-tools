@@ -768,36 +768,100 @@ document.querySelectorAll('.preset-row').forEach(row => {
   });
 });
 
-// .bin 字級 → 寬高
-// 官方樣本字級用查表（pixel-perfect），其他字級用比例公式
-const BIN_OFFICIAL_DIMS = {
-  42: { w: 44, h: 51 },
-  48: { w: 50, h: 51 },
-  51: { w: 52, h: 51 },
-  56: { w: 58, h: 58 },
-  64: { w: 68, h: 68 },
-  68: { w: 72, h: 72 }
-};
-function binDimsForPt(pt) {
-  if (BIN_OFFICIAL_DIMS[pt]) return BIN_OFFICIAL_DIMS[pt];
-  const w = pt < 50 ? pt + 2 : pt + 4;
-  const h = Math.round(pt * 1.06 + 4);
+// .bin W×H 用「字體實測最大 bbox」決定，不是 pt 算公式
+// （從 14 個官方 .bin 樣本反推：30 pt 凝書體=40×54、32 pt 宇文天穹=38×43、
+//  32 pt 內海=43×43... 同 pt 不同字體 W/H 完全不一樣，所以 W×H 是字體本身決定的）
+
+// 量測字體在指定 pt 下「常用字最大 bbox」
+// 從 14 個官方 .bin 樣本反推：官方「30 pt」實際對應 freetype 20 pt @ 150 DPI
+// 比例：實際渲染 pt = 顯示 pt × 2/3
+// 量測方法：用 Canvas 渲染（跟 worker.js 一致），量 alpha pixel 的 bbox
+const BIN_MEASURE_CHARS = '一二三四五六七八九十百千萬億零的是不了在人有我他這個們中來上大為和國地到以說時要就出會可也你對生能而子那得於著下自之年過發後作裡用道行所然家種事成方多經麼去法學如都同現當沒動面起看定天分還進好小部其些主樣理心她本前開但因只從想實日軍者意無力它與長把機十重很點物—中文english12345AaBbCcXyZ字體大小標豐';
+
+// 官方 .bin 的「顯示 pt」對應「freetype pt @ 150 DPI」 = pt × 2/3
+// opentype.js 在 Canvas 用 72 DPI，所以等效換算 = displayPt × 150/72 × 2/3 = displayPt × 25/18 ≈ × 1.389
+const BIN_RENDER_PT_RATIO = 25 / 18;
+
+function getBinRenderPt(displayPt) {
+  return Math.round(displayPt * BIN_RENDER_PT_RATIO);
+}
+
+function measureBinDims(displayPt) {
+  if (!opentypeFont) return null;
+  const renderPt = getBinRenderPt(displayPt);
+  const scale = renderPt / opentypeFont.unitsPerEm;
+
+  // 用 canvas 量測（跟 worker.js renderBinGlyph 同方法）
+  const probe = Math.ceil(renderPt * 2);
+  const canvas = document.createElement('canvas');
+  canvas.width = probe;
+  canvas.height = probe;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  let maxW = 0, maxH = 0, maxTop = 0, minBottom = 0;
+
+  for (const ch of BIN_MEASURE_CHARS) {
+    const glyph = opentypeFont.charToGlyph(ch);
+    if (!glyph || glyph.index === 0) continue;
+
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, probe, probe);
+    ctx.fillStyle = 'black';
+    const ascent = Math.round(opentypeFont.ascender * scale);
+    const path = glyph.getPath(0, ascent, renderPt);
+    path.draw(ctx);
+
+    const px = ctx.getImageData(0, 0, probe, probe).data;
+    let bx0 = probe, by0 = probe, bx1 = -1, by1 = -1;
+    for (let y = 0; y < probe; y++) {
+      for (let x = 0; x < probe; x++) {
+        if (px[(y * probe + x) * 4] < 240) {
+          if (x < bx0) bx0 = x;
+          if (y < by0) by0 = y;
+          if (x > bx1) bx1 = x;
+          if (y > by1) by1 = y;
+        }
+      }
+    }
+    if (bx1 < 0) continue;
+    const bw = bx1 - bx0 + 1;
+    const top = ascent - by0;
+    const bottom = by1 - ascent;
+    if (bw > maxW) maxW = bw;
+    if (top > maxTop) maxTop = top;
+    if (bottom > minBottom) minBottom = bottom;
+  }
+  // 公式（從 3 個官方樣本反推 + 系統校正）：
+  //   W = max bbox 寬 - 2（瀏覽器 Canvas 渲染比 freetype 寬約 2 px，校正）
+  //   H = round((face_height + cell_h) / 2) - 3（同樣校正）
+  //     - cell_h = max top + max bottom
+  //     - face_height = ascender - descender + lineGap
+  //   驗證：凝書體 30→40×54 ✓、凝書體 34→45×62 (vs 61)、匯文 32→43×43 ✓
+  const cellH = maxTop + minBottom;
+  const hheaTable = opentypeFont.tables.hhea || {};
+  const lineGap = hheaTable.lineGap || 0;
+  const faceHeight = (opentypeFont.ascender - opentypeFont.descender + lineGap) * scale;
+  const w = Math.max(1, maxW - 2);
+  const h = Math.max(1, Math.round((faceHeight + cellH) / 2) - 3);
   return { w, h };
 }
 
 function getActiveBinPreset() {
   const pt = parseInt($('binSlider').value);
-  const { w, h } = binDimsForPt(pt);
-  return { pt, w, h };
+  const dims = measureBinDims(pt);
+  if (dims) return { pt, w: dims.w, h: dims.h };
+  // 字體還沒上傳：用預估
+  return { pt, w: pt + 2, h: Math.round(pt * 1.18) };
 }
 
 // Slider 即時更新顯示
-$('binSlider').addEventListener('input', () => {
+function updateBinSliderDisplay() {
   const pt = parseInt($('binSlider').value);
-  const { w, h } = binDimsForPt(pt);
+  const { w, h } = getActiveBinPreset();
   $('binPtText').textContent = pt;
-  $('binDimText').textContent = `${w} × ${h}`;
-});
+  $('binDimText').textContent = opentypeFont ? `${w} × ${h}（依此字體實測）` : `${w} × ${h}（預估，上傳字體後重算）`;
+}
+$('binSlider').addEventListener('input', updateBinSliderDisplay);
 
 // ---- 跑 encoder ----
 runBtn.addEventListener('click', () => {
@@ -849,10 +913,12 @@ runBtn.addEventListener('click', () => {
 
   const { pt, w: outerW, h: outerH } = getActiveBinPreset();
   const vertical = $('orientation').value === 'vertical';
+  // 渲染用 pt 要套官方 1.389 倍率（150 DPI / 72 DPI × 2/3）
+  const renderPt = getBinRenderPt(pt);
   const payload = {
     format: 'bin',
     ttfBuffer: bufferCopy,
-    fontSizePt: pt, outerW, outerH,
+    fontSizePt: renderPt, outerW, outerH,
     threshold: 240,
     vertical, fontName
   };
@@ -888,6 +954,8 @@ async function loadFontForPreview(buffer) {
   await ensureOpentypeLib();
   const copy = buffer.slice(0);
   opentypeFont = window.opentype.parse(copy);
+  window._font = opentypeFont;  // 偵錯用
+  updateBinSliderDisplay();  // 字體載入後重算 W×H 顯示「實測」尺寸
   renderPreview();
 }
 

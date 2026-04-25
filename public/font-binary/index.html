@@ -65,9 +65,24 @@ body {
 }
 
 .container {
-  max-width: 760px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 48px 24px;
+  padding: 48px 32px;
+}
+
+@media (min-width: 1280px) {
+  .container { padding: 48px 64px; }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(360px, 480px) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 1023px) {
+  .layout { grid-template-columns: 1fr; }
 }
 
 header {
@@ -405,6 +420,125 @@ input:focus, select:focus {
 
 .error-msg.show { display: block; }
 
+/* ========== 預覽區（黏在右側，跟著捲動） ========== */
+.preview-col {
+  position: sticky;
+  top: 24px;
+}
+
+.preview-card {
+  background: var(--card);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 16px;
+}
+
+.preview-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--brand-brown);
+  margin-bottom: 4px;
+}
+
+.preview-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.preview-stage {
+  background: linear-gradient(135deg, #F4EFEC, #EFEAE7);
+  border: 1px solid #E8E4E1;
+  border-radius: 16px;
+  padding: 24px;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.preview-canvas-wrap {
+  display: inline-block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.preview-canvas-wrap canvas {
+  display: block;
+  image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
+  background: white;
+  border: 10px solid #2C2826;
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.22);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.preview-meta {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.preview-meta strong {
+  color: var(--brand-brown);
+}
+
+.preview-empty {
+  color: var(--text-note);
+  font-size: 14px;
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.preview-text-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #E8E4E1;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-body);
+  background: white;
+  margin-bottom: 16px;
+}
+
+.preview-text-input:focus {
+  outline: none;
+  border-color: var(--rose);
+}
+
+.preview-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .preview-row { grid-template-columns: 1fr; }
+}
+
+.preview-mini {
+  background: rgba(212,165,165,0.04);
+  border: 1px solid rgba(212,165,165,0.2);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.preview-mini-label {
+  font-size: 12px;
+  color: var(--brand-brown);
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
 footer {
   text-align: center;
   padding: 48px 24px 24px;
@@ -433,6 +567,9 @@ footer a:hover { text-decoration: underline; }
     <h1>閱星曈字體轉換器</h1>
     <p class="subtitle">TTF / OTF 字體 → .bin / .epdfont｜閱星曈墨水屏專用</p>
   </header>
+
+  <div class="layout">
+  <div class="main-col">
 
   <div class="card">
     <label>第一步：選字體檔案</label>
@@ -515,6 +652,64 @@ footer a:hover { text-decoration: underline; }
   <div class="result" id="result"></div>
   <div class="error-msg" id="errorMsg"></div>
 
+  </div>
+  <aside class="preview-col">
+    <div class="preview-card">
+      <div class="preview-title">即時預覽</div>
+      <div class="preview-sub">畫面方向 × 文字排版，4 種組合任選</div>
+
+      <div style="margin-bottom: 12px;">
+        <div style="font-size:13px; color:var(--text-heading); font-weight:500; margin-bottom:6px;">畫面方向</div>
+        <div class="preset-row" id="previewScreenRow">
+          <button type="button" class="preset-btn active" data-screen="portrait">直版畫面</button>
+          <button type="button" class="preset-btn" data-screen="landscape">橫版畫面</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <div style="font-size:13px; color:var(--text-heading); font-weight:500; margin-bottom:6px;">文字排版</div>
+        <div class="preset-row" id="previewWritingRow">
+          <button type="button" class="preset-btn active" data-writing="horizontal">橫排</button>
+          <button type="button" class="preset-btn" data-writing="vertical">直排</button>
+        </div>
+      </div>
+
+      <textarea id="previewText" class="preview-text-input" rows="4" placeholder="輸入預覽文字（用換行或｜分段）" style="resize:vertical; min-height:88px; line-height:1.6;">夏天的飛鳥，飛到我的窗前唱歌，又飛去了。
+秋天的黃葉，它們沒有什麼可唱，只嘆息一聲，飛落在那裡。
+世界對著它的愛人，把它浩瀚的面具揭下了。
+它變小了，小如一首歌，小如一回永恆的接吻。
+是大地的淚點，使她的微笑保持著青春不謝。
+無垠的沙漠熱烈追求一葉綠草的愛，她搖搖頭笑著飛開了。
+如果你因失去了太陽而流淚，那麼你也將失去群星了。
+跳舞著的流水呀，在你途中的泥沙，要求你的歌聲，你的流動呢。
+你肯背負它們麼？
+她的熱切的臉，如夜雨似的，攪擾著我的夢魂。
+有一次，我們夢見大家都是不相識的。
+我們醒了，卻知道我們原是相親愛的。
+憂思在我的心裡平靜下去，正如暮色降臨在寂靜的山林中。
+——泰戈爾《漂鳥集》</textarea>
+
+      <div class="preview-stage" id="previewStage" style="min-height: 360px; padding: 12px;">
+        <div class="preview-empty" id="previewEmpty">請先選字體檔</div>
+        <div class="preview-canvas-wrap" id="previewWrap" style="display:none;">
+          <canvas id="previewCanvas"></canvas>
+        </div>
+      </div>
+
+      <div class="preview-meta" id="previewMeta">
+        選了字體後，這裡會顯示實際裝置上的<strong>每字寬高</strong>
+      </div>
+    </div>
+    <div class="preview-card" style="background: linear-gradient(135deg, rgba(223,198,198,0.18), rgba(184,169,201,0.14)); border: 1px solid rgba(223,198,198,0.4);">
+      <div class="preview-title">小提示</div>
+      <div class="preview-sub" style="margin-bottom:0;">
+        畫面框模擬閱星曈墨水屏（直版 750×1024 / 橫版 1024×750）。<br>
+        字按裝置實際吃的 px 渲染，預覽會自動縮放配合畫面框。
+      </div>
+    </div>
+  </aside>
+  </div>
+
   <div class="card card-pink" style="margin-top:32px;">
     <label style="font-weight:700; color:var(--brand-brown); margin-bottom:12px;">怎麼用</label>
     <ol style="padding-left:20px; font-size:15px;">
@@ -580,6 +775,9 @@ async function handleFile(f) {
   fileInfo.classList.add('show');
   runBtn.disabled = false;
   runBtn.textContent = '開始轉換';
+
+  try { await loadFontForPreview(ttfBuffer); }
+  catch (e) { console.warn('預覽載入失敗：', e); }
 }
 
 // ---- 預設按鈕（每個 .preset-row 群組內互斥）----
@@ -754,6 +952,184 @@ function showError(msg) {
 function hideError() {
   errorMsg.classList.remove('show');
 }
+
+// ============ 預覽 ============
+let opentypeReady = false;
+let opentypeFont = null;
+
+function ensureOpentypeLib() {
+  if (window.opentype) { opentypeReady = true; return Promise.resolve(); }
+  if (window._opentypeLoading) return window._opentypeLoading;
+  window._opentypeLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js';
+    s.onload = () => { opentypeReady = true; resolve(); };
+    s.onerror = () => reject(new Error('opentype.js 載入失敗'));
+    document.head.appendChild(s);
+  });
+  return window._opentypeLoading;
+}
+
+async function loadFontForPreview(buffer) {
+  await ensureOpentypeLib();
+  const copy = buffer.slice(0);
+  opentypeFont = window.opentype.parse(copy);
+  renderPreview();
+}
+
+// 閱星曈墨水屏：直版 750×1024、橫版 1024×750
+const SCREEN_DIMS = {
+  portrait:  { w: 750,  h: 1024 },
+  landscape: { w: 1024, h: 750 }
+};
+const PAGE_MARGIN = 32;     // 模擬閱讀器內距
+const LINE_GAP = 4;          // 行/列間距
+
+let previewScreen = 'portrait';
+let previewWriting = 'horizontal';
+
+function getCellSize() {
+  const format = getActiveFormat();
+  let outerW, outerH, fontSizePt;
+  if (format === 'bin') {
+    const p = getActiveBinPreset();
+    outerW = p.w; outerH = p.h; fontSizePt = p.pt;
+  } else {
+    fontSizePt = parseInt($('epdSlider').value);
+    const pixelSize = Math.round(fontSizePt * 48 / 38);
+    outerW = pixelSize;
+    outerH = Math.round(pixelSize * 1.18);
+  }
+  return { outerW, outerH, fontSizePt, format };
+}
+
+function renderPreview() {
+  if (!opentypeFont) return;
+
+  const screen = SCREEN_DIMS[previewScreen];
+  const { outerW, outerH, fontSizePt, format } = getCellSize();
+
+  // 換行符或 ｜ 都當段落分隔
+  const rawText = $('previewText').value || '閱星曈';
+  const paragraphs = rawText.split(/[\r\n|｜]+/).map(s => s.trim()).filter(Boolean);
+
+  drawScreen(paragraphs, opentypeFont, fontSizePt, outerW, outerH, screen, previewWriting);
+
+  $('previewEmpty').style.display = 'none';
+  $('previewWrap').style.display = '';
+
+  const fmtName = format === 'bin' ? '.bin' : '.epdfont';
+  const screenName = previewScreen === 'portrait' ? '直版' : '橫版';
+  const writingName = previewWriting === 'horizontal' ? '橫排' : '直排';
+  $('previewMeta').innerHTML =
+    `<strong>${screenName} ${screen.w}×${screen.h}</strong>　${writingName}　${fmtName} 字級 <strong>${fontSizePt}</strong>　每字 <strong>${outerW}×${outerH} px</strong>`;
+}
+
+function drawScreen(paragraphs, font, fontSizePt, cellW, cellH, screen, writing) {
+  const canvas = $('previewCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // canvas 1:1 對應裝置 px；CSS 由 .preview-canvas-wrap 自動縮放配合容器
+  canvas.width = screen.w;
+  canvas.height = screen.h;
+  canvas.style.maxWidth = '100%';
+  canvas.style.maxHeight = '78vh';
+  canvas.style.aspectRatio = `${screen.w} / ${screen.h}`;
+
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, screen.w, screen.h);
+  ctx.imageSmoothingEnabled = false;
+
+  const innerW = screen.w - PAGE_MARGIN * 2;
+  const innerH = screen.h - PAGE_MARGIN * 2;
+
+  const scale = fontSizePt / font.unitsPerEm;
+  const ascent = Math.round(font.ascender * scale);
+  const descent = Math.round(-font.descender * scale);
+  const yPad = Math.max(0, cellH - (ascent + descent));
+  const baselineInCell = ascent + Math.floor(yPad / 2);
+
+  ctx.fillStyle = '#222';
+
+  if (writing === 'horizontal') {
+    // 一段 = 一行（自動換行）
+    let curY = PAGE_MARGIN;
+    for (const para of paragraphs) {
+      if (curY + cellH > screen.h - PAGE_MARGIN) break;
+      let curX = PAGE_MARGIN;
+      const chars = Array.from(para);
+      for (const ch of chars) {
+        if (curX + cellW > screen.w - PAGE_MARGIN) {
+          curX = PAGE_MARGIN;
+          curY += cellH + LINE_GAP;
+          if (curY + cellH > screen.h - PAGE_MARGIN) break;
+        }
+        drawGlyphInCell(ctx, font, ch, fontSizePt, scale, baselineInCell, curX, curY, cellW, cellH);
+        curX += cellW;
+      }
+      curY += cellH + LINE_GAP * 2;
+    }
+  } else {
+    // 直排：一段 = 一列，從右往左排
+    let curX = screen.w - PAGE_MARGIN - cellW;
+    for (const para of paragraphs) {
+      if (curX < PAGE_MARGIN) break;
+      let curY = PAGE_MARGIN;
+      const chars = Array.from(para);
+      for (const ch of chars) {
+        if (curY + cellH > screen.h - PAGE_MARGIN) {
+          curY = PAGE_MARGIN;
+          curX -= cellW + LINE_GAP;
+          if (curX < PAGE_MARGIN) break;
+        }
+        drawGlyphInCell(ctx, font, ch, fontSizePt, scale, baselineInCell, curX, curY, cellW, cellH);
+        curY += cellH;
+      }
+      curX -= cellW + LINE_GAP * 2;
+    }
+  }
+}
+
+function drawGlyphInCell(ctx, font, ch, fontSizePt, scale, baselineInCell, cellX, cellY, cellW, cellH) {
+  const glyph = font.charToGlyph(ch);
+  if (!glyph || glyph.index === 0) {
+    // 字體沒這個字 — 畫一個淡色方框佔位，讓嚕寶看到版面排好了
+    ctx.strokeStyle = 'rgba(120,120,120,0.35)';
+    ctx.lineWidth = 1;
+    const m = 4;
+    ctx.strokeRect(cellX + m + 0.5, cellY + m + 0.5, cellW - m * 2 - 1, cellH - m * 2 - 1);
+    return;
+  }
+  const advance = Math.round(glyph.advanceWidth * scale);
+  const xPad = Math.max(0, Math.floor((cellW - advance) / 2));
+  const path = glyph.getPath(cellX + xPad, cellY + baselineInCell, fontSizePt);
+  path.fill = '#222';
+  path.draw(ctx);
+}
+
+// 預覽選項按鈕
+function bindToggleRow(rowId, attr, onChange) {
+  const row = $(rowId);
+  if (!row) return;
+  row.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('preset-btn')) return;
+    row.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    onChange(e.target.dataset[attr]);
+  });
+}
+bindToggleRow('previewScreenRow', 'screen', (v) => { previewScreen = v; renderPreview(); });
+bindToggleRow('previewWritingRow', 'writing', (v) => { previewWriting = v; renderPreview(); });
+
+// 任何控制變動都重繪預覽
+['binSlider', 'epdSlider', 'orientation', 'previewText'].forEach(id => {
+  const el = $(id);
+  if (el) el.addEventListener('input', renderPreview);
+});
+document.querySelectorAll('#formatRow, #epdfontPanel .preset-row').forEach(row => {
+  row.addEventListener('click', () => setTimeout(renderPreview, 0));
+});
+
 </script>
 
 </body>

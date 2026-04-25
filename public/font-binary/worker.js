@@ -225,14 +225,22 @@ async function runEpdfont({ ttfBuffer, fontSizePt, charset = 'common', fontName 
   const out = new Uint8Array(total);
   const dv = new DataView(out.buffer);
 
-  // Header
-  out[0] = 0x45; out[1] = 0x50; out[2] = 0x44; out[3] = 0x46; out[4] = 0x4E;
-  // [5..8] padding 0
+  // Header（48 byte）— 對 4 個官方樣本反推得：
+  //   off 0-3:   magic 'EPDF'（只有 4 byte）
+  //   off 4-7:   range_count（實際筆數，不要 +1）
+  //   off 8-11:  glyph_count
+  //   off 12-15: 不明（17 號常見 35、38 號 79，寫 0 試）
+  //   off 20-23: line_height = ascent + descent
+  //   off 28-31: -descent
+  //   off 32-35: version=1
+  //   off 36-39: pixel_size 固定 48
+  out[0] = 0x45; out[1] = 0x50; out[2] = 0x44; out[3] = 0x46;  // 'EPDF'
+  dv.setUint32(4, rangeTable.length, true);   // range_count（實際筆數）
   dv.setUint32(8, glyphCount, true);
-  dv.setUint32(12, rangeTable.length + 1, true);
-  // [16..20] reserved
-  dv.setUint32(20, pixelSize + 36, true);
-  // [24..28] reserved
+  dv.setUint32(12, 0, true);                  // 未知欄位
+  dv.setUint32(16, 0, true);
+  dv.setUint32(20, ascent + descent, true);   // line_height
+  dv.setUint32(24, 0, true);
   dv.setInt32(28, -descent, true);
   dv.setUint32(32, 1, true);
   dv.setUint32(36, pixelSize, true);

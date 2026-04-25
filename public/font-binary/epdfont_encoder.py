@@ -148,19 +148,24 @@ def encode(ttf_path: Path, font_size_pt: int, out_path: Path, charset: str = "co
     bitmap_start = metadata_start + metadata_size
 
     with open(out_path, "wb") as fp:
-        # Header
-        fp.write(b"EPDFN")
-        fp.write(b"\x00\x00\x00")
-        fp.write(struct.pack("<I", glyph_count))
-        fp.write(struct.pack("<I", len(range_table) + 1))  # 官方慣例：N+1
-        fp.write(struct.pack("<I", 0))
-        fp.write(struct.pack("<I", asc + des))         # field20: line_height（行高），用 PIL 字體實測 ascent+descent
-        fp.write(struct.pack("<I", 0))
-        fp.write(struct.pack("<i", -des))              # field28: 負 descent
-        fp.write(struct.pack("<I", 1))                 # field32: version
-        fp.write(struct.pack("<I", pixel_size))
-        fp.write(struct.pack("<I", metadata_start))
-        fp.write(struct.pack("<I", bitmap_start))
+        # Header（48 byte）
+        # 對 4 個官方樣本（粉圓/GuanKiap/順風順水 17 號 + GuanKiap 38 號）反推得：
+        #   off 0-3:   magic 'EPDF'（**只有 4 byte，不是 5 byte**）
+        #   off 4-7:   range_count（實際筆數，**不要 +1**）
+        #   off 8-11:  glyph_count
+        #   off 12-15: 不明（17 號常見 35、38 號 79，我寫 0 試試，裝置似乎不檢查）
+        fp.write(b"EPDF")                                # off 0-3
+        fp.write(struct.pack("<I", len(range_table)))    # off 4-7: range_count（實際筆數）
+        fp.write(struct.pack("<I", glyph_count))         # off 8-11
+        fp.write(struct.pack("<I", 0))                   # off 12-15: 未知欄位
+        fp.write(struct.pack("<I", 0))                   # off 16-19
+        fp.write(struct.pack("<I", asc + des))           # off 20-23: line_height
+        fp.write(struct.pack("<I", 0))                   # off 24-27
+        fp.write(struct.pack("<i", -des))                # off 28-31: 負 descent
+        fp.write(struct.pack("<I", 1))                   # off 32-35: version
+        fp.write(struct.pack("<I", pixel_size))          # off 36-39: pixel_size 固定 48
+        fp.write(struct.pack("<I", metadata_start))      # off 40-43
+        fp.write(struct.pack("<I", bitmap_start))        # off 44-47
 
         for s, e, ci in range_table:
             fp.write(struct.pack("<III", s, e, ci))

@@ -722,12 +722,12 @@ footer a:hover { text-decoration: underline; }
         </select>
       </div>
 
-      <label style="margin-top:16px;">字符範圍</label>
+      <label style="margin-top:16px;">要包多少字進去</label>
       <select id="epdfontCharset">
-        <option value="common">常用字（≈ 28k 字，最相容）</option>
-        <option value="big5">Big5 範圍（≈ 13k 字，檔案最小）</option>
-        <option value="all">CJK 全套（中日韓拉丁，社群版預設）</option>
-        <option value="all-bmp">全 BMP（U+0020–U+FFFD，最完整但最慢）</option>
+        <option value="common">常用字（一般繁中閱讀夠用，約 2.8 萬字）</option>
+        <option value="big5">繁中精簡版（檔案最小，舊書沒問題，約 1.3 萬字）</option>
+        <option value="all">中日韓全包（看古籍 / 日文 / 韓文也 OK，檔案中等）</option>
+        <option value="all-bmp">全套（罕見字 / 符號都包，檔案最大、轉檔最慢）</option>
       </select>
       <div class="warn-msg show" style="margin-top:12px;">
         <strong>提示</strong>：本工具的 .epdfont 編碼器依社群逆向版實作（header / metadata / bitmap 編碼方式對齊）。瀏覽器以 Canvas 渲染字形，<strong>跟 Streamlit 版可能像素級略有差異但裝置應能讀取</strong>。建議先小批量測試。

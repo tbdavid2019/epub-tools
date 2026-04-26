@@ -41,13 +41,13 @@ function jsonResponse(data, status = 200) {
 }
 
 // 抓 HyRead 頁面 HTML
+// 注意：HyRead 主站（one.ebook.hyread.com.tw）會擋帶 Chrome User-Agent 的請求，
+// 反而沒帶 UA 或只帶 Accept 都能通。子站對 UA 沒意見。
+// 為了同時相容主站 + 子站，這裡只送 Accept，不偽裝 UA、不帶 Cookie。
 async function fetchHyRead(url) {
   const res = await fetch(url, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'zh-TW,zh;q=0.9,en;q=0.8',
-      'Cookie': 'notBot=1',
     },
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);

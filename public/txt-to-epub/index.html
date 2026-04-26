@@ -24,6 +24,16 @@
   <meta name="twitter:description" content="免費線上 TXT 轉 EPUB 工具，自動偵測 30+ 種章節格式、自訂關鍵字、簡轉繁、直排橫排、封面、拆冊。全程本機處理。">
 
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+  <!-- 預覽用內建字體 CDN（讓 step 3 即時預覽可以真的看到字體變化）
+       這些 CDN 都是子集化版本（Google Fonts 自動子集，ZeoSeven 動態切片） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fontsapi.zeoseven.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/gh/justfont/open-huninn-font@2.0/web/jf-openhuninn-2.0.css" rel="stylesheet">
+  <link href="https://fontsapi.zeoseven.com/427/main/result.css" rel="stylesheet">
+
   <script src="https://lab.helloruru.com/shared/brand-header.js"></script>
   <script>
     (function() {
@@ -371,9 +381,9 @@
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
-  <script src="js/encodingDetector.js?v=20260426f"></script>
-  <script src="js/chapterDetector.js?v=20260426f"></script>
-  <script src="js/epubGenerator.js?v=20260426f"></script>
-  <script src="js/main.js?v=20260426f"></script>
+  <script src="js/encodingDetector.js?v=20260426g"></script>
+  <script src="js/chapterDetector.js?v=20260426g"></script>
+  <script src="js/epubGenerator.js?v=20260426g"></script>
+  <script src="js/main.js?v=20260426g"></script>
 </body>
 </html>

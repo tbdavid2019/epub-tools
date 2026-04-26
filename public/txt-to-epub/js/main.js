@@ -352,35 +352,126 @@
     var paras = pc.querySelectorAll('p');
     for (var j = 0; j < paras.length; j++) paras[j].style.textIndent = indentVal;
 
-    // 4. 字型：內建用對應 family；自訂字體需 @font-face inject
+    // 4. 字型：內建從 CDN 載；自訂字體先子集化再 @font-face inject
+    // CDN 字體名稱對齊：
+    //   Google Fonts 提供 "Noto Sans TC" / "Noto Serif TC"（自動子集）
+    //   jsdelivr 提供 "jf-openhuninn-2.0"（jf 粉圓）
+    //   ZeoSeven 提供 "GuanKiapTsingKhai"（原俠正楷，自動切片）
     var fontMap = {
       'noto-sans': '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
       'noto-serif': '"Noto Serif TC", "PMingLiU", serif',
-      'guankiap': '"GuanKiapTsingKhai TW", "DFKai-SB", "BiauKai", serif',
-      'huninn': '"jf-openhuninn", "Microsoft JhengHei", sans-serif',
+      'guankiap': '"GuanKiapTsingKhai", "DFKai-SB", "BiauKai", serif',
+      'huninn': '"jf-openhuninn-2.0", "Microsoft JhengHei", sans-serif',
       'custom': null,  // 動態決定
     };
     if (state.settings.fontFamily === 'custom' && state.customFontFile) {
-      // 為自訂字體建立 @font-face
-      // 只在字體檔變動時才重新建 ObjectURL，避免每次預覽都產生
-      if (!_customFontObjectURL || _customFontStyleEl?.dataset.fontName !== state.customFontFile.name) {
-        if (_customFontObjectURL) URL.revokeObjectURL(_customFontObjectURL);
-        _customFontObjectURL = URL.createObjectURL(state.customFontFile);
-        if (!_customFontStyleEl) {
-          _customFontStyleEl = document.createElement('style');
-          document.head.appendChild(_customFontStyleEl);
-        }
-        _customFontStyleEl.dataset.fontName = state.customFontFile.name;
-        _customFontStyleEl.textContent =
-          '@font-face { font-family: "TxtEpubPreviewCustom"; src: url("' + _customFontObjectURL + '"); font-display: swap; }';
-      }
+      injectCustomFontForPreview();  // 非同步，會自己刷新 fontFamily
       pc.style.fontFamily = '"TxtEpubPreviewCustom", sans-serif';
     } else if (state.settings.fontFamily === 'custom') {
-      // 選了自訂字體但還沒上傳 → 顯示 sans-serif
       pc.style.fontFamily = 'sans-serif';
     } else {
       pc.style.fontFamily = fontMap[state.settings.fontFamily] || fontMap['noto-sans'];
     }
+  }
+
+  // 自訂字體預覽：先子集化再注入 @font-face（避免 5MB+ 字體卡載入）
+  // 子集化內容 = 預覽用的 600 字（第一章前段）+ 常用 ASCII
+  var _customFontSubsetCache = { fileName: null, fileSize: null, blobUrl: null };
+  async function injectCustomFontForPreview() {
+    if (!state.customFontFile) return;
+    var f = state.customFontFile;
+    // 同一個檔案不重複子集化
+    if (_customFontSubsetCache.fileName === f.name && _customFontSubsetCache.fileSize === f.size && _customFontSubsetCache.blobUrl) {
+      return;
+    }
+    // 先把舊的 ObjectURL 釋放
+    if (_customFontSubsetCache.blobUrl) {
+      URL.revokeObjectURL(_customFontSubsetCache.blobUrl);
+      _customFontSubsetCache.blobUrl = null;
+    }
+    if (!_customFontStyleEl) {
+      _customFontStyleEl = document.createElement('style');
+      document.head.appendChild(_customFontStyleEl);
+    }
+    try {
+      // 收集預覽會用到的 codepoint
+      var firstChapter = state.chapters && state.chapters[0];
+      var sampleText = (firstChapter ? (firstChapter.title + '\n' + firstChapter.content) : '').slice(0, 800);
+      // 加上書名/作者讓標題也能顯示
+      sampleText += '\n' + (state.settings.title || '') + '\n' + (state.settings.author || '');
+      var cps = new Set();
+      for (var i = 0; i < sampleText.length; i++) {
+        var cp = sampleText.codePointAt(i);
+        cps.add(cp);
+        if (cp > 0xFFFF) i++;
+      }
+      // ASCII 補齊
+      for (var a = 0x20; a < 0x7F; a++) cps.add(a);
+      var rawBuf = await f.arrayBuffer();
+      // 用 epubGenerator 內已寫好的 hb-subset wrapper（同一支 wasm，瀏覽器會快取）
+      // 找個不會破壞既有流程的方式：複製 generateEpub 用的子集化邏輯。
+      // 這裡簡化：直接 fetch wasm + subset
+      var subsetBuf = await _previewSubset(rawBuf, cps);
+      var blob = new Blob([subsetBuf], { type: 'font/ttf' });
+      var url = URL.createObjectURL(blob);
+      _customFontSubsetCache = { fileName: f.name, fileSize: f.size, blobUrl: url };
+      _customFontStyleEl.textContent =
+        '@font-face { font-family: "TxtEpubPreviewCustom"; src: url("' + url + '") format("truetype"); font-display: swap; }';
+      // 子集化完成後刷一下預覽（讓字體真的套上去）
+      var pc2 = $('previewContent');
+      if (pc2 && state.settings.fontFamily === 'custom') {
+        pc2.style.fontFamily = '"TxtEpubPreviewCustom", sans-serif';
+      }
+    } catch (err) {
+      console.warn('預覽字體子集化失敗，改用原始字體：', err);
+      // fallback：直接用原始檔
+      var fallbackUrl = URL.createObjectURL(f);
+      _customFontSubsetCache = { fileName: f.name, fileSize: f.size, blobUrl: fallbackUrl };
+      _customFontStyleEl.textContent =
+        '@font-face { font-family: "TxtEpubPreviewCustom"; src: url("' + fallbackUrl + '"); font-display: swap; }';
+    }
+  }
+
+  // 簡化版的 hb-subset 呼叫（與 epubGenerator.js 共用同一支 wasm，瀏覽器會快取）
+  var _previewHbExports = null;
+  async function _previewLoadHb() {
+    if (_previewHbExports) return _previewHbExports;
+    var resp = await fetch('https://cdn.jsdelivr.net/npm/harfbuzzjs@0.4.11/hb-subset.wasm');
+    if (!resp.ok) throw new Error('hb-subset.wasm 載入失敗');
+    var bytes = await resp.arrayBuffer();
+    var result = await WebAssembly.instantiate(bytes);
+    _previewHbExports = result.instance.exports;
+    return _previewHbExports;
+  }
+  async function _previewSubset(fontBuffer, cps) {
+    var ex = await _previewLoadHb();
+    var fontBytes = new Uint8Array(fontBuffer);
+    var ptr = ex.malloc(fontBytes.byteLength);
+    new Uint8Array(ex.memory.buffer).set(fontBytes, ptr);
+    var blob = ex.hb_blob_create(ptr, fontBytes.byteLength, 2, 0, 0);
+    var face = ex.hb_face_create(blob, 0);
+    ex.hb_blob_destroy(blob);
+    var input = ex.hb_subset_input_create_or_fail();
+    var us = ex.hb_subset_input_unicode_set(input);
+    cps.forEach(function (cp) { ex.hb_set_add(us, cp); });
+    var sub = ex.hb_subset_or_fail(face, input);
+    ex.hb_subset_input_destroy(input);
+    if (!sub) {
+      ex.hb_face_destroy(face);
+      ex.free(ptr);
+      throw new Error('hb_subset_or_fail');
+    }
+    var rb = ex.hb_face_reference_blob(sub);
+    var off = ex.hb_blob_get_data(rb, 0);
+    var len = ex.hb_blob_get_length(rb);
+    var view = new Uint8Array(ex.memory.buffer, off, len);
+    var data = new Uint8Array(len);
+    data.set(view);
+    ex.hb_blob_destroy(rb);
+    ex.hb_face_destroy(sub);
+    ex.hb_face_destroy(face);
+    ex.free(ptr);
+    return data.buffer;
   }
 
   function renderSmallBtns(containerId, options, activeId, onSelect) {

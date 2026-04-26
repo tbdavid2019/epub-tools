@@ -3,20 +3,19 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>XTC Flasher — 閱星曈 X3 / X4 繁中韌體刷機工具</title>
-<meta name="description" content="瀏覽器刷機工具，支援閱星曈 X3 與 X4 繁中版韌體安裝與備份，零安裝、零後端，純 Web Serial 刷機。" />
+<title>XTC Flasher — 閱星曈 X3 / X4 韌體備份還原工具</title>
+<meta name="description" content="瀏覽器版閱星曈 X3 / X4 韌體備份與還原工具。零安裝、零後端，純 Web Serial 操作，可備份原廠韌體、刷入任何相容的 bin 檔。" />
 <meta name="robots" content="noindex, nofollow" />
 
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="stylesheet" href="./css/style.css" />
+<link rel="stylesheet" href="./css/style.css?v=20260426" />
 </head>
 <body>
 
 <header class="topbar">
   <div class="topbar-inner">
     <h1 class="site-title">XTC Flasher</h1>
-    <p class="site-sub">閱星曈 X3 / X4 繁中韌體刷機工具</p>
-    <p class="site-version">韌體版本：<span id="fw-version">載入中…</span></p>
+    <p class="site-sub">閱星曈 X3 / X4 韌體備份還原工具</p>
   </div>
 </header>
 
@@ -33,43 +32,37 @@
   <section class="card card-note">
     <h2>使用前請注意</h2>
     <ul>
-      <li>插上 USB-C 線前，<b>先按住 X3 的 BOOT 鍵</b>，再按 Reset 鬆開，最後再放開 BOOT。</li>
-      <li>刷機過程中<b>請勿拔線、勿關閉分頁、勿讓電腦睡眠</b>。</li>
-      <li>建議先點「備份完整韌體」下載原廠 bin，日後想回復可以用。</li>
+      <li>插上 USB-C 線前，<b>先按住 X3 / X4 的 BOOT 鍵</b>，再按 Reset 鬆開，最後再放開 BOOT。</li>
+      <li>操作過程中<b>請勿拔線、勿關閉分頁、勿讓電腦睡眠</b>。</li>
+      <li>建議第一次使用先做完整備份，留一份原廠 bin 在手邊，日後想回復隨時可以用。</li>
       <li>本工具是 HelloRuru 個人改作，非閱星曈官方工具，使用風險請自行評估。</li>
     </ul>
   </section>
 
-  <!-- 功能區塊 -->
+  <!-- 功能①：備份 -->
   <section class="card">
     <h2>① 備份完整韌體</h2>
-    <p class="hint">讀取 X3 目前 Flash 整片 16 MB 內容，存成 <code>backup.bin</code> 檔。約 25 分鐘。</p>
+    <p class="hint">讀取 X3 / X4 目前 Flash 整片 16 MB 內容，存成 <code>xtc-backup-日期.bin</code> 檔。約 25 分鐘。</p>
     <button id="btn-backup" class="btn btn-secondary">備份完整韌體</button>
   </section>
 
+  <!-- 功能②：刷入 bin -->
   <section class="card">
-    <h2>② 刷入繁中版韌體</h2>
-    <p class="hint">刷入 HelloRuru 改作的繁中版（含最新 UI 修正）。約 2 分鐘。<b>X3 / X4 不要選錯</b>。</p>
-    <div class="version-badge">
-      <span class="version-label">目前線上版本</span>
-      <span id="fw-version-big" class="version-number">載入中…</span>
-    </div>
-    <div class="btn-row">
-      <button id="btn-flash-x3-zhtw" class="btn btn-primary">刷入 X3 繁中版</button>
-      <button id="btn-flash-x4-zhtw" class="btn btn-primary">刷入 X4 繁中版</button>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>③ 還原備份（從自己的 bin）</h2>
-    <p class="hint">選擇先前備份下來的 <code>backup.bin</code>（16 MB 完整韌體），刷回去。約 15 分鐘。</p>
+    <h2>② 刷入 bin 檔</h2>
+    <p class="hint">
+      把一個完整的 16 MB bin 檔燒回 X3 / X4。兩種情境都用這個功能：
+    </p>
+    <ul class="hint">
+      <li><b>還原自己的備份</b>：選擇之前用①備份下來的 <code>xtc-backup-日期.bin</code>，刷回原本狀態。</li>
+      <li><b>刷入網路下載的 bin</b>：選擇從別處下載的完整 bin 檔（例如朋友改的版本、社群分享的韌體）。</li>
+    </ul>
+    <p class="hint">
+      <b>⚠️ 請先確認 bin 檔來源</b>：刷入不相容的 bin 可能讓裝置變磚。系統不會幫你判斷檔案是不是 X3 / X4 對應的版本，請自己確認。約 15 分鐘。
+    </p>
     <div class="btn-row">
       <input type="file" id="file-restore" accept=".bin" class="file-input" />
-      <button id="btn-restore" class="btn btn-secondary">還原選取的 bin</button>
+      <button id="btn-restore" class="btn btn-primary">刷入選取的 bin</button>
     </div>
-    <p class="hint small">
-      ⚠️ 提醒：官方原廠 bin 自動下載的功能之後再補。現在先用「自己備份 → 自己還原」的方式，最安全。
-    </p>
   </section>
 
   <!-- 執行狀態 -->
@@ -90,12 +83,12 @@
     </div>
   </section>
 
-  <!-- 重啟說明 -->
+  <!-- 完成後說明 -->
   <section class="card card-note">
     <h2>刷完之後</h2>
-    <p>刷機完成後，X3 不會自動重啟，需要手動：</p>
+    <p>刷入 bin 後，X3 / X4 不會自動重啟，需要手動：</p>
     <ol>
-      <li>按一下 <b>Reset 鍵</b>（位於 X3 左上角）</li>
+      <li>按一下 <b>Reset 鍵</b>（位於裝置左上角）</li>
       <li>長按 <b>電源鍵 3 秒</b>，開機進入新韌體</li>
     </ol>
   </section>
@@ -107,13 +100,13 @@
     基於 MIT 授權改作自
     <a href="https://github.com/crosspoint-reader/crosspoint-reader" target="_blank" rel="noopener">CrossPoint Reader</a>
     &nbsp;|&nbsp;
-    繁中版 by HelloRuru
+    工具 by HelloRuru
   </p>
   <p class="copyright">&copy; 2026 Kaoru Tsai. All Rights Reserved.</p>
 </footer>
 
 <!-- esptool-js 從 CDN 載入 -->
-<script type="module" src="./js/app.js"></script>
+<script type="module" src="./js/app.js?v=20260426"></script>
 
 </body>
 </html>

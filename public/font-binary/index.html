@@ -730,7 +730,7 @@ footer a:hover { text-decoration: underline; }
         <option value="all-bmp">全 BMP（U+0020–U+FFFD，最完整但最慢）</option>
       </select>
       <div class="warn-msg show" style="margin-top:12px;">
-        <strong>提示</strong>：本工具的 .epdfont 編碼器已對齊社群逆向版（reference/crosspoint-font-tool.py），header / metadata / bitmap 編碼方式都依社群版實作。不過瀏覽器無 freetype，bitmap 渲染用 Canvas 反推，<strong>跟 Streamlit 版可能像素級不一致但裝置應能讀取</strong>。建議先小批量測試。
+        <strong>提示</strong>：本工具的 .epdfont 編碼器依社群逆向版實作（header / metadata / bitmap 編碼方式對齊）。瀏覽器以 Canvas 渲染字形，<strong>跟 Streamlit 版可能像素級略有差異但裝置應能讀取</strong>。建議先小批量測試。
       </div>
     </div>
 

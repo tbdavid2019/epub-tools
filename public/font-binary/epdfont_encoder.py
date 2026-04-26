@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
-"""閱星曈刷機版 .epdfont 字體編碼器
+"""閱星曈刷機版 .epdfont 字體編碼器（**已棄用，請用 worker.js 版本**）
 
-格式（已破解）：
-- Magic "EPDFN" + 48 byte header
-- range table (12 byte × N)
-- glyph metadata table (13 byte × glyph_count)
-- bitmap data：2-bit packed 灰階（4 級），MSB first，row-major
+⚠️ 此檔案為早期反推版本，header 欄位順序錯誤（裝置可能讀不到）。
+   2026-04-26 已對齊社群逆向版重寫，新的正確邏輯在：
+   - worker.js（瀏覽器版，正在線上跑）
+   - reference/crosspoint-font-tool.py（社群逆向版原始檔，在
+     D:\\RURU-ALL\\Library\\工具\\閱星曈刷機\\reference\\ 下）
 
-關鍵字級對應（從官方 38號 樣本反推）：
-  XTEink 字級 38 → PIL pt 64 → pixel_size 48
-  比例：PIL_pt = round(xteink_pt × 64/38)
-        pixel_size = round(xteink_pt × 48/38)
-
-用法：
-  python epdfont_encoder.py <ttf> <pt> -o <out.epdfont> [--charset common|big5|all]
+   留著本檔僅供對比早期反推與社群版差異，**不要再用本檔生產 .epdfont**。
 """
 
 import argparse

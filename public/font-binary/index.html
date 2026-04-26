@@ -696,32 +696,41 @@ footer a:hover { text-decoration: underline; }
     </div>
 
     <div id="epdfontPanel" hidden>
-      <label style="margin-top:8px;">官方字級（風眼樣本實測值）</label>
+      <label style="margin-top:8px;">字級（建議 18，社群版預設值）</label>
       <div class="preset-row" id="epdfontPresetRow">
-        <button type="button" class="preset-btn" data-pt="17">17 號</button>
-        <button type="button" class="preset-btn" data-pt="22">22 號</button>
-        <button type="button" class="preset-btn" data-pt="28">28 號</button>
-        <button type="button" class="preset-btn active" data-pt="38">38 號</button>
-        <button type="button" class="preset-btn" data-pt="48">48 號</button>
+        <button type="button" class="preset-btn" data-pt="14">14</button>
+        <button type="button" class="preset-btn active" data-pt="18">18</button>
+        <button type="button" class="preset-btn" data-pt="22">22</button>
+        <button type="button" class="preset-btn" data-pt="28">28</button>
+        <button type="button" class="preset-btn" data-pt="38">38</button>
       </div>
 
       <label style="margin-top:16px;">微調字級</label>
       <div class="slider-wrap">
-        <input type="range" id="epdfontSlider" min="12" max="72" value="38" step="1">
+        <input type="range" id="epdfontSlider" min="8" max="72" value="18" step="1">
         <div class="slider-value">
-          <span id="epdfontPtText">38</span> 號
-          <span class="slider-sub">→ pixel_size <span id="epdfontPxText">48</span></span>
+          <span id="epdfontPtText">18</span> 號
+          <span class="slider-sub">→ <span id="epdfontPxText">38</span> px @ 150 DPI</span>
         </div>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="epdfont2bit">灰階模式</label>
+        <select id="epdfont2bit">
+          <option value="1" selected>2-bit 灰階（4 級，建議）</option>
+          <option value="0">1-bit 黑白（檔案小一半）</option>
+        </select>
       </div>
 
       <label style="margin-top:16px;">字符範圍</label>
       <select id="epdfontCharset">
-        <option value="common">常用字（沿用官方 79 段範圍 ≈ 28k 字）</option>
+        <option value="common">常用字（≈ 28k 字，最相容）</option>
         <option value="big5">Big5 範圍（≈ 13k 字，檔案最小）</option>
-        <option value="all">全 BMP（U+0020–U+FFFD，最完整但最慢）</option>
+        <option value="all">CJK 全套（中日韓拉丁，社群版預設）</option>
+        <option value="all-bmp">全 BMP（U+0020–U+FFFD，最完整但最慢）</option>
       </select>
       <div class="warn-msg show" style="margin-top:12px;">
-        <strong>注意</strong>：.epdfont 是依官方樣本反推的實驗版，只有 17 / 38 號實機驗過。其他字級照公式線性外推（PIL_pt × 79/38、pixel_size × 48/38），<strong>非 17/38 可能裝到風眼上不顯示</strong>，請小批量測。
+        <strong>提示</strong>：本工具的 .epdfont 編碼器已對齊社群逆向版（reference/crosspoint-font-tool.py），header / metadata / bitmap 編碼方式都依社群版實作。不過瀏覽器無 freetype，bitmap 渲染用 Canvas 反推，<strong>跟 Streamlit 版可能像素級不一致但裝置應能讀取</strong>。建議先小批量測試。
       </div>
     </div>
 
@@ -996,7 +1005,7 @@ $('binPresetRow').addEventListener('click', (e) => {
 
 function updateEpdfontSliderDisplay() {
   const pt = parseInt($('epdfontSlider').value);
-  const pixelSize = Math.round(pt * 48 / 38);
+  const pixelSize = Math.round(pt * 150 / 72);
   $('epdfontPtText').textContent = pt;
   $('epdfontPxText').textContent = pixelSize;
   document.querySelectorAll('#epdfontPresetRow .preset-btn').forEach(b => {
@@ -1085,6 +1094,7 @@ runBtn.addEventListener('click', () => {
   } else {
     const fontSizePt = parseInt($('epdfontSlider').value);
     const charset = $('epdfontCharset').value;
+    const is2Bit = $('epdfont2bit').value === '1';
     if (charset === 'common' && !epdfontDefaultRanges) {
       showError('字符範圍檔（epdfont_ranges.json）還沒載入完，請稍等再試。');
       progressArea.classList.remove('show');
@@ -1099,6 +1109,7 @@ runBtn.addEventListener('click', () => {
       fontSizePt,
       charset,
       defaultRanges: epdfontDefaultRanges,
+      is2Bit,
       fontName
     };
   }

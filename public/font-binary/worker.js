@@ -90,13 +90,15 @@ function renderBinGlyph(font, cp, fontSizePt, w, h, xOff, yOff, ctx, out, slotOf
 }
 
 // ============ .epdfont encoder ============
-// 從官方樣本反推（38 號「永」aw=79、pixel_size=48；17 號 aw=35 驗證一致）
-// PIL_pt = round(xteink_pt × 79/38)
-// pixel_size = round(xteink_pt × 48/38)（不再寫死 48，跟 Python 編碼器一致）
-const EPDFONT_PIL_PT_RATIO = 79 / 38;
-const EPDFONT_PIXEL_SIZE_RATIO = 48 / 38;
+// 對齊社群逆向版（reference/crosspoint-font-tool.py）
+// 關鍵：social/Streamlit 版用 freetype set_char_size(size*64, size*64, 150, 150)
+// 瀏覽器無 freetype，改用 Canvas 渲染 + opentype.js metrics 模擬
+// pt → px 換算：freetype 在 150 DPI 下的 pixel size = pt * 150/72
+const EPDFONT_DPI_RATIO = 150 / 72;
 
-async function runEpdfont({ ttfBuffer, fontSizePt, charset = 'common', fontName = 'font', defaultRanges }) {
+function clampS8(v) { return Math.max(-128, Math.min(127, v | 0)); }
+
+async function runEpdfont({ ttfBuffer, fontSizePt, charset = 'common', fontName = 'font', defaultRanges, is2Bit = true, letterSpacing = 0 }) {
   const font = opentype.parse(ttfBuffer);
 
   let ranges;
@@ -104,182 +106,279 @@ async function runEpdfont({ ttfBuffer, fontSizePt, charset = 'common', fontName 
     ranges = defaultRanges;
   } else if (charset === 'big5') {
     ranges = [[0x0020, 0x007E], [0x3000, 0x303F], [0x4E00, 0x9FA0], [0xFF01, 0xFF9F]];
-  } else if (charset === 'all') {
+  } else if (charset === 'all-bmp') {
     ranges = [[0x0020, 0xFFFD]];
+  } else if (charset === 'all') {
+    // 對齊社群版「所有字體」模式：CJK 全範圍 + 拉丁 + 假名 + 韓文等
+    ranges = [
+      [0x0020, 0x007F], [0x0080, 0x00FF], [0x0100, 0x017F],
+      [0x0300, 0x036F], [0x0370, 0x03FF], [0x0400, 0x04FF],
+      [0x1100, 0x11FF],
+      [0x2010, 0x206F], [0x2070, 0x209F], [0x20A0, 0x20CF],
+      [0x2190, 0x21FF], [0x2200, 0x22FF],
+      [0x2E80, 0x2EFF], [0x2F00, 0x2FDF],
+      [0x3000, 0x303F], [0x3040, 0x309F], [0x30A0, 0x30FF],
+      [0x3130, 0x318F], [0x31F0, 0x31FF], [0x3400, 0x4DBF],
+      [0x4E00, 0x9FFF],
+      [0xA960, 0xA97F], [0xAC00, 0xD7AF], [0xD7B0, 0xD7FF],
+      [0xF900, 0xFAFF], [0xFE10, 0xFE1F], [0xFE30, 0xFE4F],
+      [0xFF00, 0xFFEF], [0xFFFD, 0xFFFD],
+    ];
   } else {
     throw new Error(`unknown charset: ${charset}`);
   }
 
-  const renderPt = Math.round(fontSizePt * EPDFONT_PIL_PT_RATIO);
-  const pixelSize = Math.round(fontSizePt * EPDFONT_PIXEL_SIZE_RATIO);
-  const scale = renderPt / font.unitsPerEm;
+  // freetype 在 150 DPI 下的 pixel size = pt * 150/72
+  const pixelSize = Math.round(fontSizePt * EPDFONT_DPI_RATIO);
+  const scale = pixelSize / font.unitsPerEm;
   const ascent = Math.round(font.ascender * scale);
-  const descent = Math.round(-font.descender * scale);
+  const descent = Math.round(-font.descender * scale);  // 正值
+  const lineHeight = ascent + descent;
 
-  const canvasW = renderPt * 2;
-  const canvasH = ascent + descent + 20;
+  const canvasW = pixelSize * 2;
+  const canvasH = lineHeight + 20;
   const canvas = new OffscreenCanvas(canvasW, canvasH);
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   ctx.textBaseline = 'alphabetic';
   const baselineY = ascent;
 
+  // ---- Pass 1: 掃所有 ranges，找出有字形的 code point + 渲染 bitmap ----
   const totalChars = ranges.reduce((s, [a, b]) => s + (b - a + 1), 0);
-
-  const metas = [];        // {bw, bh, aw, xb, yb, blen, boff}
-  const bitmaps = [];      // Uint8Array
-  let bitmapOffset = 0;
-  let glyphCount = 0;
+  const glyphsByCode = new Map();  // cp -> { width, height, advance_x, left, top, data }
+  let processed = 0;
   let lastReport = 0;
 
   for (const [s, e] of ranges) {
     for (let cp = s; cp <= e; cp++) {
+      processed++;
+      if (processed - lastReport >= PROGRESS_STEP) {
+        progress(processed, totalChars);
+        lastReport = processed;
+      }
+
       const ch = String.fromCodePoint(cp);
       const glyph = font.charToGlyph(ch);
+      if (!glyph || glyph.index === 0) continue;  // 字體沒這個字 → 跳過（社群版邏輯）
 
       // 清畫布
       ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, canvasW, canvasH);
-
-      const advance = glyph && glyph.index !== 0
-        ? Math.round(glyph.advanceWidth * scale)
-        : Math.round(renderPt / 2);
-
-      if (!glyph || glyph.index === 0) {
-        metas.push({ bw: 0, bh: 0, aw: advance, xb: 0, yb: 0, blen: 0, boff: 0 });
-        glyphCount++;
-        continue;
-      }
-
-      // 畫字
       ctx.fillStyle = 'black';
-      const path = glyph.getPath(0, baselineY, renderPt);
+
+      const path = glyph.getPath(0, baselineY, pixelSize);
       path.fill = 'black';
       path.draw(ctx);
 
-      // 找 bbox（掃 alpha < threshold 的範圍）
+      // 找 bbox（掃任何非白像素）
       const fullPx = ctx.getImageData(0, 0, canvasW, canvasH).data;
-      let x0 = canvasW, y0 = canvasH, x1 = 0, y1 = 0;
-      let hasInk = false;
+      let x0 = canvasW, y0 = canvasH, x1 = -1, y1 = -1;
       for (let yy = 0; yy < canvasH; yy++) {
         for (let xx = 0; xx < canvasW; xx++) {
-          if (fullPx[(yy * canvasW + xx) * 4] < 192) {
+          if (fullPx[(yy * canvasW + xx) * 4] < 250) {
             if (xx < x0) x0 = xx;
             if (yy < y0) y0 = yy;
             if (xx > x1) x1 = xx;
             if (yy > y1) y1 = yy;
-            hasInk = true;
           }
         }
       }
 
-      if (!hasInk) {
-        metas.push({ bw: 0, bh: 0, aw: advance, xb: 0, yb: 0, blen: 0, boff: 0 });
-        glyphCount++;
+      const advance = Math.round(glyph.advanceWidth * scale) + letterSpacing;
+
+      if (x1 < 0) {
+        // 空白字（如 U+0020 空格）— 仍記入，但 bitmap 0 byte
+        glyphsByCode.set(cp, { width: 0, height: 0, advance_x: advance, left: 0, top: 0, data: new Uint8Array(0) });
         continue;
       }
 
       const bw = x1 - x0 + 1;
       const bh = y1 - y0 + 1;
-      const bmp = new Uint8Array(Math.ceil(bw * bh * 2 / 8));
 
-      for (let row = 0; row < bh; row++) {
-        for (let col = 0; col < bw; col++) {
-          const g = fullPx[((y0 + row) * canvasW + (x0 + col)) * 4];
-          let v;
-          if (g >= 192) v = 0;
-          else if (g >= 128) v = 1;
-          else if (g >= 64) v = 2;
-          else v = 3;
-          if (v) {
-            const bitPos = (row * bw + col) * 2;
-            bmp[bitPos >>> 3] |= v << (6 - (bitPos & 7));
+      // ---- Bitmap 編碼（對齊社群版 freetype 4-bit → 2-bit/1-bit）----
+      // Canvas 給 8-bit grayscale（白 255，黑 0），轉 4-bit anti-aliased：v = (255 - g) >> 4
+      // 社群版閾值（針對 freetype 4-bit 0-15 區間）：
+      //   2-bit: v >= 12 → 3, >= 8 → 2, >= 4 → 1, else 0
+      //   1-bit: v 的高 3 bit 有任何值（v >= 2）→ 1
+      const data = [];
+      let acc = 0;
+      const totalPixels = bw * bh;
+
+      if (is2Bit) {
+        // 2-bit: 每 4 個像素打包成 1 byte（每像素 2 bit，MSB first）
+        for (let row = 0; row < bh; row++) {
+          for (let col = 0; col < bw; col++) {
+            const g = fullPx[((y0 + row) * canvasW + (x0 + col)) * 4];
+            const v4 = (255 - g) >> 4;  // 0..15
+            let v2;
+            if (v4 >= 12) v2 = 3;
+            else if (v4 >= 8) v2 = 2;
+            else if (v4 >= 4) v2 = 1;
+            else v2 = 0;
+            acc = (acc << 2) | v2;
+            const idx = row * bw + col;
+            if ((idx & 3) === 3) {
+              data.push(acc & 0xFF);
+              acc = 0;
+            }
           }
+        }
+        const remainder = totalPixels & 3;
+        if (remainder !== 0) {
+          acc <<= (4 - remainder) * 2;
+          data.push(acc & 0xFF);
+        }
+      } else {
+        // 1-bit: 每 8 個像素打包成 1 byte（MSB first）
+        for (let row = 0; row < bh; row++) {
+          for (let col = 0; col < bw; col++) {
+            const g = fullPx[((y0 + row) * canvasW + (x0 + col)) * 4];
+            const v4 = (255 - g) >> 4;
+            const bit = v4 >= 2 ? 1 : 0;
+            acc = (acc << 1) | bit;
+            const idx = row * bw + col;
+            if ((idx & 7) === 7) {
+              data.push(acc & 0xFF);
+              acc = 0;
+            }
+          }
+        }
+        const remainder = totalPixels & 7;
+        if (remainder !== 0) {
+          acc <<= (8 - remainder);
+          data.push(acc & 0xFF);
         }
       }
 
-      const xb = Math.max(0, x0);
-      const yb = baselineY - y0;
-      metas.push({ bw, bh, aw: advance, xb, yb, blen: bmp.length, boff: bitmapOffset });
-      bitmaps.push(bmp);
-      bitmapOffset += bmp.length;
-      glyphCount++;
+      // freetype 的 bitmap_left = bbox 起點 x 偏移；bitmap_top = baseline 到 bbox 頂端的距離
+      const bitmap_left = x0;          // signed int8（社群版這欄是 signed）
+      const bitmap_top = baselineY - y0;  // signed int8
 
-      if (glyphCount - lastReport >= PROGRESS_STEP) {
-        progress(glyphCount, totalChars);
-        lastReport = glyphCount;
-      }
+      glyphsByCode.set(cp, {
+        width: bw,
+        height: bh,
+        advance_x: advance,
+        left: bitmap_left,
+        top: bitmap_top,
+        data: new Uint8Array(data),
+      });
     }
   }
   progress(totalChars, totalChars);
 
-  // Build range table
-  const rangeTable = [];
-  let cumIdx = 0;
-  for (const [s, e] of ranges) {
-    rangeTable.push([s, e, cumIdx]);
-    cumIdx += (e - s + 1);
+  // ---- 合併連續 code point 成 intervals（對齊社群版邏輯）----
+  const sortedCodes = Array.from(glyphsByCode.keys()).sort((a, b) => a - b);
+  if (sortedCodes.length === 0) {
+    throw new Error('字體沒有任何可用字形（檢查字符範圍）');
+  }
+  const outIntervals = [];
+  let segStart = sortedCodes[0];
+  let segEnd = segStart;
+  for (let i = 1; i < sortedCodes.length; i++) {
+    const c = sortedCodes[i];
+    if (c === segEnd + 1) {
+      segEnd = c;
+    } else {
+      outIntervals.push([segStart, segEnd]);
+      segStart = segEnd = c;
+    }
+  }
+  outIntervals.push([segStart, segEnd]);
+
+  // ---- 重建 glyph 表：interval 內所有 cp（含中間缺字位）都要佔 slot ----
+  const finalGlyphs = [];   // { width, height, advance_x, left, top, data_length, data_offset }
+  const dataChunks = [];
+  let dataOffset = 0;
+
+  for (const [s, e] of outIntervals) {
+    for (let cp = s; cp <= e; cp++) {
+      const g = glyphsByCode.get(cp);
+      if (g) {
+        finalGlyphs.push({
+          width: g.width, height: g.height, advance_x: g.advance_x,
+          left: g.left, top: g.top,
+          data_length: g.data.length, data_offset: dataOffset,
+        });
+        if (g.data.length > 0) dataChunks.push(g.data);
+        dataOffset += g.data.length;
+      } else {
+        // interval 內缺字 → 0 byte 佔位（社群版邏輯）
+        finalGlyphs.push({ width: 0, height: 0, advance_x: 0, left: 0, top: 0, data_length: 0, data_offset: 0 });
+      }
+    }
   }
 
-  const rangeTableSize = rangeTable.length * 12;
-  const metadataSize = glyphCount * 13;
-  const metadataStart = 48 + rangeTableSize;
-  const bitmapStart = metadataStart + metadataSize;
-  const bitmapTotal = bitmaps.reduce((s, b) => s + b.length, 0);
+  // ---- 計算 offset ----
+  const headerSize = 48;
+  const intervalsSize = outIntervals.length * 12;
+  const glyphsSize = finalGlyphs.length * 13;
+  let totalDataSize = 0;
+  for (const c of dataChunks) totalDataSize += c.length;
 
-  const total = bitmapStart + bitmapTotal;
-  const out = new Uint8Array(total);
+  const oi = headerSize;
+  const og = oi + intervalsSize;
+  const od = og + glyphsSize;
+  const totalSize = od + totalDataSize;
+
+  const out = new Uint8Array(totalSize);
   const dv = new DataView(out.buffer);
 
-  // Header（48 byte）— 對 4 個官方樣本反推得：
-  //   off 0-3:   magic 'EPDF'（只有 4 byte）
-  //   off 4-7:   range_count（實際筆數，不要 +1）
-  //   off 8-11:  glyph_count
-  //   off 12-15: 不明（17 號常見 35、38 號 79，寫 0 試）
-  //   off 20-23: line_height = ascent + descent
-  //   off 28-31: -descent
-  //   off 32-35: version=1
-  //   off 36-39: pixel_size 固定 48
-  out[0] = 0x45; out[1] = 0x50; out[2] = 0x44; out[3] = 0x46;  // 'EPDF'
-  dv.setUint32(4, rangeTable.length, true);   // range_count（實際筆數）
-  dv.setUint32(8, glyphCount, true);
-  dv.setUint32(12, 0, true);                  // 未知欄位
-  dv.setUint32(16, 0, true);
-  dv.setUint32(20, ascent + descent, true);   // line_height
-  dv.setUint32(24, 0, true);
-  dv.setInt32(28, -descent, true);
-  dv.setUint32(32, 1, true);
-  dv.setUint32(36, pixelSize, true);
-  dv.setUint32(40, metadataStart, true);
-  dv.setUint32(44, bitmapStart, true);
+  // ---- Header 48 byte（完全對齊社群版順序）----
+  // off 0-3:   'EPDF'
+  // off 4-7:   range_count
+  // off 8-11:  od + d_len（檔案總長）
+  // off 12-15: line_height
+  // off 16-19: glyph_count
+  // off 20-23: ascender (signed)
+  // off 24-27: 0
+  // off 28-31: descender (signed, 正值或負值依字體)
+  // off 32-35: is2Bit flag
+  // off 36-39: oi (intervals offset)
+  // off 40-43: og (glyphs offset)
+  // off 44-47: od (data offset)
+  out[0] = 0x45; out[1] = 0x50; out[2] = 0x44; out[3] = 0x46;
+  dv.setUint32(4, outIntervals.length, true);
+  dv.setUint32(8, totalSize, true);
+  dv.setUint32(12, lineHeight, true);
+  dv.setUint32(16, finalGlyphs.length, true);
+  dv.setInt32(20, ascent, true);
+  dv.setInt32(24, 0, true);
+  dv.setInt32(28, -descent, true);  // freetype size.descender 是負值
+  dv.setUint32(32, is2Bit ? 1 : 0, true);
+  dv.setUint32(36, oi, true);
+  dv.setUint32(40, og, true);
+  dv.setUint32(44, od, true);
 
-  // Range table
-  let off = 48;
-  for (const [s, e, ci] of rangeTable) {
+  // ---- Intervals table（每段 12 byte：start, end, glyph_idx）----
+  let off = oi;
+  let cumIdx = 0;
+  for (const [s, e] of outIntervals) {
     dv.setUint32(off, s, true);
     dv.setUint32(off + 4, e, true);
-    dv.setUint32(off + 8, ci, true);
+    dv.setUint32(off + 8, cumIdx, true);
+    cumIdx += (e - s + 1);
     off += 12;
   }
 
-  // Metadata
-  for (const m of metas) {
-    out[off] = Math.min(m.bw, 255);
-    out[off + 1] = Math.min(m.bh, 255);
-    out[off + 2] = Math.min(m.aw, 255);
-    out[off + 3] = Math.min(m.xb, 255);
+  // ---- Glyphs metadata（每個 13 byte：'<BBB b B b B H I'）----
+  for (const g of finalGlyphs) {
+    out[off]     = Math.min(g.width, 255);
+    out[off + 1] = Math.min(g.height, 255);
+    out[off + 2] = Math.min(g.advance_x, 255);
+    dv.setInt8(off + 3, clampS8(g.left));
     out[off + 4] = 0;
-    dv.setUint16(off + 5, Math.min(m.yb, 0xFFFF), true);
-    dv.setUint16(off + 7, Math.min(m.blen, 0xFFFF), true);
-    dv.setUint32(off + 9, m.boff, true);
+    dv.setInt8(off + 5, clampS8(g.top));
+    out[off + 6] = 0;
+    dv.setUint16(off + 7, Math.min(g.data_length, 0xFFFF), true);
+    dv.setUint32(off + 9, g.data_offset, true);
     off += 13;
   }
 
-  // Bitmaps
-  for (const b of bitmaps) {
-    out.set(b, off);
-    off += b.length;
+  // ---- Bitmap data ----
+  for (const c of dataChunks) {
+    out.set(c, off);
+    off += c.length;
   }
 
-  const filename = `${fontName}-${fontSizePt}號.epdfont`;
+  const filename = `${fontName}${fontSizePt}.epdfont`;
   self.postMessage({ type: 'done', buffer: out.buffer, filename }, [out.buffer]);
 }

@@ -269,6 +269,54 @@ html.dark .icon-moon { display: none; }
 .cover-preview { text-align: center; }
 .cover-preview img { max-height: 200px; border-radius: 12px; box-shadow: var(--shadow-sm); margin-bottom: 12px; }
 
+/* 即時排版預覽 */
+.preview-frame {
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: #FAFAFA;
+  padding: 0;
+  max-height: 480px;
+  overflow: auto;
+  position: relative;
+}
+.preview-content {
+  padding: 24px 20px;
+  color: #333;
+  font-family: "Noto Sans TC", sans-serif;
+  font-size: 1em;
+  line-height: 1.8;
+  text-align: justify;
+}
+.preview-content h1 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0 0 1em 0;
+  line-height: 1.3;
+  text-align: left;
+}
+.preview-content p {
+  margin: 0.5em 0;
+  text-indent: 2em;
+}
+.preview-content.vertical {
+  writing-mode: vertical-rl;
+  -webkit-writing-mode: vertical-rl;
+  text-orientation: mixed;
+  height: 420px;
+  max-height: 420px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.preview-content.vertical h1 {
+  text-align: center;
+}
+@media (prefers-color-scheme: dark) {
+  .preview-frame { background: #2A2326; }
+  .preview-content { color: #EDE8E9; }
+}
+html.dark .preview-frame { background: #2A2326; }
+html.dark .preview-content { color: #EDE8E9; }
+
 /* Export / Complete */
 .export-section { text-align: center; padding: 32px 0; }
 .export-section h2 { font-size: 24px; font-weight: 500; color: var(--text-heading); margin-bottom: 24px; }

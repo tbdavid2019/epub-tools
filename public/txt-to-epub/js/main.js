@@ -296,6 +296,91 @@
     renderSmallBtns('textIndentGrid', [
       { id: 'none', label: '無' }, { id: 'one', label: '1字' }, { id: 'two', label: '2字' }
     ], state.settings.textIndent, function (v) { state.settings.textIndent = v; renderSettings(); });
+
+    // 即時預覽
+    renderPreview();
+  }
+
+  // ── 即時排版預覽 ──
+  // 把當前設定（字體/字級/行距/縮排/直橫排/簡轉繁/標點/自訂字體）套到一段範例文字上
+  var _customFontStyleEl = null;  // 動態 inject 的 @font-face style 元素
+  var _customFontObjectURL = null;
+  function renderPreview() {
+    var pc = $('previewContent');
+    var pf = $('previewFrame');
+    if (!pc || !pf) return;
+
+    // 1. 抽預覽內容：第一章前 ~500 字
+    var firstChapter = state.chapters && state.chapters[0];
+    var rawTitle, rawText;
+    if (firstChapter) {
+      rawTitle = firstChapter.title || '第一章';
+      rawText = (firstChapter.content || '').slice(0, 600);
+    } else {
+      rawTitle = '預覽';
+      rawText = '上傳檔案後會在這裡看到實際排版。';
+    }
+    // 套用簡轉繁 / 標點
+    if (state.settings.convertToTraditional) {
+      try {
+        rawTitle = convertText(rawTitle);
+        rawText = convertText(rawText);
+      } catch (e) {}
+    }
+    if (state.settings.convertPunctuation) {
+      rawTitle = convertPunctuation(rawTitle);
+      rawText = convertPunctuation(rawText);
+    }
+    // 切段落
+    var paragraphs = rawText.split(/\n+/).filter(function (p) { return p.trim(); });
+    var html = '<h1>' + escapeHtml(rawTitle) + '</h1>';
+    for (var i = 0; i < paragraphs.length; i++) {
+      html += '<p>' + escapeHtml(paragraphs[i].trim()) + '</p>';
+    }
+    pc.innerHTML = html;
+
+    // 2. 直/橫排
+    pc.classList.toggle('vertical', state.settings.writingMode === 'vertical');
+
+    // 3. 字級 / 行距 / 縮排
+    var sizeMap = { 'small': '0.9em', 'medium': '1em', 'large': '1.15em', 'xlarge': '1.3em' };
+    var lineMap = { 'compact': '1.5', 'normal': '1.8', 'relaxed': '2.0', 'loose': '2.3' };
+    var indentMap = { 'none': '0', 'one': '1em', 'two': '2em' };
+    pc.style.fontSize = sizeMap[state.settings.fontSize] || '1em';
+    pc.style.lineHeight = lineMap[state.settings.lineHeight] || '1.8';
+    var indentVal = indentMap[state.settings.textIndent] || '2em';
+    var paras = pc.querySelectorAll('p');
+    for (var j = 0; j < paras.length; j++) paras[j].style.textIndent = indentVal;
+
+    // 4. 字型：內建用對應 family；自訂字體需 @font-face inject
+    var fontMap = {
+      'noto-sans': '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
+      'noto-serif': '"Noto Serif TC", "PMingLiU", serif',
+      'guankiap': '"GuanKiapTsingKhai TW", "DFKai-SB", "BiauKai", serif',
+      'huninn': '"jf-openhuninn", "Microsoft JhengHei", sans-serif',
+      'custom': null,  // 動態決定
+    };
+    if (state.settings.fontFamily === 'custom' && state.customFontFile) {
+      // 為自訂字體建立 @font-face
+      // 只在字體檔變動時才重新建 ObjectURL，避免每次預覽都產生
+      if (!_customFontObjectURL || _customFontStyleEl?.dataset.fontName !== state.customFontFile.name) {
+        if (_customFontObjectURL) URL.revokeObjectURL(_customFontObjectURL);
+        _customFontObjectURL = URL.createObjectURL(state.customFontFile);
+        if (!_customFontStyleEl) {
+          _customFontStyleEl = document.createElement('style');
+          document.head.appendChild(_customFontStyleEl);
+        }
+        _customFontStyleEl.dataset.fontName = state.customFontFile.name;
+        _customFontStyleEl.textContent =
+          '@font-face { font-family: "TxtEpubPreviewCustom"; src: url("' + _customFontObjectURL + '"); font-display: swap; }';
+      }
+      pc.style.fontFamily = '"TxtEpubPreviewCustom", sans-serif';
+    } else if (state.settings.fontFamily === 'custom') {
+      // 選了自訂字體但還沒上傳 → 顯示 sans-serif
+      pc.style.fontFamily = 'sans-serif';
+    } else {
+      pc.style.fontFamily = fontMap[state.settings.fontFamily] || fontMap['noto-sans'];
+    }
   }
 
   function renderSmallBtns(containerId, options, activeId, onSelect) {
@@ -317,22 +402,26 @@
   $('toggleConvert').addEventListener('click', function () {
     state.settings.convertToTraditional = !state.settings.convertToTraditional;
     this.className = 'toggle-switch ' + (state.settings.convertToTraditional ? 'on' : 'off');
+    renderPreview();
   });
 
   $('togglePunctuation').addEventListener('click', function () {
     state.settings.convertPunctuation = !state.settings.convertPunctuation;
     this.className = 'toggle-switch ' + (state.settings.convertPunctuation ? 'on' : 'off');
+    renderPreview();
   });
 
   $('modeHorizontal').addEventListener('click', function () {
     state.settings.writingMode = 'horizontal';
     $('modeHorizontal').classList.add('active');
     $('modeVertical').classList.remove('active');
+    renderPreview();
   });
   $('modeVertical').addEventListener('click', function () {
     state.settings.writingMode = 'vertical';
     $('modeVertical').classList.add('active');
     $('modeHorizontal').classList.remove('active');
+    renderPreview();
   });
 
   // Advanced toggle
@@ -391,6 +480,8 @@
       }
       state.customFontFile = f;
       $('customFontLabel').textContent = f.name + '（' + (f.size / 1048576).toFixed(1) + ' MB）';
+      // 立刻刷新預覽（如果使用者已選自訂字體）
+      if (state.settings.fontFamily === 'custom') renderPreview();
     }
     this.value = '';
   });

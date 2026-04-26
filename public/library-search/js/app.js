@@ -170,23 +170,189 @@ async function loadBooks() {
   }
 }
 
-function searchBooks() {
+async function searchBooks() {
   const query = document.getElementById('search-input').value.trim();
   if (!query) { showToast('請輸入書名'); return; }
 
   const lib = document.getElementById('search-lib').value || 'tpml';
   const libName = libraries[lib] || '圖書館';
-  const encoded = encodeURIComponent(query);
 
-  // HyRead 搜尋頁參數：scope=2 全部館藏（計次+買斷）/ scope=4 只看計次館藏 / isRental=0 排除付費
-  const allUrl = `https://${lib}.ebook.hyread.com.tw/searchList.jsp?search_field=FullText&search_input=${encoded}&target=lib&scope=2&isRental=0`;
-  const mocUrl = `https://${lib}.ebook.hyread.com.tw/searchList.jsp?search_field=FullText&search_input=${encoded}&target=lib&scope=4&isRental=0`;
+  showLoading(true, `查詢「${query}」在${libName}...`);
+  clearResults();
+  document.getElementById('lib-search-result').innerHTML = '';
+  document.getElementById('lib-search-result').classList.add('hidden');
 
-  // 同時開兩個分頁
-  window.open(allUrl, '_blank', 'noopener');
-  window.open(mocUrl, '_blank', 'noopener');
+  try {
+    // 同時打兩個請求：全部館藏 + 只看計次
+    const [allRes, mocRes] = await Promise.all([
+      fetchAPI({ action: 'lib-search', lib, q: query, scope: 2 }),
+      fetchAPI({ action: 'lib-search', lib, q: query, scope: 4 }),
+    ]);
 
-  showToast(`已開兩個分頁：${libName} 全部館藏 + 只看計次`);
+    renderLibSearchResult(query, libName, lib, allRes, mocRes);
+  } catch (err) {
+    showToast('搜尋失敗：' + err.message);
+  } finally {
+    showLoading(false);
+  }
+}
+
+function renderLibSearchResult(query, libName, lib, allRes, mocRes) {
+  const allBooks = allRes.books || [];
+  const mocIds = new Set((mocRes.books || []).map(b => b.id));
+  const allCount = allRes.queryNum || 0;
+  const mocCount = mocRes.queryNum || 0;
+  const buyCount = allCount - mocCount;
+
+  // 分類每本書：計次 vs 買斷
+  const categorized = allBooks.map(b => ({
+    ...b,
+    type: mocIds.has(b.id) ? 'moc' : 'buy',
+  }));
+
+  // 渲染統計區
+  let html = `
+    <div class="lib-search-summary">
+      <h2 class="lib-search-title">「${escapeHtml(query)}」在 ${escapeHtml(libName)}</h2>
+      <div class="lib-search-stats">
+        <div class="stat-card stat-moc">
+          <div class="stat-num">${mocCount}</div>
+          <div class="stat-label">計次館藏</div>
+          <div class="stat-desc">借閱會扣月配額（每館每月 10 次）</div>
+        </div>
+        <div class="stat-card stat-buy">
+          <div class="stat-num">${buyCount}</div>
+          <div class="stat-label">該館買斷</div>
+          <div class="stat-desc">不扣配額，但有冊數上限，借滿要預約</div>
+        </div>
+        <div class="stat-card stat-total">
+          <div class="stat-num">${allCount}</div>
+          <div class="stat-label">全部館藏</div>
+          <div class="stat-desc">這間圖書館一共多少本相關書</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (allCount === 0) {
+    html += `
+      <div class="lib-search-empty">
+        <p>${escapeHtml(libName)}找不到「${escapeHtml(query)}」的相關書籍。</p>
+        <p>可以試「查全台圖書館」看看其他館有沒有，或換個關鍵字（例如：副標、作者）。</p>
+        <button class="btn btn-secondary" id="btn-cross-search">查全台圖書館（會慢一點）</button>
+      </div>
+    `;
+  } else {
+    // 列出書本卡片
+    html += '<div class="lib-search-books">';
+    for (const book of categorized) {
+      const badge = book.type === 'moc'
+        ? '<span class="badge badge-moc">計次</span>'
+        : '<span class="badge badge-buy">該館買斷</span>';
+      const detailUrl = `https://${lib}.ebook.hyread.com.tw/bookDetail.jsp?id=${book.id}`;
+      const cover = book.thumbnail || `https://webcdn2.ebook.hyread.com.tw/bookcover/${book.id}.jpg`;
+      html += `
+        <a class="lib-book-card" href="${detailUrl}" target="_blank" rel="noopener">
+          <img class="lib-book-cover" src="${escapeHtml(cover)}" alt="${escapeHtml(book.title)}" loading="lazy" onerror="this.style.display='none'">
+          <div class="lib-book-meta">
+            ${badge}
+            <div class="lib-book-title">${escapeHtml(book.title)}</div>
+            <div class="lib-book-link">查看書況 →</div>
+          </div>
+        </a>
+      `;
+    }
+    html += '</div>';
+    html += '<button class="btn btn-secondary" id="btn-cross-search" style="margin-top:16px">查全台圖書館（會慢一點）</button>';
+  }
+
+  const container = document.getElementById('lib-search-result');
+  container.innerHTML = html;
+  container.classList.remove('hidden');
+
+  const crossBtn = document.getElementById('btn-cross-search');
+  if (crossBtn) crossBtn.addEventListener('click', () => crossLibrarySearch(query));
+
+  if (window.lucide) lucide.createIcons();
+}
+
+async function crossLibrarySearch(query) {
+  const btn = document.getElementById('btn-cross-search');
+  if (btn) { btn.disabled = true; btn.textContent = '查詢中（約需 30 秒）...'; }
+  showLoading(true, `跨館查詢「${query}」中（並行查 23 間圖書館）...`);
+
+  try {
+    // 兩個 scope 並行：計次 + 全部
+    const [mocRes, allRes] = await Promise.all([
+      fetchAPI({ action: 'lib-search-cross', q: query, scope: 4 }),
+      fetchAPI({ action: 'lib-search-cross', q: query, scope: 2 }),
+    ]);
+
+    renderCrossResult(query, mocRes, allRes);
+  } catch (err) {
+    showToast('跨館查詢失敗：' + err.message);
+  } finally {
+    showLoading(false);
+    if (btn) { btn.disabled = false; btn.textContent = '查全台圖書館（會慢一點）'; }
+  }
+}
+
+function renderCrossResult(query, mocRes, allRes) {
+  const mocByLib = {};
+  (mocRes.results || []).forEach(r => { mocByLib[r.lib] = r.queryNum || 0; });
+
+  const rows = (allRes.results || []).map(r => ({
+    lib: r.lib,
+    library: r.library,
+    allCount: r.queryNum || 0,
+    mocCount: mocByLib[r.lib] || 0,
+  }));
+  rows.sort((a, b) => b.allCount - a.allCount || b.mocCount - a.mocCount);
+
+  const hitLibs = rows.filter(r => r.allCount > 0);
+
+  let html = `
+    <div class="cross-result">
+      <h3 class="cross-title">「${escapeHtml(query)}」全台圖書館掃描結果</h3>
+      <p class="cross-desc">共 ${rows.length} 間圖書館中，<strong>${hitLibs.length} 間有相關書</strong>。</p>
+      <table class="cross-table">
+        <thead>
+          <tr><th>圖書館</th><th>計次</th><th>買斷</th><th>合計</th></tr>
+        </thead>
+        <tbody>
+  `;
+  for (const r of rows) {
+    if (r.allCount === 0) continue;
+    const buy = r.allCount - r.mocCount;
+    const searchUrl = `https://${r.lib}.ebook.hyread.com.tw/searchList.jsp?search_field=FullText&search_input=${encodeURIComponent(query)}&target=lib&scope=2&isRental=0`;
+    html += `
+      <tr>
+        <td><a href="${searchUrl}" target="_blank" rel="noopener">${escapeHtml(r.library)} ↗</a></td>
+        <td>${r.mocCount}</td>
+        <td>${buy}</td>
+        <td><strong>${r.allCount}</strong></td>
+      </tr>
+    `;
+  }
+  if (hitLibs.length === 0) {
+    html += '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px">所有圖書館都沒有，可能要去 HyRead 書店買，或換個關鍵字試試。</td></tr>';
+  }
+  html += `
+        </tbody>
+      </table>
+      <p class="cross-note">點圖書館名稱可開新分頁前往該館 HyRead 站。注意：計次書全國共用書單、買斷書每館不同。</p>
+    </div>
+  `;
+
+  const container = document.getElementById('lib-search-result');
+  // 接在現有單館結果下方
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
 }
 
 // ══════════════════════════════════════════════════

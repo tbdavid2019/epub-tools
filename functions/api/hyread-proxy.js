@@ -176,6 +176,84 @@ function parseSearchResults(html) {
   }));
 }
 
+// 兩步走：在指定圖書館分站搜尋（破解 AJAX info 參數）
+// scope: 2 = 全部館藏 / 4 = 計次館藏 / 1 = 本館 / 3 = 試用
+async function librarySearch(lib, query, scope = 4) {
+  const encoded = encodeURIComponent(query);
+  const searchUrl = `https://${lib}.ebook.hyread.com.tw/searchList.jsp?search_field=FullText&search_input=${encoded}&target=lib&scope=${scope}&isRental=0`;
+
+  // Step 1: 拿 HTML 撈 info 字串（伺服器把加密後的參數寫死在 inline script）
+  const html = await fetchHyRead(searchUrl);
+  const infoMatch = html.match(/url:\s*aaa\+'slp_searchResultHtmlAjax\.jsp'[\s\S]*?info\s*:\s*'([^']+)'/);
+  if (!infoMatch) {
+    return { lib, query, scope, queryNum: 0, totalpage: 0, books: [], error: 'info-not-found' };
+  }
+  const info = infoMatch[1];
+
+  // Step 2: POST AJAX 端點拿結果片段
+  const ajaxRes = await fetch(`https://${lib}.ebook.hyread.com.tw/mservice/slp_searchResultHtmlAjax.jsp`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'X-Requested-With': 'XMLHttpRequest',
+      'Accept': '*/*',
+      'Referer': searchUrl,
+    },
+    body: 'info=' + encodeURIComponent(info),
+  });
+  const resultHtml = await ajaxRes.text();
+
+  // 解析總筆數（HTML 註解裡的 debug info：totalpage / queryNum）
+  const debugMatch = resultHtml.match(/totalpage\s*:\s*(\d+)[\s\S]*?queryNum\s*:\s*(\d+)/);
+  const totalpage = debugMatch ? parseInt(debugMatch[1], 10) : 0;
+  const queryNum = debugMatch ? parseInt(debugMatch[2], 10) : 0;
+
+  // 解析書本：從 section.book__list 之類的 wrapper 撈 bookDetail 連結 + 書名 + 書封
+  const books = parseLibrarySearchBooks(resultHtml);
+
+  return { lib, query, scope, queryNum, totalpage, books };
+}
+
+// 解析圖書館搜尋的 AJAX HTML 片段
+function parseLibrarySearchBooks(html) {
+  const books = [];
+  const seen = new Set();
+
+  // 用 bookDetail 連結為錨點，往前抓書封、往後抓書名
+  const blockRegex = /<section[^>]*class="[^"]*book__list[^"]*"[\s\S]*?<\/section>/g;
+  const blocks = html.match(blockRegex) || [];
+
+  for (const block of blocks) {
+    const idMatch = block.match(/\/bookDetail\.jsp\?id=(\d+)/);
+    if (!idMatch) continue;
+    const id = idMatch[1];
+    if (seen.has(id)) continue;
+
+    const titleMatch = block.match(/<h6[^>]*>\s*<a[^>]*>([^<]+)<\/a>/);
+    const imgMatch = block.match(/<img[^>]+src="([^"]+)"/);
+
+    books.push({
+      id,
+      title: titleMatch ? decodeEntities(titleMatch[1].trim()) : '',
+      thumbnail: imgMatch ? imgMatch[1] : '',
+    });
+    seen.add(id);
+  }
+
+  // 後備：如果上面 section 抓不到，用直接 regex
+  if (books.length === 0) {
+    const titleRegex = /<h6[^>]*>\s*<a[^>]*href="\/bookDetail\.jsp\?id=(\d+)"[^>]*>([^<]+)<\/a>/g;
+    let m;
+    while ((m = titleRegex.exec(html)) !== null) {
+      if (seen.has(m[1])) continue;
+      books.push({ id: m[1], title: decodeEntities(m[2].trim()), thumbnail: '' });
+      seen.add(m[1]);
+    }
+  }
+
+  return books;
+}
+
 function decodeEntities(str) {
   return str
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
@@ -369,9 +447,53 @@ export async function onRequest(context) {
         totalBestseller: bestSet.size,
       });
 
+    } else if (action === 'lib-search' && lib && query) {
+      // 圖書館分站搜尋（兩步走破解 AJAX）
+      // scope=4 計次 / scope=2 全部館藏（包含計次+買斷）
+      const scope = parseInt(url.searchParams.get('scope') || '4', 10);
+      const result = await librarySearch(lib, query, scope);
+      return jsonResponse({
+        library: LIBRARIES[lib],
+        ...result,
+      });
+
+    } else if (action === 'lib-search-cross' && query) {
+      // 跨館搜尋：並行查所有圖書館的「計次」或「全部」館藏
+      const scope = parseInt(url.searchParams.get('scope') || '4', 10);
+      const libs = Object.keys(LIBRARIES);
+
+      const results = await Promise.allSettled(
+        libs.map(libCode => librarySearch(libCode, query, scope))
+      );
+
+      const summary = results.map((r, i) => {
+        if (r.status === 'fulfilled') {
+          return {
+            lib: libs[i],
+            library: LIBRARIES[libs[i]],
+            queryNum: r.value.queryNum,
+            books: r.value.books.slice(0, 5), // 每館只回前 5 本，控制 payload
+          };
+        }
+        return { lib: libs[i], library: LIBRARIES[libs[i]], queryNum: 0, error: r.reason?.message };
+      });
+
+      // 按筆數降冪排序
+      summary.sort((a, b) => (b.queryNum || 0) - (a.queryNum || 0));
+      const totalHits = summary.reduce((sum, s) => sum + (s.queryNum || 0), 0);
+      const libsWithBook = summary.filter(s => s.queryNum > 0).length;
+
+      return jsonResponse({
+        query,
+        scope,
+        totalHits,
+        libsWithBook,
+        libCount: libs.length,
+        results: summary,
+      });
+
     } else if (action === 'search' && query) {
-      // 搜尋 HyRead 書店（靜態 HTML，能抓到結果）
-      // 圖書館子站搜尋是 AJAX 加密，無法直接抓
+      // 搜尋 HyRead 書店（靜態 HTML，能抓到結果）— 舊版相容
       const encoded = encodeURIComponent(query);
       const html = await fetchHyRead(
         `https://ebook.hyread.com.tw/searchList.jsp?search_field=FullText&MZAD=0&search_input=${encoded}`
@@ -395,8 +517,9 @@ export async function onRequest(context) {
           libraries: '?action=libraries',
           top: '?action=top&lib=tpml',
           new: '?action=new&lib=tpml',
-          search: '?action=search&lib=tpml&q=原子習慣',
-          searchAll: '?action=search-all&q=原子習慣',
+          libSearch: '?action=lib-search&lib=tpml&q=原子習慣&scope=4 (4=計次 / 2=全部)',
+          libSearchCross: '?action=lib-search-cross&q=原子習慣&scope=4',
+          search: '?action=search&q=原子習慣 (HyRead 書店搜尋)',
         }
       }, 400);
     }

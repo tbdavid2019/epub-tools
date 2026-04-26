@@ -55,6 +55,24 @@ function populateLibrarySelect() {
     if (code === currentLib) opt.selected = true;
     select.appendChild(opt);
   }
+  populateSearchLibSelect();
+}
+
+function populateSearchLibSelect() {
+  const select = document.getElementById('search-lib');
+  if (!select) return;
+  select.innerHTML = '';
+  const savedLib = localStorage.getItem('searchLib') || 'tpml';
+  for (const [code, name] of Object.entries(libraries)) {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = name;
+    if (code === savedLib) opt.selected = true;
+    select.appendChild(opt);
+  }
+  select.addEventListener('change', (e) => {
+    localStorage.setItem('searchLib', e.target.value);
+  });
 }
 
 // ══════════════════════════════════════════════════
@@ -152,30 +170,24 @@ async function loadBooks() {
   }
 }
 
-async function searchBooks() {
+function searchBooks() {
   const query = document.getElementById('search-input').value.trim();
   if (!query) { showToast('請輸入書名'); return; }
 
-  showLoading(true, `正在搜尋「${query}」...`);
-  clearResults();
+  const lib = document.getElementById('search-lib').value || 'tpml';
+  const libName = libraries[lib] || '圖書館';
+  const encoded = encodeURIComponent(query);
 
-  try {
-    const data = await fetchAPI({ action: 'search', q: query });
-    const books = data.books || [];
-    currentBooks = books;
-    if (books.length === 0) {
-      document.getElementById('empty-state').style.display = '';
-      document.getElementById('empty-state').querySelector('p').textContent = '沒有找到相關書籍。';
-    } else {
-      // 用卡片模式渲染搜尋結果（點擊連到 HyRead 書店主站，圖書館子站不一定有這本書）
-      isSearchMode = true;
-      renderBooks();
-    }
-  } catch (err) {
-    showToast('搜尋失敗：' + err.message);
-  } finally {
-    showLoading(false);
-  }
+  // 全部館藏（計次+買斷混合）
+  const allUrl = `https://${lib}.ebook.hyread.com.tw/searchList.jsp?search_field=FullText&search_input=${encoded}`;
+  // 只看計次書（filter=1 是 HyRead 內建的計次篩選參數）
+  const mocUrl = `https://${lib}.ebook.hyread.com.tw/searchList.jsp?search_field=FullText&search_input=${encoded}&filter=1`;
+
+  // 同時開兩個分頁
+  window.open(allUrl, '_blank', 'noopener');
+  window.open(mocUrl, '_blank', 'noopener');
+
+  showToast(`已開兩個分頁：${libName} 全部館藏 + 只看計次`);
 }
 
 // ══════════════════════════════════════════════════

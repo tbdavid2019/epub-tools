@@ -49,7 +49,7 @@
   </script>
 
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260426a">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260426b">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <link rel="preconnect" href="https://lab.helloruru.com" crossorigin>
@@ -61,7 +61,7 @@
   </style>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
-  <link rel="stylesheet" href="css/style.css?v=20260426a">
+  <link rel="stylesheet" href="css/style.css?v=20260426b">
 </head>
 <body>
   <!-- Brand Header -->
@@ -89,15 +89,33 @@
       </button>
     </nav>
 
-    <!-- 搜尋（永遠顯示） -->
+    <!-- 找書助手（永遠顯示） -->
     <div class="search-panel" id="search-panel">
+      <div class="search-helper-title">
+        <i data-lucide="search" width="18" height="18"></i>
+        想借這本書？查兩種借法就知道
+      </div>
+      <p class="search-helper-desc">
+        打書名 + 選你常去的圖書館，按搜尋會在新分頁同時打開：
+        <strong>全部館藏</strong>（計次 + 買斷混合）+ <strong>只看計次書</strong>。
+        對照兩邊就知道這本書是「計次（會扣月配額）」、「買斷（不扣配額）」，還是「該館沒有」。
+      </p>
       <div class="search-row">
-        <input type="text" id="search-input" class="input" placeholder="輸入書名，例如：原子習慣">
+        <input type="text" id="search-input" class="input" placeholder="輸入書名，例如：裝幀師">
+      </div>
+      <div class="search-row">
+        <select id="search-lib" class="select"></select>
         <button class="btn btn-primary" id="btn-search">
-          <i data-lucide="search" width="16" height="16"></i> 搜尋
+          <i data-lucide="external-link" width="16" height="16"></i> 開兩個分頁搜尋
         </button>
       </div>
-      <p class="form-note">搜尋 HyRead 電子書平台，點擊書封可至書店頁查看書況；圖書館是否採購請以各館為準。</p>
+      <div class="search-help-box">
+        <p class="search-help-line"><strong>怎麼看結果：</strong></p>
+        <p class="search-help-line">○ 兩邊都有 → 計次書，借閱會扣當月配額（每館每月 10 次）</p>
+        <p class="search-help-line">○ 只有「全部館藏」有 → 該館買斷書，沒有配額限制，但每館書單不同</p>
+        <p class="search-help-line">○ 兩邊都沒有 → 這間館沒收，可換其他館再搜一次</p>
+        <p class="search-help-line search-help-tip">未登入會看到「請登入」是正常的，那就是你要拿借書證去借的圖書館。</p>
+      </div>
     </div>
 
     <!-- 延伸閱讀 -->
@@ -178,6 +196,6 @@
   <!-- Toast -->
   <div id="toast" class="toast" style="display:none"></div>
 
-  <script src="js/app.js?v=20260426a"></script>
+  <script src="js/app.js?v=20260426b"></script>
 </body>
 </html>

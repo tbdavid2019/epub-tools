@@ -83,6 +83,13 @@ function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
 
+  // 切 tab 時清掉找書助手的搜尋結果，避免兩個結果疊在一起
+  const libSearchResult = document.getElementById('lib-search-result');
+  if (libSearchResult) {
+    libSearchResult.innerHTML = '';
+    libSearchResult.classList.add('hidden');
+  }
+
   // 計次新書提示 + 圖書館選擇器顯隱
   const mocHint = document.getElementById('moc-hint');
   if (mocHint) mocHint.style.display = tab === 'new' ? '' : 'none';

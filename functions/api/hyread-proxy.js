@@ -215,51 +215,33 @@ async function librarySearch(lib, query, scope = 4) {
 }
 
 // 解析圖書館搜尋的 AJAX HTML 片段
-// 結構：<div class="booklistblock"><section>... <a href="/bookDetail.jsp?id=NNN"><img src="..."></a> <h6><a>書名</a></h6> ...</section></div>
+// 結構（每本書）：
+//   <a href="/bookDetail.jsp?id=NNN"><img src="https://webcdn2.../bookcover/XXX.jpg"></a>
+//   ... <h6><a href="/bookDetail.jsp?id=NNN">書名</a></h6>
+//
+// 同一個 id 會出現兩次（一次包圖、一次包標題），用第一次出現的位置為書本起點，
+// 在後續 2000 字元內撈書名（h6）和書封（bookcover img）。
 function parseLibrarySearchBooks(html) {
   const books = [];
   const seen = new Set();
 
-  // 用 booklistblock 為單位切塊
-  const blockRegex = /<div\s+class="booklistblock"[\s\S]*?(?=<div\s+class="booklistblock"|<\/div>\s*<\/div>\s*<\/div>|$)/g;
-  const blocks = html.match(blockRegex) || [];
-
-  for (const block of blocks) {
-    const idMatch = block.match(/\/bookDetail\.jsp\?id=(\d+)/);
-    if (!idMatch) continue;
-    const id = idMatch[1];
+  const idRegex = /href="\/bookDetail\.jsp\?id=(\d+)"/g;
+  let m;
+  while ((m = idRegex.exec(html)) !== null) {
+    const id = m[1];
     if (seen.has(id)) continue;
+    seen.add(id);
 
-    const titleMatch = block.match(/<h6[^>]*>\s*<a[^>]*>([^<]+)<\/a>/);
-    const imgMatch = block.match(/<img[^>]+src="(https?:[^"]+)"/);
+    // 從這個位置往後 2000 字元內找書名和書封
+    const nearby = html.slice(m.index, m.index + 2000);
+    const titleMatch = nearby.match(/<h6[^>]*>\s*<a[^>]*>([^<]+)<\/a>/);
+    const imgMatch = nearby.match(/<img[^>]+src="(https?:\/\/[^"]*bookcover[^"]+)"/);
 
     books.push({
       id,
       title: titleMatch ? decodeEntities(titleMatch[1].trim()) : '',
       thumbnail: imgMatch ? imgMatch[1] : '',
     });
-    seen.add(id);
-  }
-
-  // 後備：booklistblock 沒切到時，用 bookDetail 連結 + 鄰近 img/h6 直接撈
-  if (books.length === 0) {
-    const idRegex = /href="\/bookDetail\.jsp\?id=(\d+)"/g;
-    let m;
-    while ((m = idRegex.exec(html)) !== null) {
-      const id = m[1];
-      if (seen.has(id)) continue;
-      seen.add(id);
-
-      // 往後 1500 字元內找 h6 書名 + img 書封
-      const nearby = html.slice(m.index, m.index + 1500);
-      const titleMatch = nearby.match(/<h6[^>]*>\s*<a[^>]*>([^<]+)<\/a>/);
-      const imgMatch = nearby.match(/<img[^>]+src="(https?:\/\/[^"]*bookcover[^"]+)"/);
-      books.push({
-        id,
-        title: titleMatch ? decodeEntities(titleMatch[1].trim()) : '',
-        thumbnail: imgMatch ? imgMatch[1] : '',
-      });
-    }
   }
 
   return books;

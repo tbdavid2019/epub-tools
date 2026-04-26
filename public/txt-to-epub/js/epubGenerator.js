@@ -42,6 +42,71 @@ function loadHbSubset() {
   return _hbExportsPromise;
 }
 
+// 從 sfnt（TTF/OTF）的 name table 讀出字體實際 family name
+// 這很重要 — 很多 EPUB 閱讀器會比對字體檔內部的 name 而不是 CSS 給的名字，
+// 所以 CSS 必須用字體的真實 family name，否則 @font-face 會被忽略。
+function readFontFamilyName(arrayBuffer) {
+  try {
+    var view = new DataView(arrayBuffer);
+    var sfntVersion = view.getUint32(0);
+    // 必須是合法 sfnt（TrueType 0x00010000、OpenType 'OTTO' 0x4F54544F）
+    if (sfntVersion !== 0x00010000 && sfntVersion !== 0x4F54544F && sfntVersion !== 0x74727565) {
+      return null;  // 可能是 woff/woff2，跳過自動偵測
+    }
+    var numTables = view.getUint16(4);
+    var nameOffset = null, nameLength = null;
+    for (var i = 0; i < numTables; i++) {
+      var recOffset = 12 + i * 16;
+      var tag = String.fromCharCode(
+        view.getUint8(recOffset),
+        view.getUint8(recOffset + 1),
+        view.getUint8(recOffset + 2),
+        view.getUint8(recOffset + 3)
+      );
+      if (tag === 'name') {
+        nameOffset = view.getUint32(recOffset + 8);
+        nameLength = view.getUint32(recOffset + 12);
+        break;
+      }
+    }
+    if (nameOffset === null) return null;
+    var count = view.getUint16(nameOffset + 2);
+    var stringOffset = view.getUint16(nameOffset + 4);
+    // 偏好順序：Win Unicode (3,1) Family (1)，再退到 Mac Roman (1,0) Family (1)
+    var candidates = [];
+    for (var r = 0; r < count; r++) {
+      var rec = nameOffset + 6 + r * 12;
+      var platformID = view.getUint16(rec);
+      var encodingID = view.getUint16(rec + 2);
+      var nameID = view.getUint16(rec + 6);
+      var sLen = view.getUint16(rec + 8);
+      var sOff = view.getUint16(rec + 10);
+      // 只收 nameID 1 (Family Name) 或 16 (Typographic Family Name，較新規範)
+      if (nameID !== 1 && nameID !== 16) continue;
+      var raw = new Uint8Array(arrayBuffer, nameOffset + stringOffset + sOff, sLen);
+      var str;
+      if (platformID === 3 || (platformID === 0 && encodingID >= 3)) {
+        // UTF-16 BE
+        var chars = [];
+        for (var k = 0; k < raw.length; k += 2) {
+          chars.push(String.fromCharCode((raw[k] << 8) | raw[k + 1]));
+        }
+        str = chars.join('');
+      } else {
+        // 假設 ASCII / Mac Roman
+        str = String.fromCharCode.apply(null, raw);
+      }
+      candidates.push({ priority: (nameID === 16 ? 0 : 1) + (platformID === 3 ? 0 : 10), name: str });
+    }
+    if (candidates.length === 0) return null;
+    candidates.sort(function (a, b) { return a.priority - b.priority; });
+    return candidates[0].name;
+  } catch (e) {
+    console.warn('讀取字體 family name 失敗：', e);
+    return null;
+  }
+}
+
 // 從章節文字中收集所有用到的 unicode codepoint
 function collectCodepoints(chapters, title, author) {
   var set = new Set();
@@ -153,11 +218,11 @@ window.EpubGenerator = {
     var fontConfig = useCustom ? FONT_CONFIG['custom'] : (FONT_CONFIG[fontFamily] || FONT_CONFIG['noto-sans']);
     // 自訂字體拿不到時退回思源黑體
     if (fontFamily === 'custom' && !customFont) fontConfig = FONT_CONFIG['noto-sans'];
-    // 自訂字體：用 !important 強制覆蓋，並把 fallback 降到只剩通用族（避免閱讀器拿系統字體覆蓋）
-    var fontFamilyCSS = useCustom
-      ? '"' + fontConfig.family + '", sans-serif'
-      : '"' + fontConfig.family + '", "Noto Sans TC", sans-serif';
     var fontImportant = useCustom ? ' !important' : '';
+    // fontFamilyCSS 自訂字體分支會等讀完字體真實 family name 再決定（在下方字體處理區塊）
+    var fontFamilyCSS = useCustom
+      ? null
+      : '"' + fontConfig.family + '", "Noto Sans TC", sans-serif';
     var fontSizeValue = SIZE_MAP[fontSize] || SIZE_MAP['medium'];
     var lineHeightValue = LINE_HEIGHT_MAP[lineHeight] || LINE_HEIGHT_MAP['normal'];
     var textIndentValue = INDENT_MAP[textIndent] || INDENT_MAP['two'];
@@ -202,6 +267,7 @@ window.EpubGenerator = {
     // 自訂字體：子集化（只保留書中用到的字）後嵌入 EPUB
     var fontFaceCSS = '';
     var fontManifest = '';
+    var actualFontFamily = 'CustomUserFont';  // 預設名稱，之後若能讀到字體真實 family name 就會被覆蓋
     if (useCustom) {
       var fontMeta = getCustomFontMeta(customFont);
       var rawFontData = await customFont.arrayBuffer();
@@ -225,9 +291,23 @@ window.EpubGenerator = {
         console.warn('字體子集化失敗，改用原始字體：', subErr);
         onProgress({ stage: 'font', message: '字體子集化失敗，改用原始字體（' + (rawFontData.byteLength / 1048576).toFixed(1) + ' MB）' });
       }
+      // 讀字體實際 family name（從子集化後的字體讀，因為閱讀器看到的是這個檔案）
+      var realName = readFontFamilyName(fontDataToEmbed);
+      if (realName) {
+        actualFontFamily = realName;
+        onProgress({ stage: 'font', message: '字體名稱：' + realName });
+      }
       var fontFilename = 'user-font.' + subsetExt;
       zip.file('OEBPS/fonts/' + fontFilename, fontDataToEmbed);
+      // CSS 用字體真實名稱（避免閱讀器比對 family name 失敗而忽略 @font-face）
+      // 同時宣告 CustomUserFont 別名，雙保險
       fontFaceCSS =
+        '@font-face {\n' +
+        '  font-family: "' + actualFontFamily + '";\n' +
+        '  src: url("fonts/' + fontFilename + '") format("' + subsetFormat + '");\n' +
+        '  font-weight: normal;\n' +
+        '  font-style: normal;\n' +
+        '}\n' +
         '@font-face {\n' +
         '  font-family: "CustomUserFont";\n' +
         '  src: url("fonts/' + fontFilename + '") format("' + subsetFormat + '");\n' +
@@ -235,6 +315,8 @@ window.EpubGenerator = {
         '  font-style: normal;\n' +
         '}\n\n';
       fontManifest = '<item id="user-font" href="fonts/' + fontFilename + '" media-type="' + subsetMime + '"/>';
+      // 設定 fontFamilyCSS — 真實名稱優先，CustomUserFont 為 alias，再 fallback 通用族
+      fontFamilyCSS = '"' + actualFontFamily + '", "CustomUserFont", sans-serif';
     }
 
     // CSS

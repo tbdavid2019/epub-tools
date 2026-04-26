@@ -98,7 +98,7 @@ const EPDFONT_DPI_RATIO = 150 / 72;
 
 function clampS8(v) { return Math.max(-128, Math.min(127, v | 0)); }
 
-async function runEpdfont({ ttfBuffer, fontSizePt, charset = 'common', fontName = 'font', defaultRanges, is2Bit = true, letterSpacing = 0 }) {
+async function runEpdfont({ ttfBuffer, fontSizePt, charset = 'common', fontName = 'font', defaultRanges, is2Bit = true }) {
   const font = opentype.parse(ttfBuffer);
 
   let ranges;
@@ -183,7 +183,7 @@ async function runEpdfont({ ttfBuffer, fontSizePt, charset = 'common', fontName 
         }
       }
 
-      const advance = Math.round(glyph.advanceWidth * scale) + letterSpacing;
+      const advance = Math.round(glyph.advanceWidth * scale);
 
       if (x1 < 0) {
         // 空白字（如 U+0020 空格）— 仍記入，但 bitmap 0 byte
@@ -195,58 +195,32 @@ async function runEpdfont({ ttfBuffer, fontSizePt, charset = 'common', fontName 
       const bh = y1 - y0 + 1;
 
       // ---- Bitmap 編碼（對齊社群版 freetype 4-bit → 2-bit/1-bit）----
-      // Canvas 給 8-bit grayscale（白 255，黑 0），轉 4-bit anti-aliased：v = (255 - g) >> 4
-      // 社群版閾值（針對 freetype 4-bit 0-15 區間）：
-      //   2-bit: v >= 12 → 3, >= 8 → 2, >= 4 → 1, else 0
-      //   1-bit: v 的高 3 bit 有任何值（v >= 2）→ 1
+      // Canvas 8-bit grayscale → 4-bit anti-aliased（v4 = (255-g) >> 4），再依模式量化：
+      //   2-bit: 12/8/4 階梯 → 0..3，每 4 px 打包 1 byte
+      //   1-bit: v4 >= 2 視為有色 → 0/1，每 8 px 打包 1 byte
       const data = [];
+      const bitsPerPx = is2Bit ? 2 : 1;
+      const pxPerByte = 8 / bitsPerPx;
+      const quantize = is2Bit
+        ? (v4) => v4 >= 12 ? 3 : v4 >= 8 ? 2 : v4 >= 4 ? 1 : 0
+        : (v4) => v4 >= 2 ? 1 : 0;
       let acc = 0;
       const totalPixels = bw * bh;
-
-      if (is2Bit) {
-        // 2-bit: 每 4 個像素打包成 1 byte（每像素 2 bit，MSB first）
-        for (let row = 0; row < bh; row++) {
-          for (let col = 0; col < bw; col++) {
-            const g = fullPx[((y0 + row) * canvasW + (x0 + col)) * 4];
-            const v4 = (255 - g) >> 4;  // 0..15
-            let v2;
-            if (v4 >= 12) v2 = 3;
-            else if (v4 >= 8) v2 = 2;
-            else if (v4 >= 4) v2 = 1;
-            else v2 = 0;
-            acc = (acc << 2) | v2;
-            const idx = row * bw + col;
-            if ((idx & 3) === 3) {
-              data.push(acc & 0xFF);
-              acc = 0;
-            }
+      for (let row = 0; row < bh; row++) {
+        for (let col = 0; col < bw; col++) {
+          const g = fullPx[((y0 + row) * canvasW + (x0 + col)) * 4];
+          const v4 = (255 - g) >> 4;
+          acc = (acc << bitsPerPx) | quantize(v4);
+          if (((row * bw + col) % pxPerByte) === pxPerByte - 1) {
+            data.push(acc & 0xFF);
+            acc = 0;
           }
         }
-        const remainder = totalPixels & 3;
-        if (remainder !== 0) {
-          acc <<= (4 - remainder) * 2;
-          data.push(acc & 0xFF);
-        }
-      } else {
-        // 1-bit: 每 8 個像素打包成 1 byte（MSB first）
-        for (let row = 0; row < bh; row++) {
-          for (let col = 0; col < bw; col++) {
-            const g = fullPx[((y0 + row) * canvasW + (x0 + col)) * 4];
-            const v4 = (255 - g) >> 4;
-            const bit = v4 >= 2 ? 1 : 0;
-            acc = (acc << 1) | bit;
-            const idx = row * bw + col;
-            if ((idx & 7) === 7) {
-              data.push(acc & 0xFF);
-              acc = 0;
-            }
-          }
-        }
-        const remainder = totalPixels & 7;
-        if (remainder !== 0) {
-          acc <<= (8 - remainder);
-          data.push(acc & 0xFF);
-        }
+      }
+      const remainder = totalPixels % pxPerByte;
+      if (remainder !== 0) {
+        acc <<= (pxPerByte - remainder) * bitsPerPx;
+        data.push(acc & 0xFF);
       }
 
       // freetype 的 bitmap_left = bbox 起點 x 偏移；bitmap_top = baseline 到 bbox 頂端的距離

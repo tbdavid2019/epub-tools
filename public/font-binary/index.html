@@ -850,8 +850,9 @@ const errorMsg = $('errorMsg');
 let ttfBuffer = null;
 let detectedName = null;
 let opentypeFont = null;
-let currentFormat = 'bin';
 let epdfontDefaultRanges = null;
+
+const getCurrentFormat = () => formatRow.querySelector('.format-card.active')?.dataset.format || 'bin';
 
 if (!window.opentype) {
   showError('opentype.js 載入失敗（CDN 連不上）。請檢查網路後重新整理頁面。');
@@ -910,9 +911,9 @@ formatRow.addEventListener('click', (e) => {
   if (!btn) return;
   formatRow.querySelectorAll('.format-card').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  currentFormat = btn.dataset.format;
-  $('binPanel').hidden = currentFormat !== 'bin';
-  $('epdfontPanel').hidden = currentFormat !== 'epdfont';
+  const fmt = btn.dataset.format;
+  $('binPanel').hidden = fmt !== 'bin';
+  $('epdfontPanel').hidden = fmt !== 'epdfont';
 });
 
 const BIN_MEASURE_CHARS = '一二三四五六七八九十百千萬億零的是不了在人有我他這個們中來上大為和國地到以說時要就出會可也你對生能而子那得於著下自之年過發後作裡用道行所然家種事成方多經麼去法學如都同現當沒動面起看定天分還進好小部其些主樣理心她本前開但因只從想實日軍者意無力它與長把機十重很點物—中文english12345AaBbCcXyZ字體大小標豐';
@@ -993,15 +994,18 @@ function updateBinSliderDisplay() {
     b.classList.toggle('active', parseInt(b.dataset.pt) === pt);
   });
 }
-$('binSlider').addEventListener('input', updateBinSliderDisplay);
-
-$('binPresetRow').addEventListener('click', (e) => {
-  const btn = e.target.closest('.preset-btn');
-  if (!btn) return;
-  $('binSlider').value = btn.dataset.pt;
-  updateBinSliderDisplay();
-  renderPreview();
-});
+function bindPresetSlider(presetRowId, sliderId, displayFn, afterChange) {
+  const sliderEl = $(sliderId);
+  sliderEl.addEventListener('input', () => { displayFn(); afterChange?.(); });
+  $(presetRowId).addEventListener('click', (e) => {
+    const btn = e.target.closest('.preset-btn');
+    if (!btn) return;
+    sliderEl.value = btn.dataset.pt;
+    displayFn();
+    afterChange?.();
+  });
+}
+bindPresetSlider('binPresetRow', 'binSlider', updateBinSliderDisplay, renderPreview);
 
 function updateEpdfontSliderDisplay() {
   const pt = parseInt($('epdfontSlider').value);
@@ -1012,14 +1016,7 @@ function updateEpdfontSliderDisplay() {
     b.classList.toggle('active', parseInt(b.dataset.pt) === pt);
   });
 }
-$('epdfontSlider').addEventListener('input', updateEpdfontSliderDisplay);
-
-$('epdfontPresetRow').addEventListener('click', (e) => {
-  const btn = e.target.closest('.preset-btn');
-  if (!btn) return;
-  $('epdfontSlider').value = btn.dataset.pt;
-  updateEpdfontSliderDisplay();
-});
+bindPresetSlider('epdfontPresetRow', 'epdfontSlider', updateEpdfontSliderDisplay);
 
 function sanitizeFilename(name) {
   return name.replace(/[\\/:*?"<>|\x00-\x1F]/g, '_').replace(/\s+/g, '_').slice(0, 64) || 'font';
@@ -1080,7 +1077,7 @@ runBtn.addEventListener('click', () => {
   };
 
   let payload;
-  if (currentFormat === 'bin') {
+  if (getCurrentFormat() === 'bin') {
     const { pt, w: outerW, h: outerH } = getActiveBinPreset();
     const vertical = $('orientation').value === 'vertical';
     const renderPt = getBinRenderPt(pt);
@@ -1252,7 +1249,6 @@ bindToggleRow('previewWritingRow', 'writing', (v) => { previewWriting = v; rende
   const el = $(id);
   if (el) el.addEventListener('input', renderPreview);
 });
-$('binSlider').addEventListener('input', renderPreview);
 
 </script>
 

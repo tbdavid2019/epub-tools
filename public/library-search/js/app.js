@@ -11,6 +11,7 @@ let currentLib = 'taichunggov';
 let currentBooks = [];
 let sortAsc = true;
 let libraries = {};
+let isSearchMode = false; // 目前畫面顯示的是不是搜尋結果（影響卡片連結要連書店還是圖書館子站）
 
 // ══════════════════════════════════════════════════
 // API
@@ -166,10 +167,9 @@ async function searchBooks() {
       document.getElementById('empty-state').style.display = '';
       document.getElementById('empty-state').querySelector('p').textContent = '沒有找到相關書籍。';
     } else {
-      // 用卡片模式渲染搜尋結果（點擊連到書店頁面）
-      currentTab = '_search_result';
+      // 用卡片模式渲染搜尋結果（點擊連到 HyRead 書店主站，圖書館子站不一定有這本書）
+      isSearchMode = true;
       renderBooks();
-      currentTab = 'new'; // 恢復
     }
   } catch (err) {
     showToast('搜尋失敗：' + err.message);
@@ -218,7 +218,9 @@ function renderBooks() {
   for (const book of display) {
     const a = document.createElement('a');
     a.className = 'book-card';
-    const host = `${currentLib}.ebook.hyread.com.tw`;
+    // 搜尋結果連到 HyRead 書店主站（圖書館子站不一定有這本書，會 404）
+    // 計次新書 / 熱門 Top 100 才連到圖書館子站
+    const host = isSearchMode ? 'ebook.hyread.com.tw' : `${currentLib}.ebook.hyread.com.tw`;
     a.href = `https://${host}/bookDetail.jsp?id=${book.id}`;
     a.target = '_blank';
     a.rel = 'noopener';
@@ -348,6 +350,7 @@ function clearResults() {
   document.getElementById('results').innerHTML = '';
   document.getElementById('sort-row').style.display = 'none';
   document.getElementById('empty-state').style.display = 'none';
+  isSearchMode = false;
 }
 
 function showToast(msg) {

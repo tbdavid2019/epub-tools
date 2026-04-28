@@ -509,6 +509,37 @@
       padding: 1px 8px;
       border-radius: 999px;
     }
+    /* 促銷類型標籤（Pubu「每日精選」/「限時 99」、HyRead「週末快閃」） */
+    .promo-tag {
+      display: inline-block;
+      align-self: flex-start;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+    .promo-tag.promo-daily {
+      color: var(--color-sage-dark);
+      background: var(--color-sage-bg);
+      border: 1px solid var(--color-sage);
+    }
+    html.dark .promo-tag.promo-daily { color: var(--color-sage); }
+    .promo-tag.promo-flash {
+      color: var(--color-gold-dark);
+      background: var(--color-gold-bg);
+      border: 1px solid var(--color-gold);
+    }
+    html.dark .promo-tag.promo-flash { color: var(--color-gold); }
+    .promo-tag.promo-weekend {
+      color: var(--color-lavender);
+      background: var(--color-lavender-bg);
+      border: 1px solid var(--color-lavender);
+    }
+
     .deal-title {
       font-family: var(--font-serif);
       font-size: 16px;
@@ -1521,7 +1552,7 @@
     // === Fetch Deals ===
     async function fetchDeals(endpoint = '/api/deals') {
       try {
-        const res = await fetch(API_BASE + endpoint + '?v=20260428-9');
+        const res = await fetch(API_BASE + endpoint + '?v=20260428-10');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         allDealsData = data;
@@ -1577,6 +1608,9 @@
         }
       }
 
+      // 一致性：如果任何一欄 > 1 本，全部都標數量；否則都不標
+      const hasMulti = dateGroups.some(g => g.count > 1);
+
       // 標頭用 gridColumn span 合併同日
       headerEl.style.gridTemplateColumns = colStyle;
       headerEl.innerHTML = dateGroups.map(g => {
@@ -1591,7 +1625,7 @@
           dayName + '<br>' + dateLabel +
           (isToday ? '<br>今天' : '') +
           (isPast ? '<br>已過' : '') +
-          (g.count > 1 ? `<br>${g.count} 本` : '') +
+          (hasMulti ? `<br>${g.count} 本` : '') +
           '</span>';
       }).join('');
     }
@@ -1682,9 +1716,20 @@
           '</div>'
         : '';
 
+      // 促銷類型標籤（Pubu 兩種、HyRead 週末快閃；其他平台無 promoMessage 時不顯示）
+      let promoTag = '';
+      if (deal.promoMessage) {
+        let tagClass = 'promo-tag';
+        if (/限時.*99|即將下架/.test(deal.promoMessage)) tagClass += ' promo-flash';
+        else if (/週末快閃/.test(deal.promoMessage)) tagClass += ' promo-weekend';
+        else tagClass += ' promo-daily';
+        promoTag = '<span class="' + tagClass + '">' + escapeHtml(deal.promoMessage) + '</span>';
+      }
+
       return '<article class="deal-card' + (isToday ? ' is-today' : isPast ? ' is-past' : '') + '" data-platform="' + p + '">' +
         '<div class="book-cover-wrap"><div class="book-cover">' + cover + '</div></div>' +
         '<div class="deal-info">' +
+          (promoTag ? promoTag : '') +
           '<h3 class="deal-title' + (deal.title ? '' : ' is-placeholder') + '">' + escapeHtml(displayTitle) + '</h3>' +
           (deal.author ? '<p class="deal-author">' + escapeHtml(deal.author) + '</p>' : '') +
           '<div class="deal-pricing">' +

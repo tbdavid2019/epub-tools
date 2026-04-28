@@ -894,7 +894,7 @@ footer a:hover { text-decoration: underline; }
 <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js" id="opentypeLib"></script>
 <script>
 // 版本號 — 改 worker.js / epdfont_ranges.json 時要 bump 這個值，瀏覽器才會抓新版
-const ASSET_VERSION = '20260428f-x4';
+const ASSET_VERSION = '20260428g-render';
 const $ = (id) => document.getElementById(id);
 const dropzone = $('dropzone');
 const ttfInput = $('ttfInput');
@@ -1185,8 +1185,9 @@ function getScreenDims() {
     ? { w: d.w, h: d.h }
     : { w: d.h, h: d.w };
 }
-const PAGE_MARGIN = 32;
-const LINE_GAP = 4;
+// XTEink RenderPreview 規則（從 Utility.RenderPreview IL 反推）：
+//   padding = 4，無行間距、無段落間距，剩餘空間平均分配
+const PAGE_PADDING = 4;
 
 let previewScreen = 'portrait';
 let previewWriting = 'horizontal';
@@ -1226,7 +1227,8 @@ function drawScreen(paragraphs, font, fontSizePt, cellW, cellH, screen, writing)
   canvas.style.maxHeight = '78vh';
   canvas.style.aspectRatio = `${screen.w} / ${screen.h}`;
 
-  ctx.fillStyle = 'white';
+  // XTEink 預覽底色 = Color.FromArgb(0xFF, 0xFD, 0xFA)（米白）
+  ctx.fillStyle = 'rgb(255,253,250)';
   ctx.fillRect(0, 0, screen.w, screen.h);
   ctx.imageSmoothingEnabled = false;
 
@@ -1238,39 +1240,63 @@ function drawScreen(paragraphs, font, fontSizePt, cellW, cellH, screen, writing)
   const antiAlias = aaMode.startsWith('SystemAntiAltas');
   const boldPx = parseInt($('binBoldPx')?.value || 0) || 0;
 
-  if (writing === 'horizontal') {
-    let curY = PAGE_MARGIN;
-    for (const para of paragraphs) {
-      if (curY + cellH > screen.h - PAGE_MARGIN) break;
-      let curX = PAGE_MARGIN;
-      const chars = Array.from(para);
-      for (const ch of chars) {
-        if (curX + cellW > screen.w - PAGE_MARGIN) {
-          curX = PAGE_MARGIN;
-          curY += cellH + LINE_GAP;
-          if (curY + cellH > screen.h - PAGE_MARGIN) break;
-        }
-        drawGlyphInCellXTEink(ctx, ch, fontSizePt, curX, curY, cellW, cellH, cs, ls, threshold, antiAlias, boldPx);
-        curX += cellW;
+  // === XTEink RenderPreview 規則 ===
+  // padding=4，render area = (screen - 8)
+  // totalLines = renderArea.H / cellH（整數除法）
+  // totalCharacter = renderArea.W / cellW
+  // outerHeight = (renderArea.H / totalLines) * totalLines
+  // outerWidth = (renderArea.W / totalCharacter) * totalCharacter
+  // screenPaddingTop = padding + (renderArea.H - outerHeight) / 2
+  // screenPaddingLeft = padding + (renderArea.W - outerWidth) / 2
+  // 然後逐字塞滿格子，整段塞完換下一段（不留空行）
+  const renderW = screen.w - PAGE_PADDING * 2;
+  const renderH = screen.h - PAGE_PADDING * 2;
+
+  const isHoriz = writing === 'horizontal';
+  // 直排：行 = column，每列字數 = renderH / cellH，總列數 = renderW / cellW
+  const charsPerLine = isHoriz
+    ? Math.floor(renderW / cellW)
+    : Math.floor(renderH / cellH);
+  const totalLines = isHoriz
+    ? Math.floor(renderH / cellH)
+    : Math.floor(renderW / cellW);
+  if (charsPerLine < 1 || totalLines < 1) return;
+
+  const outerW = charsPerLine * cellW;
+  const outerH = totalLines * cellH;
+  const padLeft = PAGE_PADDING + Math.floor((renderW - (isHoriz ? outerW : outerH)) / 2);
+  const padTop = PAGE_PADDING + Math.floor((renderH - (isHoriz ? outerH : outerW)) / 2);
+
+  // 把段落攤平成「字陣列」，每段結束直接換行（無空白行）
+  let lineIdx = 0;
+  let charIdx = 0;
+  outer: for (const para of paragraphs) {
+    const chars = Array.from(para);
+    let i = 0;
+    while (i < chars.length) {
+      if (lineIdx >= totalLines) break outer;
+      const ch = chars[i];
+      let cellX, cellY;
+      if (isHoriz) {
+        cellX = padLeft + charIdx * cellW;
+        cellY = padTop + lineIdx * cellH;
+      } else {
+        // 直排從右往左，列從上往下
+        cellX = screen.w - padLeft - (lineIdx + 1) * cellW;
+        cellY = padTop + charIdx * cellH;
       }
-      curY += cellH + LINE_GAP * 2;
+      drawGlyphInCellXTEink(ctx, ch, fontSizePt, cellX, cellY, cellW, cellH, cs, ls, threshold, antiAlias, boldPx);
+      charIdx++;
+      i++;
+      if (charIdx >= charsPerLine) {
+        charIdx = 0;
+        lineIdx++;
+      }
     }
-  } else {
-    let curX = screen.w - PAGE_MARGIN - cellW;
-    for (const para of paragraphs) {
-      if (curX < PAGE_MARGIN) break;
-      let curY = PAGE_MARGIN;
-      const chars = Array.from(para);
-      for (const ch of chars) {
-        if (curY + cellH > screen.h - PAGE_MARGIN) {
-          curY = PAGE_MARGIN;
-          curX -= cellW + LINE_GAP;
-          if (curX < PAGE_MARGIN) break;
-        }
-        drawGlyphInCellXTEink(ctx, ch, fontSizePt, curX, curY, cellW, cellH, cs, ls, threshold, antiAlias, boldPx);
-        curY += cellH;
-      }
-      curX -= cellW + LINE_GAP * 2;
+    // 段落結束 → 強制換行（除非剛好填滿）
+    if (charIdx > 0) {
+      charIdx = 0;
+      lineIdx++;
     }
   }
 }

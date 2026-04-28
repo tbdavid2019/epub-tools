@@ -1521,7 +1521,7 @@
     // === Fetch Deals ===
     async function fetchDeals(endpoint = '/api/deals') {
       try {
-        const res = await fetch(API_BASE + endpoint + '?v=20260428-8');
+        const res = await fetch(API_BASE + endpoint + '?v=20260428-9');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         allDealsData = data;
@@ -1603,10 +1603,20 @@
       const platformNames = { readmoo: 'Readmoo', books: '博客來', kobo: 'Kobo', pubu: 'Pubu', hyread: 'HyRead' };
       for (const platform of ['readmoo', 'books', 'kobo', 'pubu', 'hyread']) {
         const deals = data[platform]?.deals || [];
-        // 三平台一致：只顯示今天 + 未來，日期升冪
-        const showDeals = deals
+        // 只顯示今天 + 未來，日期升冪
+        let showDeals = deals
           .filter(d => d.date >= today)
           .sort((a, b) => a.date.localeCompare(b.date));
+
+        // 去重：同 bookUrl 只保留最早那筆（避免 Pubu 每日精選/HyRead 週末快閃同書展開重複顯示）
+        const seenUrls = new Set();
+        showDeals = showDeals.filter(d => {
+          const key = d.bookUrl || d.title;
+          if (!key) return true;
+          if (seenUrls.has(key)) return false;
+          seenUrls.add(key);
+          return true;
+        });
 
         const grid = document.getElementById('grid-' + platform);
         const calHeader = document.getElementById('cal-header-' + platform);
@@ -1616,6 +1626,25 @@
           if (calHeader) calHeader.innerHTML = '';
           columnHeader.innerHTML = platformNames[platform];
           grid.innerHTML = '<div class="empty-state"><p>今天無特價</p></div>';
+        } else if (platform === 'hyread') {
+          // HyRead 特例：本週末同一批書（不分日，只顯示一個「本週末」標頭）
+          const dates = [...new Set(showDeals.map(d => d.date))].sort();
+          const startDate = dates[0];
+          const endDate = dates[dates.length - 1];
+          const fmtDate = (s) => {
+            const x = new Date(s + 'T00:00:00');
+            return (x.getMonth() + 1) + '/' + x.getDate();
+          };
+          const rangeLabel = startDate === endDate
+            ? fmtDate(startDate)
+            : fmtDate(startDate) + '–' + fmtDate(endDate);
+          columnHeader.innerHTML = platformNames[platform] + ' <span class="col-count">' + showDeals.length + ' 本</span>';
+          if (calHeader) {
+            calHeader.style.gridTemplateColumns = '1fr';
+            calHeader.innerHTML = '<span>本週末快閃<br>' + rangeLabel + '<br>' + showDeals.length + ' 本</span>';
+          }
+          grid.style.gridTemplateColumns = `repeat(${showDeals.length}, 1fr)`;
+          grid.innerHTML = showDeals.map(deal => renderDealCard(deal, today)).join('');
         } else {
           columnHeader.innerHTML = platformNames[platform] + ' <span class="col-count">' + showDeals.length + ' 本</span>';
           renderCalendarHeader(showDeals, today, 'cal-header-' + platform, 'grid-' + platform);

@@ -818,9 +818,10 @@
       flex: 1 1 70px;
       min-width: 0;
       display: inline-flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 5px;
+      gap: 2px;
       padding: 8px 6px;
       font-size: 14px;
       font-weight: 400;
@@ -833,6 +834,13 @@
       text-decoration: none;
       transition: all var(--transition-fast);
       white-space: nowrap;
+      line-height: 1.3;
+    }
+    .feed-btn small {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0;
+      font-weight: 400;
     }
     .feed-btn:hover {
       border-color: var(--color-sage);
@@ -1367,6 +1375,13 @@
       .deal-title { font-size: 15px; }
       .price-deal { font-size: 18px; }
       .search-box { flex-direction: column; }
+      /* 手機版促銷標籤縮一階 + 加底部間距 */
+      .promo-tag {
+        font-size: 10px;
+        padding: 2px 7px;
+        margin-bottom: 8px;
+        letter-spacing: 0;
+      }
     }
 
     /* --- Accessibility --- */
@@ -1552,7 +1567,7 @@
     // === Fetch Deals ===
     async function fetchDeals(endpoint = '/api/deals') {
       try {
-        const res = await fetch(API_BASE + endpoint + '?v=20260428-11');
+        const res = await fetch(API_BASE + endpoint + '?v=20260428-13');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         allDealsData = data;
@@ -2117,8 +2132,8 @@
           '<input type="text" class="feed-card-url" readonly value="' + escapeHtml(f.url) + '" aria-label="訂閱網址（可長按選取）">' +
           '<div class="feed-card-actions">' +
             '<button type="button" class="feed-btn" data-copy="' + escapeHtml(f.url) + '" title="複製訂閱連結">' + copyIcon + '<span>複製</span></button>' +
-            '<a class="feed-btn" href="' + escapeHtml(gcalAdd) + '" target="_blank" rel="noopener" title="加到 Google 日曆">' + openIcon + 'Google</a>' +
-            '<a class="feed-btn" href="' + escapeHtml(webcalUrl) + '" rel="noopener" title="加到 Apple 日曆（Safari 用）">' + openIcon + 'Apple</a>' +
+            '<a class="feed-btn" href="' + escapeHtml(gcalAdd) + '" target="_blank" rel="noopener" title="桌面 / Android 用 Google 日曆">' + openIcon + 'Google<small>桌面/Android</small></a>' +
+            '<a class="feed-btn" href="' + escapeHtml(webcalUrl) + '" rel="noopener" title="iPhone / iPad / Mac Safari 用 Apple 日曆">' + openIcon + 'Apple<small>iPhone/Mac</small></a>' +
           '</div>' +
         '</div>';
       }).join('');

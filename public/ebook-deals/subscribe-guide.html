@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-TQYREKR9EV"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-TQYREKR9EV');
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>怎麼訂閱電子書特價到我的日曆？— 完整使用說明 | HelloRuru</title>
+  <meta name="description" content="把 Readmoo、博客來、Kobo 每日電子書特價自動同步到 Google 日曆或 Apple 日曆。Windows / Mac / iPhone / Android 完整教學。">
+  <link rel="canonical" href="https://tools.helloruru.com/ebook-deals/subscribe-guide.html">
+
+  <meta property="og:title" content="怎麼訂閱電子書特價到我的日曆？— 完整使用說明">
+  <meta property="og:description" content="一條連結讓電子書特價自動進日曆，看到喜歡的書當天就跳通知。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://tools.helloruru.com/ebook-deals/subscribe-guide.html">
+  <meta property="og:image" content="https://tools.helloruru.com/ebook-deals/og-image.png">
+  <meta property="og:site_name" content="HelloRuru 工具站">
+  <meta property="og:locale" content="zh_TW">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="怎麼訂閱電子書特價到我的日曆？">
+  <meta name="twitter:description" content="一條連結讓電子書特價自動進日曆。">
+  <meta name="twitter:image" content="https://tools.helloruru.com/ebook-deals/og-image.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "怎麼訂閱電子書特價到我的日曆",
+    "description": "把 HelloRuru 電子書每日特價自動同步到 Google 日曆或 Apple 日曆的完整教學。",
+    "url": "https://tools.helloruru.com/ebook-deals/subscribe-guide.html",
+    "step": [
+      {"@type": "HowToStep", "name": "取得訂閱連結", "text": "從電子書特價頁面選擇要追蹤的平台，複製訂閱連結。"},
+      {"@type": "HowToStep", "name": "貼到日曆軟體", "text": "Google 日曆用「透過網址新增」；Apple 日曆 Safari 點連結會直接彈訂閱視窗。"},
+      {"@type": "HowToStep", "name": "完成", "text": "之後每天特價自動進日曆，看到喜歡的書當天會跳通知。"}
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://lab.helloruru.com" crossorigin>
+  <link rel="preload" href="https://lab.helloruru.com/fonts/jf-openhuninn-Regular.woff2" as="font" type="font/woff2" crossorigin>
+
+  <script src="https://lab.helloruru.com/shared/brand-header.js"></script>
+
+  <style>
+    /* ========================================
+       防老花眼設計（v1.0）
+       字體：jf 粉圓（圓潤、粗、易讀）
+       配色：米白底 + 暖黑字 + 降飽和鼠尾草
+       字級：內文 18px、行高 2、字距加寬
+       ======================================== */
+    @font-face {
+      font-family: 'JfOpenhuninn';
+      src: url('https://lab.helloruru.com/fonts/jf-openhuninn-Regular.woff2') format('woff2');
+      font-weight: 400; font-display: swap;
+    }
+
+    :root {
+      /* 鼠尾草降飽和 1 階（防老花眼：減少視覺疲勞） */
+      --color-sage: #9CAB94;
+      --color-sage-dark: #7A8A72;
+      --color-sage-bg: rgba(156, 171, 148, 0.14);
+      --color-gold: #B0A070;
+      --color-gold-dark: #8C7B50;
+      --color-gold-bg: rgba(176, 160, 112, 0.14);
+
+      /* 文字暖黑（不冷不刺眼） */
+      --text-primary: #2A2522;
+      --text-secondary: #4A413A;
+      --text-muted: #7A6F62;
+      --text-hint: #A89E92;
+
+      /* 米白底（不刺眼的暖色） */
+      --bg-page: #F5EFE6;
+      --bg-card: #FFFBF4;
+      --bg-card-warm: #EDE6DA;
+      --border-color: #D9CFC0;
+
+      --shadow-sm: 0 2px 8px rgba(92, 74, 58, 0.08);
+      --shadow-md: 0 4px 16px rgba(92, 74, 58, 0.10);
+      --shadow-lg: 0 8px 32px rgba(92, 74, 58, 0.14);
+
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 24px;
+
+      --font-body: 'JfOpenhuninn', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+      --font-serif: var(--font-body);
+      --transition-fast: 0.15s ease;
+    }
+
+    html.dark {
+      --color-sage: #9CAB94;
+      --color-sage-dark: #B8C6AE;
+      --color-sage-bg: rgba(156, 171, 148, 0.12);
+      --color-gold: #B0A070;
+      --color-gold-dark: #C8B884;
+
+      --text-primary: #EDE5DA;
+      --text-secondary: #C4BAAA;
+      --text-muted: #8A8074;
+      --text-hint: #6B6359;
+
+      --bg-page: #1C1A18;
+      --bg-card: #26221F;
+      --bg-card-warm: #2A2622;
+      --border-color: #3A3530;
+
+      --shadow-sm: 0 2px 8px rgba(20, 16, 14, 0.30);
+      --shadow-md: 0 4px 16px rgba(20, 16, 14, 0.35);
+      --shadow-lg: 0 8px 32px rgba(20, 16, 14, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 2;
+      color: var(--text-primary);
+      background: var(--bg-page);
+      letter-spacing: 0.05em;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+
+    h1, h2, h3 {
+      font-family: var(--font-body);
+      color: var(--text-primary);
+      letter-spacing: 0.06em;
+      font-weight: 400;
+    }
+    h1 {
+      font-size: 36px;
+      margin: 0 0 14px;
+      line-height: 1.5;
+    }
+    h2 {
+      font-size: 26px;
+      margin: 56px 0 18px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--color-sage-bg);
+    }
+    h3 {
+      font-size: 20px;
+      margin: 32px 0 12px;
+      color: var(--color-sage-dark);
+    }
+    html.dark h3 { color: var(--color-sage); }
+
+    p { margin: 0 0 16px; color: var(--text-secondary); }
+    a {
+      color: var(--color-sage-dark);
+      text-decoration: underline;
+      text-decoration-color: var(--color-sage-bg);
+      text-underline-offset: 3px;
+      transition: color var(--transition-fast);
+    }
+    html.dark a { color: var(--color-sage); }
+    a:hover { color: var(--color-gold-dark); }
+    html.dark a:hover { color: var(--color-gold); }
+
+    .lede {
+      font-size: 19px;
+      color: var(--text-secondary);
+      margin: 0 0 32px;
+      padding: 20px 24px;
+      background: var(--bg-card-warm);
+      border-left: 4px solid var(--color-sage);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      line-height: 1.95;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 16px;
+      margin-bottom: 24px;
+      text-decoration: none;
+      color: var(--text-muted);
+    }
+    .back-link:hover { color: var(--color-sage-dark); }
+
+    .hero-logo {
+      display: block;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 16px;
+      object-fit: contain;
+    }
+    @media (max-width: 600px) { .hero-logo { width: 80px; height: 80px; } }
+
+    /* 情境卡片 */
+    .scenario {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .scenario-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .scenario-head h3 { margin: 0; }
+    .scenario-tag {
+      font-size: 14px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--color-sage-bg);
+      color: var(--color-sage-dark);
+      border: 1px solid var(--color-sage);
+    }
+    html.dark .scenario-tag { color: var(--color-sage); }
+    .scenario-tag.is-best {
+      background: var(--color-gold-bg);
+      color: var(--color-gold-dark);
+      border-color: var(--color-gold);
+    }
+    html.dark .scenario-tag.is-best { color: var(--color-gold); }
+
+    ol, ul {
+      padding-left: 28px;
+      color: var(--text-secondary);
+      margin: 0 0 14px;
+    }
+    ol li, ul li { margin-bottom: 10px; line-height: 1.95; }
+    ol strong, ul strong { color: var(--text-primary); }
+
+    code {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-size: 16px;
+      background: var(--bg-card-warm);
+      padding: 3px 10px;
+      border-radius: 4px;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    /* 注意框 */
+    .note {
+      margin: 18px 0;
+      padding: 16px 20px;
+      background: var(--color-gold-bg);
+      border-left: 4px solid var(--color-gold);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.85;
+    }
+    .note strong { color: var(--color-gold-dark); }
+    html.dark .note strong { color: var(--color-gold); }
+
+    .tip {
+      margin: 18px 0;
+      padding: 16px 20px;
+      background: var(--color-sage-bg);
+      border-left: 4px solid var(--color-sage);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.85;
+    }
+    .tip strong { color: var(--color-sage-dark); }
+    html.dark .tip strong { color: var(--color-sage); }
+
+    /* 對照表 */
+    .compat-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0 28px;
+      font-size: 16px;
+    }
+    .compat-table th,
+    .compat-table td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .compat-table th {
+      background: var(--bg-card-warm);
+      color: var(--text-primary);
+    }
+    .compat-table td { color: var(--text-secondary); }
+    .compat-table .yes { color: var(--color-sage-dark); }
+    html.dark .compat-table .yes { color: var(--color-sage); }
+    .compat-table .partial { color: var(--color-gold-dark); }
+    html.dark .compat-table .partial { color: var(--color-gold); }
+
+    /* FAQ */
+    details {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin-bottom: 14px;
+      font-size: 17px;
+    }
+    details[open] { background: var(--bg-card-warm); }
+    summary {
+      cursor: pointer;
+      color: var(--text-primary);
+      list-style: none;
+      position: relative;
+      padding-right: 28px;
+      line-height: 1.7;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: '+';
+      position: absolute;
+      right: 0;
+      font-size: 24px;
+      color: var(--color-sage);
+      transition: transform var(--transition-fast);
+    }
+    details[open] summary::after { content: '−'; }
+    details p { margin: 10px 0 0; }
+
+    /* 主題切換 */
+    .theme-toggle {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      z-index: 100;
+    }
+    .theme-toggle:hover { color: var(--color-sage-dark); }
+    .theme-toggle svg { width: 20px; height: 20px; }
+
+    /* Footer */
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      position: relative;
+    }
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+      opacity: 0.5;
+    }
+
+    @media (max-width: 600px) {
+      body { font-size: 17px; }
+      h1 { font-size: 28px; }
+      h2 { font-size: 22px; }
+      h3 { font-size: 19px; }
+      .container { padding: 20px 16px 60px; }
+      .scenario { padding: 18px; }
+      .lede { font-size: 17px; padding: 16px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <hello-ruru-header title="HelloRuru 工具站"></hello-ruru-header>
+
+  <main class="container">
+    <a href="./" class="back-link">← 回電子書每日特價</a>
+
+    <img class="hero-logo" src="https://lab.helloruru.com/images/rabbit-logo.png" alt="HelloRuru 兔子 Logo" width="100" height="100">
+    <h1>怎麼訂閱電子書特價到我的日曆？</h1>
+    <p class="lede">看到喜歡的書，當天自動跳通知提醒入手 — 不用再每天記得回來看。Windows、Mac、iPhone、Android 全部都能用，這頁告訴你要怎麼做。</p>
+
+    <h2>先搞清楚兩種用法</h2>
+
+    <div class="scenario">
+      <div class="scenario-head">
+        <h3>用法 A：單本書「先加進日曆」</h3>
+        <span class="scenario-tag">隨手加</span>
+      </div>
+      <p>看到一本想買但還沒空看的書，點書卡上的「加日曆」按鈕，那一天日曆會跳通知 — 適合「我先記著，下班再買」。</p>
+    </div>
+
+    <div class="scenario">
+      <div class="scenario-head">
+        <h3>用法 B：整個訂閱「自動每天進日曆」</h3>
+        <span class="scenario-tag is-best">推薦</span>
+      </div>
+      <p>把整個特價清單訂閱起來，之後每天的特價自動進你的日曆，不用再手動加。可以選只追某個平台（Readmoo / 博客來 / Kobo），不會塞爆。</p>
+    </div>
+
+    <h2>哪個裝置用哪個方法最順？</h2>
+    <table class="compat-table">
+      <thead>
+        <tr>
+          <th>裝置</th>
+          <th>單本加日曆</th>
+          <th>訂閱（推薦）</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Windows / Mac 桌面</strong></td>
+          <td class="yes">Google 日曆 ✓</td>
+          <td class="yes">Google 日曆 ✓</td>
+        </tr>
+        <tr>
+          <td><strong>iPhone / iPad（Safari）</strong></td>
+          <td class="yes">Apple 日曆 ✓</td>
+          <td class="yes">Apple 日曆 ✓（最順）</td>
+        </tr>
+        <tr>
+          <td><strong>Mac（Safari）</strong></td>
+          <td class="yes">Apple 日曆 ✓</td>
+          <td class="yes">Apple 日曆 ✓</td>
+        </tr>
+        <tr>
+          <td><strong>Android</strong></td>
+          <td class="yes">Google 日曆 ✓</td>
+          <td class="partial">用瀏覽器版設定 ⚠️</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Windows / Mac 桌面：用 Google 日曆</h2>
+
+    <h3>單本加日曆</h3>
+    <ol>
+      <li>到 <a href="./">電子書每日特價</a> 頁面</li>
+      <li>找到喜歡的書，點書卡上的「<strong>加日曆 ▾</strong>」</li>
+      <li>選「<strong>Google 日曆</strong>」</li>
+      <li>跳到 Google 日曆預填頁，按右上角「儲存」</li>
+    </ol>
+
+    <h3>訂閱整個清單</h3>
+    <ol>
+      <li>到 <a href="./#subscribe-section">電子書每日特價 → 訂閱專區</a></li>
+      <li>選想追蹤的平台（全部 / Readmoo / 博客來 / Kobo），按「<strong>一鍵加到 Google</strong>」</li>
+      <li>跳到 Google 日曆，會問「要新增此日曆嗎？」按「<strong>新增</strong>」</li>
+      <li>完成。之後每天的特價會自動進日曆。</li>
+    </ol>
+
+    <div class="tip">
+      <strong>更新頻率：</strong>Google 日曆通常每 12-24 小時拉一次更新，所以新特價可能晚一天才出現，這是 Google 的限制，不是 bug。
+    </div>
+
+    <h2>iPhone / iPad：用 Apple 日曆（最順）</h2>
+
+    <h3>單本加日曆</h3>
+    <ol>
+      <li>用 <strong>Safari</strong> 開 <a href="./">電子書每日特價</a></li>
+      <li>找到喜歡的書，點「<strong>加日曆 ▾</strong>」</li>
+      <li>選「<strong>Apple 日曆 / iPhone</strong>」</li>
+      <li>系統會跳出「將此活動加入行事曆」視窗，按「<strong>加入</strong>」</li>
+    </ol>
+
+    <h3>訂閱整個清單</h3>
+    <ol>
+      <li>用 <strong>Safari</strong> 開 <a href="./#subscribe-section">訂閱專區</a></li>
+      <li>找到想追蹤的平台卡片，點「<strong>複製連結</strong>」</li>
+      <li>把連結貼到 Safari 網址列 → Enter</li>
+      <li>系統會跳「<strong>訂閱此日曆</strong>」視窗，按「<strong>訂閱</strong>」→「<strong>加入</strong>」</li>
+      <li>完成。打開「行事曆」App 就看得到。</li>
+    </ol>
+
+    <div class="note">
+      <strong>注意：</strong>必須用 <strong>Safari</strong> 才會跳訂閱視窗。iPhone Chrome 會把連結當成檔案下載，不會自動進日曆。
+    </div>
+
+    <h3>Mac Safari 也是這樣</h3>
+    <p>Mac 用 Safari 點訂閱連結 → 會自動開「行事曆」App → 跳「訂閱日曆」對話框 → 按「訂閱」即可。Mac Chrome 則會下載 .ics 檔，要自己打開檔案。</p>
+
+    <h2>Android：用 Google 日曆</h2>
+
+    <h3>單本加日曆</h3>
+    <ol>
+      <li>用 <strong>Chrome</strong> 開 <a href="./">電子書每日特價</a></li>
+      <li>找到喜歡的書，點「<strong>加日曆 ▾</strong>」</li>
+      <li>選「<strong>Google 日曆</strong>」</li>
+      <li>會自動跳到 Google 日曆 App，按右上角「儲存」</li>
+    </ol>
+
+    <h3>訂閱整個清單</h3>
+    <p>這裡有點麻煩 — <strong>Google 日曆 App 在手機上不能新增訂閱</strong>，是 Google 的長年限制。要繞一下：</p>
+    <ol>
+      <li>先用桌面電腦或筆電（任何瀏覽器）打開 <a href="./#subscribe-section">訂閱專區</a></li>
+      <li>按「<strong>一鍵加到 Google</strong>」 → Google 日曆網頁版會跳出新增對話框</li>
+      <li>用同一個 Google 帳號登入手機 Google 日曆 App，下拉重新整理</li>
+      <li>訂閱的日曆會自動同步出現在手機上</li>
+    </ol>
+
+    <div class="tip">
+      <strong>沒有桌面電腦？</strong>用手機 Chrome 開 <code>calendar.google.com</code>，**長按頁面 → 「桌面版網站」**，就能像電腦一樣新增訂閱。
+    </div>
+
+    <h2>常見問題</h2>
+
+    <details>
+      <summary>訂閱了之後，新特價多久會進日曆？</summary>
+      <p>Google 日曆通常 12-24 小時拉一次新版，Apple 日曆預設 1 小時但可以調整。所以最久一天內會更新。如果想立刻看到新的，到日曆 App 裡找這個訂閱日曆，按「重新整理」或「立即同步」。</p>
+    </details>
+
+    <details>
+      <summary>會塞爆我的日曆嗎？</summary>
+      <p>每天大約 15-20 個事件（三平台特價加總）。如果只訂單一平台會少很多，大約 5-8 個。事件會在當天結束後自動消失（因為設成「全天事件」+ 透明顯示，不會擋你原本的行程）。如果還是覺得多，建議只訂自己常用的那個平台。</p>
+    </details>
+
+    <details>
+      <summary>我訂閱了但看不到事件？</summary>
+      <p>三個常見原因：
+      <br>1. 日曆 App 還沒同步 — 等 1 小時或手動重新整理
+      <br>2. 訂閱日曆預設可能被「隱藏」 — 到日曆設定把它打勾
+      <br>3. iPhone 用 Chrome 訂閱會失敗 — 必須用 Safari</p>
+    </details>
+
+    <details>
+      <summary>怎麼取消訂閱？</summary>
+      <p><strong>Google 日曆：</strong>左側「其他日曆」找到「電子書每日特價」 → 點旁邊的「×」<br>
+      <strong>Apple 日曆（iPhone）：</strong>「行事曆」App → 底部「行事曆」→ 找到 HelloRuru → 點「資訊」→「刪除行事曆」<br>
+      <strong>Apple 日曆（Mac）：</strong>左側列表上點右鍵 → 「取消訂閱」</p>
+    </details>
+
+    <details>
+      <summary>會收到我的個資嗎？</summary>
+      <p>不會。訂閱是你的日曆 App 主動來抓我們的公開連結（純文字 .ics 檔），就像你訂閱 RSS 一樣。我們不知道誰訂閱了，也不會記錄你的任何資料。</p>
+    </details>
+
+    <details>
+      <summary>會花錢嗎？</summary>
+      <p>完全免費。沒有付費版、沒有廣告、沒有任何隱藏費用。</p>
+    </details>
+
+    <p style="margin-top: 40px; text-align: center;">
+      <a href="./" style="font-size: 16px;">← 回電子書每日特價開始挑書</a>
+    </p>
+
+    <footer>
+      <p>&copy; 2026 Kaoru Tsai. All Rights Reserved. | Contact: <a href="mailto:hello@helloruru.com">hello@helloruru.com</a></p>
+    </footer>
+  </main>
+
+  <button id="theme-toggle" class="theme-toggle" aria-label="切換深色模式">
+    <svg id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+    <svg id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </button>
+
+  <script>
+    (function initTheme() {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('icon-sun').style.display = 'none';
+        document.getElementById('icon-moon').style.display = 'block';
+      }
+    })();
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      document.getElementById('icon-sun').style.display = isDark ? 'none' : 'block';
+      document.getElementById('icon-moon').style.display = isDark ? 'block' : 'none';
+    });
+  </script>
+</body>
+</html>

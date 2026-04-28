@@ -54,103 +54,100 @@
   }
   </script>
 
-  <!-- Fonts（全部自有 CDN，已子集化） -->
+  <!-- Fonts（防老花眼設計：jf 粉圓圓體，已子集化） -->
   <link rel="preconnect" href="https://lab.helloruru.com" crossorigin>
-  <link rel="preload" href="https://lab.helloruru.com/fonts/NotoSerifTC-Regular.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="https://lab.helloruru.com/fonts/NotoSerifTC-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="https://lab.helloruru.com/fonts/jf-openhuninn-Regular.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Brand Header -->
   <script src="https://lab.helloruru.com/shared/brand-header.js"></script>
 
   <style>
     /* =============================================
-       DS 文青 V2.5
-       鼠尾草綠 + 思源宋體 + 暖棕多層陰影 + 紙質感
+       防老花眼設計 v1.0
+       粉圓字體 + 米白底 + 暖黑字 + 降飽和鼠尾草
+       核心：字大、行高鬆、對比柔和、減少視覺疲勞
        ============================================= */
 
-    /* --- Fonts（V2.5：NotoSerifTC 思源宋體） --- */
+    /* --- Font: jf 粉圓（圓潤、粗、易讀） --- */
     @font-face {
-      font-family: 'NotoSerifTC';
-      src: url('https://lab.helloruru.com/fonts/NotoSerifTC-Regular.woff2') format('woff2');
+      font-family: 'JfOpenhuninn';
+      src: url('https://lab.helloruru.com/fonts/jf-openhuninn-Regular.woff2') format('woff2');
       font-weight: 400; font-display: swap;
-    }
-    @font-face {
-      font-family: 'NotoSerifTC';
-      src: url('https://lab.helloruru.com/fonts/NotoSerifTC-SemiBold.woff2') format('woff2');
-      font-weight: 600; font-display: swap;
     }
 
     /* --- Variables --- */
     :root {
-      --color-sage: #A8B5A0;
-      --color-sage-dark: #889B7E;
-      --color-sage-light: #C5CFBF;
-      --color-sage-bg: rgba(168, 181, 160, 0.10);
-      --color-gold: #C2B280;
-      --color-gold-dark: #A89860;
-      --color-gold-bg: rgba(194, 178, 128, 0.12);
-      --color-ink: #5C4A3A;
-      --color-lavender: #AEA8B8;
-      --color-lavender-bg: rgba(174, 168, 184, 0.10);
+      /* 鼠尾草降飽和（不刺眼） */
+      --color-sage: #9CAB94;
+      --color-sage-dark: #7A8A72;
+      --color-sage-light: #BCC9B5;
+      --color-sage-bg: rgba(156, 171, 148, 0.14);
+      --color-gold: #B0A070;
+      --color-gold-dark: #8C7B50;
+      --color-gold-bg: rgba(176, 160, 112, 0.14);
+      --color-ink: #4A3A2C;
+      --color-lavender: #9C95A8;
+      --color-lavender-bg: rgba(156, 149, 168, 0.12);
 
-      --text-primary: #3D3833;
-      --text-secondary: #5C5650;
-      --text-muted: #8A847E;
-      --text-hint: #B0A99F;
+      /* 暖黑文字（深而不冷） */
+      --text-primary: #2A2522;
+      --text-secondary: #4A413A;
+      --text-muted: #7A6F62;
+      --text-hint: #A89E92;
 
-      --bg-page: #F7F5F2;
-      --bg-card: #FFFFFF;
-      --bg-card-warm: #FFFDF8;
-      --bg-card-hover: #FBF8F4;
-      --border-color: #E5E0DB;
+      /* 米白底（暖色不刺眼） */
+      --bg-page: #F5EFE6;
+      --bg-card: #FFFBF4;
+      --bg-card-warm: #EDE6DA;
+      --bg-card-hover: #E5DDD0;
+      --border-color: #D9CFC0;
 
-      /* DS V2.4 陰影 — 暖棕三層 */
-      --shadow-sm: 0 2px 8px rgba(92, 74, 58, 0.06);
-      --shadow-md: 0 4px 16px rgba(92, 74, 58, 0.08);
-      --shadow-lg: 0 8px 32px rgba(92, 74, 58, 0.12);
+      --shadow-sm: 0 2px 8px rgba(92, 74, 58, 0.08);
+      --shadow-md: 0 4px 16px rgba(92, 74, 58, 0.10);
+      --shadow-lg: 0 8px 32px rgba(92, 74, 58, 0.14);
 
-      --gradient-primary: linear-gradient(135deg, #A8B5A0, #AEA8B8);
+      --gradient-primary: linear-gradient(135deg, #9CAB94, #9C95A8);
 
-      --font-serif: 'NotoSerifTC', serif;
-      --font-body: 'NotoSerifTC', serif;
+      --font-body: 'JfOpenhuninn', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+      --font-serif: var(--font-body);
 
-      --radius-sm: 8px;
-      --radius-md: 12px;
+      --radius-sm: 10px;
+      --radius-md: 14px;
       --radius-lg: 24px;
 
       --transition-fast: 150ms ease;
       --transition-normal: 250ms ease;
     }
 
-    /* --- 深色模式：深夜書房 --- */
+    /* --- 深色模式：暖夜書房（防老花眼） --- */
     html.dark {
-      --color-sage: #B0BDA8;
-      --color-sage-dark: #95A88C;
-      --color-sage-bg: rgba(176, 189, 168, 0.12);
-      --color-gold: #D4C490;
-      --color-gold-dark: #B8A870;
-      --color-gold-bg: rgba(212, 196, 144, 0.12);
-      --color-ink: #D4C8BC;
-      --color-lavender: #B8B2C2;
-      --color-lavender-bg: rgba(184, 178, 194, 0.10);
+      --color-sage: #9CAB94;
+      --color-sage-dark: #B8C6AE;
+      --color-sage-light: #BCC9B5;
+      --color-sage-bg: rgba(156, 171, 148, 0.12);
+      --color-gold: #B0A070;
+      --color-gold-dark: #C8B884;
+      --color-gold-bg: rgba(176, 160, 112, 0.12);
+      --color-ink: #E8DCC8;
+      --color-lavender: #9C95A8;
+      --color-lavender-bg: rgba(156, 149, 168, 0.10);
 
-      --text-primary: #E8E5E2;
-      --text-secondary: #C4BFB8;
-      --text-muted: #8A857E;
-      --text-hint: #6B665F;
+      --text-primary: #EDE5DA;
+      --text-secondary: #C4BAAA;
+      --text-muted: #8A8074;
+      --text-hint: #6B6359;
 
-      --bg-page: #1C1E1A;
-      --bg-card: #26282A;
-      --bg-card-warm: #2A2C28;
-      --bg-card-hover: #30322E;
-      --border-color: #3A3C38;
+      --bg-page: #1C1A18;
+      --bg-card: #26221F;
+      --bg-card-warm: #2A2622;
+      --bg-card-hover: #30292600;
+      --border-color: #3A3530;
 
-      /* 暖色調陰影（不用純黑） */
-      --shadow-sm: 0 2px 8px rgba(30, 26, 22, 0.25);
-      --shadow-md: 0 4px 16px rgba(30, 26, 22, 0.30);
-      --shadow-lg: 0 8px 32px rgba(30, 26, 22, 0.40);
+      --shadow-sm: 0 2px 8px rgba(20, 16, 14, 0.30);
+      --shadow-md: 0 4px 16px rgba(20, 16, 14, 0.35);
+      --shadow-lg: 0 8px 32px rgba(20, 16, 14, 0.45);
 
-      --gradient-primary: linear-gradient(135deg, #B0BDA8, #B8B2C2);
+      --gradient-primary: linear-gradient(135deg, #9CAB94, #9C95A8);
     }
 
     /* --- Reset & Base --- */
@@ -160,9 +157,9 @@
     body {
       font-family: var(--font-body);
       font-weight: 400;
-      font-size: 16px;
-      line-height: 1.8;
-      letter-spacing: 0.04em;
+      font-size: 18px;
+      line-height: 2;
+      letter-spacing: 0.05em;
       color: var(--text-secondary);
       background: var(--bg-page);
       -webkit-font-smoothing: antialiased;
@@ -175,9 +172,9 @@
       letter-spacing: 0.06em;
       line-height: 1.4;
     }
-    h1 { font-size: 32px; font-weight: 600; }
-    h2 { font-size: 22px; font-weight: 600; }
-    h3 { font-size: 18px; font-weight: 600; }
+    h1 { font-size: 38px; font-weight: 400; }
+    h2 { font-size: 26px; font-weight: 400; }
+    h3 { font-size: 20px; font-weight: 400; }
 
     a {
       color: var(--color-sage);
@@ -203,7 +200,14 @@
     /* --- Hero --- */
     .hero {
       text-align: center;
-      padding: 40px 0 32px;
+      padding: 48px 0 36px;
+    }
+    .hero-logo {
+      display: block;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 18px;
+      object-fit: contain;
     }
     .accent-bar {
       width: 60px;
@@ -212,16 +216,19 @@
       background: var(--gradient-primary);
       margin: 0 auto 20px;
     }
-    .hero h1 { margin-bottom: 8px; }
+    .hero h1 { margin-bottom: 10px; }
+    @media (max-width: 600px) {
+      .hero-logo { width: 96px; height: 96px; }
+    }
     .hero-sub {
       font-family: var(--font-serif);
-      font-size: 14px;
+      font-size: 17px;
       font-weight: 400;
       color: var(--text-muted);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
     }
     .hero-updated {
-      font-size: 12px;
+      font-size: 14px;
       color: var(--text-hint);
       margin-top: 8px;
     }
@@ -231,7 +238,7 @@
       border-radius: 999px;
       padding: 2px 10px;
       font-family: var(--font-body);
-      font-size: 12px;
+      font-size: 14px;
       color: var(--text-muted);
       cursor: pointer;
       transition: all var(--transition-fast);
@@ -266,7 +273,7 @@
     }
     .column-header .col-count {
       font-family: var(--font-body);
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 400;
       color: var(--text-hint);
       margin-left: 4px;
@@ -289,7 +296,7 @@
       text-align: center;
       padding: 8px 0;
       font-family: var(--font-body);
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 400;
       color: var(--text-hint);
     }
@@ -436,7 +443,7 @@
       justify-content: center;
       padding: 12px;
       font-family: var(--font-serif);
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 400;
       color: var(--text-muted);
       text-align: center;
@@ -463,7 +470,7 @@
       flex-wrap: wrap;
     }
     .platform-badge {
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 600;
       padding: 2px 10px;
       border-radius: 999px;
@@ -486,7 +493,7 @@
       background: rgba(176, 64, 64, 0.06);
     }
     .deal-date {
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 400;
       color: var(--text-secondary);
       background: var(--color-sage-bg);
@@ -495,7 +502,7 @@
     }
     html.dark .deal-date { background: rgba(168, 181, 160, 0.08); }
     .deal-type {
-      font-size: 11px;
+      font-size: 13px;
       color: var(--text-hint);
       border: 1px solid var(--border-color);
       padding: 1px 8px;
@@ -503,7 +510,7 @@
     }
     .deal-title {
       font-family: var(--font-serif);
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 600;
       color: var(--color-ink);
       line-height: 1.4;
@@ -520,7 +527,7 @@
       font-style: italic;
     }
     .deal-author {
-      font-size: 12px;
+      font-size: 14px;
       color: var(--text-muted);
       margin-bottom: 6px;
       overflow: hidden;
@@ -546,13 +553,13 @@
       letter-spacing: -0.02em;
     }
     .price-original {
-      font-size: 14px;
+      font-size: 16px;
       color: var(--text-hint);
       text-decoration: line-through;
       font-variant-numeric: tabular-nums;
     }
     .price-discount {
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--color-sage);
       background: var(--color-sage-bg);
@@ -569,7 +576,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 400;
       padding: 4px 12px;
       border-radius: var(--radius-sm);
@@ -598,7 +605,7 @@
       background: transparent;
     }
     .rec-copy {
-      font-size: 13px;
+      font-size: 15px;
       color: var(--text-muted);
       margin-top: 4px;
       line-height: 1.6;
@@ -609,7 +616,7 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 400;
       color: var(--color-sage);
       background-image: none;
@@ -634,7 +641,7 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 400;
       color: var(--text-secondary);
       background: transparent;
@@ -654,7 +661,47 @@
     .deal-cal svg {
       width: 14px; height: 14px;
     }
-    .deal-card.is-past .deal-cal { display: none; }
+    .deal-card.is-past .deal-cal,
+    .deal-card.is-past .cal-menu-wrap { display: none; }
+    .deal-cal .cal-chevron {
+      width: 12px; height: 12px;
+      margin-left: -2px;
+      transition: transform var(--transition-fast);
+    }
+    .cal-menu-wrap {
+      position: relative;
+      display: inline-block;
+    }
+    .cal-menu-wrap.is-open .cal-chevron { transform: rotate(180deg); }
+    .cal-menu {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0;
+      min-width: 180px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-md);
+      padding: 4px;
+      display: none;
+      z-index: 10;
+    }
+    .cal-menu-wrap.is-open .cal-menu { display: block; }
+    .cal-menu a {
+      display: block;
+      padding: 8px 12px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: var(--radius-sm);
+      background-image: none;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .cal-menu a:hover {
+      background: var(--color-sage-bg);
+      color: var(--color-sage-dark);
+    }
+    html.dark .cal-menu a:hover { color: var(--color-sage); }
 
     /* --- Subscribe Section（訂閱專區） --- */
     .subscribe-section {
@@ -706,7 +753,7 @@
       flex-shrink: 0;
     }
     .feed-card-desc {
-      font-size: 13px;
+      font-size: 15px;
       color: var(--text-secondary);
       line-height: 1.6;
     }
@@ -722,7 +769,7 @@
       justify-content: center;
       gap: 6px;
       padding: 8px 12px;
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 400;
       font-family: var(--font-body);
       border-radius: var(--radius-sm);
@@ -751,7 +798,7 @@
       border-radius: var(--radius-md);
       padding: 20px 24px;
       text-align: left;
-      font-size: 14px;
+      font-size: 16px;
       color: var(--text-secondary);
       line-height: 1.8;
     }
@@ -763,7 +810,15 @@
       margin: 8px 0 0;
       padding-left: 22px;
     }
-    .subscribe-howto li { margin-bottom: 4px; }
+    .subscribe-howto li { margin-bottom: 6px; }
+    .subscribe-howto-tip {
+      margin: 16px 0 0;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border-color);
+      font-size: 15px;
+      color: var(--text-muted);
+      text-align: center;
+    }
     .subscribe-howto a {
       color: var(--color-sage-dark);
       text-decoration: underline;
@@ -785,7 +840,7 @@
     .search-section { text-align: center; }
     .search-section h2 { margin-bottom: 4px; }
     .section-desc {
-      font-size: 14px;
+      font-size: 16px;
       color: var(--text-muted);
       margin-bottom: 20px;
     }
@@ -843,7 +898,7 @@
       text-align: left;
     }
     .search-summary {
-      font-size: 13px;
+      font-size: 15px;
       color: var(--text-muted);
       text-align: center;
       margin-bottom: 4px;
@@ -867,7 +922,7 @@
       line-height: 1.4;
     }
     .book-group-author {
-      font-size: 13px;
+      font-size: 15px;
       color: var(--text-muted);
       margin-top: 2px;
     }
@@ -894,7 +949,7 @@
       gap: 10px;
     }
     .price-row-platform {
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 600;
       min-width: 80px;
     }
@@ -903,7 +958,7 @@
     .price-row-platform.kobo { color: #B04040; }
     .price-row-platform.googlebooks { color: #4285F4; }
     .cheapest-tag {
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 600;
       color: var(--color-sage-dark);
       background: var(--color-sage-bg);
@@ -924,12 +979,12 @@
       font-variant-numeric: tabular-nums;
     }
     .price-row-amount.no-price {
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 400;
       color: var(--text-hint);
     }
     .price-row-link {
-      font-size: 12px;
+      font-size: 14px;
       color: var(--color-sage);
       background-image: none;
       white-space: nowrap;
@@ -954,7 +1009,7 @@
     }
     @media (max-width: 768px) {
       .price-row { padding: 8px 12px; }
-      .price-row-platform { min-width: 60px; font-size: 12px; }
+      .price-row-platform { min-width: 60px; font-size: 14px; }
       .price-row-amount { font-size: 16px; }
       .book-group-title { font-size: 15px; }
     }
@@ -1010,23 +1065,23 @@
       margin-bottom: 12px;
     }
     .exh-stars {
-      font-size: 11px;
+      font-size: 13px;
       color: var(--color-gold);
       flex-shrink: 0;
       letter-spacing: 1px;
     }
     .exh-legend {
       text-align: center;
-      font-size: 14px;
+      font-size: 16px;
       color: var(--text-secondary);
       margin-bottom: 16px;
     }
     .exh-legend .exh-stars {
-      font-size: 14px;
+      font-size: 16px;
     }
     .exh-note {
       text-align: center;
-      font-size: 13px;
+      font-size: 15px;
       color: var(--text-muted);
       margin-top: -8px;
       margin-bottom: 16px;
@@ -1055,7 +1110,7 @@
       border-radius: var(--radius-sm);
       text-decoration: none;
       color: var(--text-primary);
-      font-size: 14px;
+      font-size: 16px;
       transition: all var(--transition-fast);
       background-image: none;
     }
@@ -1138,7 +1193,7 @@
       color: var(--text-primary);
     }
     .quick-link-desc {
-      font-size: 12px;
+      font-size: 14px;
       color: var(--text-hint);
     }
 
@@ -1146,7 +1201,7 @@
     .site-footer {
       text-align: center;
       padding: 32px 24px;
-      font-size: 14px;
+      font-size: 16px;
       color: var(--text-hint);
       position: relative;
     }
@@ -1162,7 +1217,7 @@
     .site-footer a { color: var(--color-sage); }
     .credits {
       margin-top: 6px;
-      font-size: 12px;
+      font-size: 14px;
       color: var(--text-hint);
     }
 
@@ -1197,7 +1252,7 @@
       text-align: center;
       padding: 20px;
       color: var(--text-muted);
-      font-size: 14px;
+      font-size: 16px;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
       background: var(--bg-card);
@@ -1228,7 +1283,7 @@
       .deal-card { min-width: 120px; }
       .deal-card { scroll-snap-align: start; padding: 10px 6px; gap: 6px; }
       .book-cover { width: 80px; height: 120px; }
-      .deal-title { font-size: 13px; }
+      .deal-title { font-size: 15px; }
       .price-deal { font-size: 18px; }
       .search-box { flex-direction: column; }
     }
@@ -1253,7 +1308,7 @@
 
   <main class="container">
     <section class="hero">
-      <div class="accent-bar"></div>
+      <img class="hero-logo" src="https://lab.helloruru.com/images/rabbit-logo.png" alt="HelloRuru 兔子 Logo" width="120" height="120">
       <h1>每日好書推薦</h1>
       <p class="hero-sub">Readmoo・博客來・Kobo — 今天又有哪些書在特價？</p>
       <p class="hero-updated"><span id="updated-at"></span> <button id="refresh-btn" class="refresh-btn" title="重新抓取最新資料" style="display:none">重新整理</button></p>
@@ -1317,10 +1372,11 @@
       <div class="subscribe-howto">
         <strong>怎麼訂閱？</strong>
         <ol>
-          <li>複製上方任一條訂閱連結</li>
-          <li>打開 <a href="https://calendar.google.com/" target="_blank" rel="noopener">Google 日曆</a> → 左側「其他日曆」旁邊的 <strong>+</strong> → 選「<strong>透過網址</strong>」</li>
-          <li>貼上連結 → 按「新增日曆」→ 完成。之後每天特價會自動進你的日曆。</li>
+          <li><strong>Google 日曆（電腦/Android）：</strong>複製連結 → 打開 <a href="https://calendar.google.com/" target="_blank" rel="noopener">Google 日曆</a> → 左側「其他日曆」旁的 <strong>+</strong> → 選「<strong>透過網址</strong>」→ 貼上 → 完成</li>
+          <li><strong>Apple 日曆（iPhone/iPad/Mac）：</strong>用 Safari 點上方任一條訂閱連結 → 系統會跳「訂閱此日曆」視窗 → 按「訂閱」→ 完成</li>
+          <li>之後每天特價會自動進你的日曆，不用再手動處理</li>
         </ol>
+        <p class="subscribe-howto-tip">不確定該用哪個？<a href="./subscribe-guide.html">看完整使用說明 →</a></p>
       </div>
     </section>
 
@@ -1397,7 +1453,7 @@
     // === Fetch Deals ===
     async function fetchDeals(endpoint = '/api/deals') {
       try {
-        const res = await fetch(API_BASE + endpoint + '?v=20260319-2');
+        const res = await fetch(API_BASE + endpoint + '?v=20260428-2');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         allDealsData = data;
@@ -1513,7 +1569,21 @@
         ? '<img src="' + escapeHtml(deal.coverUrl) + '" alt="' + escapeHtml(displayTitle) + '" loading="lazy" onerror="this.outerHTML=\'<div class=book-cover-placeholder>' + escapeHtml(placeholderText) + '</div>\'">'
         : '<div class="book-cover-placeholder">' + escapeHtml(placeholderText) + '</div>';
 
-      const calUrl = isPast ? '' : buildGCalUrl(deal);
+      const gcalUrl = isPast ? '' : buildGCalUrl(deal);
+      const appleUrl = isPast ? '' : buildAppleIcsUrl(deal);
+      const calIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>';
+      const chevron = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="cal-chevron"><polyline points="6 9 12 15 18 9"/></svg>';
+      const calMenu = (gcalUrl || appleUrl)
+        ? '<div class="cal-menu-wrap">' +
+            '<button type="button" class="deal-cal" aria-haspopup="true" aria-expanded="false" title="加日曆">' +
+              calIcon + '加日曆' + chevron +
+            '</button>' +
+            '<div class="cal-menu" role="menu">' +
+              (gcalUrl ? '<a href="' + gcalUrl + '" target="_blank" rel="noopener" role="menuitem">Google 日曆</a>' : '') +
+              (appleUrl ? '<a href="' + appleUrl + '" role="menuitem" data-apple>Apple 日曆 / iPhone</a>' : '') +
+            '</div>' +
+          '</div>'
+        : '';
 
       return '<article class="deal-card' + (isToday ? ' is-today' : isPast ? ' is-past' : '') + '" data-platform="' + p + '">' +
         '<div class="book-cover-wrap"><div class="book-cover">' + cover + '</div></div>' +
@@ -1528,11 +1598,20 @@
             '<a href="' + escapeHtml(deal.bookUrl) + '" class="deal-link" target="_blank" rel="noopener">' +
               '前往購買 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
             '</a>' +
-            (calUrl ? '<a href="' + calUrl + '" class="deal-cal" target="_blank" rel="noopener" title="加入 Google 日曆，' + escapeHtml(deal.date) + ' 提醒入手">' +
-              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>' +
-              '加日曆</a>' : '') +
+            calMenu +
           '</div>' +
         '</div></article>';
+    }
+
+    // === Apple .ics URL Builder（單本書下載） ===
+    function buildAppleIcsUrl(deal) {
+      const params = new URLSearchParams({
+        platform: deal.platform || '',
+        date: deal.date || '',
+        url: deal.bookUrl || '',
+      });
+      // 用 webcal:// 在 Apple 裝置會直接彈訂閱（但單次下載 https 也 OK）
+      return API_BASE + '/api/book.ics?' + params.toString();
     }
 
     // === Google Calendar URL Builder ===
@@ -1789,7 +1868,7 @@
         const missingPlatforms = ['readmoo', 'books', 'kobo'].filter(p => !gotPlatforms.has(p));
 
         let html = '<p class="search-summary">找到 ' + all.length + ' 筆，' + sorted.length + ' 本書' +
-          (data._cached ? ' <span style="font-size:11px;color:var(--text-hint)">(快取)</span>' : '') + '</p>';
+          (data._cached ? ' <span style="font-size: 13px;color:var(--text-hint)">(快取)</span>' : '') + '</p>';
         html += sorted.map(g => {
           let inner = '<div class="book-group">';
           inner += '<div class="book-group-header">';
@@ -1817,9 +1896,9 @@
         // 有平台沒抓到 → 顯示「自己查」連結
         if (missingPlatforms.length > 0) {
           html += '<div class="search-fallback">' +
-            '<span style="font-size:13px;color:var(--text-muted)">部分平台未抓到，可自行查詢：</span>' +
+            '<span style="font-size: 15px;color:var(--text-muted)">部分平台未抓到，可自行查詢：</span>' +
             missingPlatforms.map(p =>
-              '<a href="' + searchUrls[p] + '" target="_blank" rel="noopener" style="font-size:13px;color:var(--color-sage);font-weight:400;background-image:none">' + (names[p] || p) + '</a>'
+              '<a href="' + searchUrls[p] + '" target="_blank" rel="noopener" style="font-size: 15px;color:var(--color-sage);font-weight:400;background-image:none">' + (names[p] || p) + '</a>'
             ).join(' ') +
           '</div>';
         }
@@ -1898,6 +1977,42 @@
         });
       });
     }
+
+    // === 加日曆選單開合（事件委派，動態渲染後也能用） ===
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.deal-cal');
+      const wrap = e.target.closest('.cal-menu-wrap');
+      // 點按鈕 → 開合自己，關掉其他
+      if (btn && wrap) {
+        e.preventDefault();
+        const wasOpen = wrap.classList.contains('is-open');
+        document.querySelectorAll('.cal-menu-wrap.is-open').forEach(el => {
+          el.classList.remove('is-open');
+          el.querySelector('.deal-cal')?.setAttribute('aria-expanded', 'false');
+        });
+        if (!wasOpen) {
+          wrap.classList.add('is-open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+        return;
+      }
+      // 點選單外 → 全部關掉
+      if (!wrap) {
+        document.querySelectorAll('.cal-menu-wrap.is-open').forEach(el => {
+          el.classList.remove('is-open');
+          el.querySelector('.deal-cal')?.setAttribute('aria-expanded', 'false');
+        });
+      }
+    });
+    // 點選單裡的連結後也關掉
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('.cal-menu a');
+      if (link) {
+        const wrap = link.closest('.cal-menu-wrap');
+        wrap?.classList.remove('is-open');
+        wrap?.querySelector('.deal-cal')?.setAttribute('aria-expanded', 'false');
+      }
+    });
 
     // === Init ===
     fetchDeals();

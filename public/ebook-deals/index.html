@@ -757,6 +757,25 @@
       color: var(--text-secondary);
       line-height: 1.6;
     }
+    .feed-card-url {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-family: 'SF Mono', Monaco, monospace;
+      color: var(--text-muted);
+      background: var(--bg-page);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      box-sizing: border-box;
+      -webkit-user-select: all;
+      user-select: all;
+      cursor: text;
+    }
+    .feed-card-url:focus {
+      outline: 2px solid var(--color-sage);
+      outline-offset: 1px;
+      color: var(--text-primary);
+    }
     .feed-card-actions {
       display: flex;
       gap: 8px;
@@ -791,6 +810,25 @@
       border-color: var(--color-sage);
       color: var(--color-sage-dark);
       background: var(--color-sage-bg);
+    }
+    .feed-btn-primary {
+      border-color: var(--color-sage);
+      color: var(--color-sage-dark);
+      background: var(--color-sage-bg);
+    }
+    html.dark .feed-btn-primary { color: var(--color-sage); }
+    .feed-card-alt {
+      display: block;
+      margin-top: 8px;
+      font-size: 13px;
+      text-align: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      background-image: none;
+    }
+    .feed-card-alt:hover {
+      color: var(--color-sage-dark);
+      text-decoration: underline;
     }
     .subscribe-howto {
       background: var(--bg-card-warm);
@@ -1355,6 +1393,24 @@
             </div>
           </div>
         </div>
+        <div class="platform-column">
+          <div class="column-header">Pubu</div>
+          <div class="calendar-wrap">
+            <div class="calendar-header" id="cal-header-pubu"></div>
+            <div class="deals-grid" id="grid-pubu">
+              <div class="shimmer-card"><div class="shimmer-block shimmer-cover"></div><div class="shimmer-content"><div class="shimmer-block shimmer-title"></div><div class="shimmer-block shimmer-price"></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="platform-column">
+          <div class="column-header">HyRead</div>
+          <div class="calendar-wrap">
+            <div class="calendar-header" id="cal-header-hyread"></div>
+            <div class="deals-grid" id="grid-hyread">
+              <div class="shimmer-card"><div class="shimmer-block shimmer-cover"></div><div class="shimmer-content"><div class="shimmer-block shimmer-title"></div><div class="shimmer-block shimmer-price"></div></div></div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1453,7 +1509,7 @@
     // === Fetch Deals ===
     async function fetchDeals(endpoint = '/api/deals') {
       try {
-        const res = await fetch(API_BASE + endpoint + '?v=20260428-2');
+        const res = await fetch(API_BASE + endpoint + '?v=20260428-3');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         allDealsData = data;
@@ -1477,7 +1533,7 @@
       const btn = document.getElementById('refresh-btn');
       btn.disabled = true;
       btn.textContent = '\u6293\u53D6\u4E2D...';
-      for (const p of ['readmoo','books','kobo']) {
+      for (const p of ['readmoo','books','kobo','pubu','hyread']) {
         document.getElementById('grid-' + p).innerHTML =
           '<div class="shimmer-card"><div class="shimmer-block shimmer-cover"></div><div class="shimmer-content"><div class="shimmer-block shimmer-title"></div><div class="shimmer-block shimmer-price"></div></div></div>';
       }
@@ -1532,8 +1588,8 @@
       const now = new Date();
       const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-      const platformNames = { readmoo: 'Readmoo', books: '博客來', kobo: 'Kobo' };
-      for (const platform of ['readmoo', 'books', 'kobo']) {
+      const platformNames = { readmoo: 'Readmoo', books: '博客來', kobo: 'Kobo', pubu: 'Pubu', hyread: 'HyRead' };
+      for (const platform of ['readmoo', 'books', 'kobo', 'pubu', 'hyread']) {
         const deals = data[platform]?.deals || [];
         // 三平台一致：只顯示今天 + 未來，日期升冪
         const showDeals = deals
@@ -1917,7 +1973,7 @@
     const FEEDS = [
       {
         title: '全部平台',
-        desc: '三平台每日特價一網打盡，最完整',
+        desc: '五平台每日特價一網打盡，最完整',
         url: SUBSCRIBE_BASE,
       },
       {
@@ -1935,6 +1991,16 @@
         desc: '只追 Kobo 每週 99 元書單',
         url: SUBSCRIBE_BASE + '?platform=kobo',
       },
+      {
+        title: 'Pubu',
+        desc: '每日精選 + 限時 99 即將下架提醒',
+        url: SUBSCRIBE_BASE + '?platform=pubu',
+      },
+      {
+        title: 'HyRead',
+        desc: '週末快閃 99（每週五～日）',
+        url: SUBSCRIBE_BASE + '?platform=hyread',
+      },
     ];
 
     function renderSubscribeFeeds() {
@@ -1944,36 +2010,61 @@
       const copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
       const openIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
       wrap.innerHTML = FEEDS.map((f, i) => {
+        const webcalUrl = f.url.replace(/^https?:/, 'webcal:');
         const gcalAdd = 'https://calendar.google.com/calendar/u/0/r?cid=' + encodeURIComponent(f.url);
+
         return '<div class="feed-card">' +
           '<div class="feed-card-title">' + calIcon + escapeHtml(f.title) + '</div>' +
           '<div class="feed-card-desc">' + escapeHtml(f.desc) + '</div>' +
+          '<input type="text" class="feed-card-url" readonly value="' + escapeHtml(f.url) + '" aria-label="訂閱網址（可長按選取）">' +
           '<div class="feed-card-actions">' +
-            '<button type="button" class="feed-btn" data-copy="' + escapeHtml(f.url) + '">' + copyIcon + '<span>複製連結</span></button>' +
-            '<a class="feed-btn" href="' + escapeHtml(gcalAdd) + '" target="_blank" rel="noopener">' + openIcon + '一鍵加到 Google</a>' +
+            '<button type="button" class="feed-btn" data-copy="' + escapeHtml(f.url) + '" title="複製訂閱連結">' + copyIcon + '<span>複製</span></button>' +
+            '<a class="feed-btn" href="' + escapeHtml(gcalAdd) + '" target="_blank" rel="noopener" title="加到 Google 日曆">' + openIcon + 'Google</a>' +
+            '<a class="feed-btn" href="' + escapeHtml(webcalUrl) + '" rel="noopener" title="加到 Apple 日曆（Safari 用）">' + openIcon + 'Apple</a>' +
           '</div>' +
         '</div>';
       }).join('');
 
       wrap.querySelectorAll('.feed-btn[data-copy]').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', (e) => {
+          // iOS Safari 限制：必須在點擊事件「同步」執行複製動作，
+          // 用 await 會在 microtask 後失去使用者授權。所以這裡用同步 execCommand。
           const url = btn.dataset.copy;
+          let ok = false;
+
+          // 同步路徑：execCommand（iOS / 老瀏覽器一定吃）
           try {
-            await navigator.clipboard.writeText(url);
-          } catch {
             const ta = document.createElement('textarea');
-            ta.value = url; document.body.appendChild(ta); ta.select();
-            try { document.execCommand('copy'); } catch {}
+            ta.value = url;
+            ta.setAttribute('readonly', '');
+            ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;';
+            document.body.appendChild(ta);
+            // iOS Safari 需要 contentEditable + selection range
+            ta.contentEditable = 'true';
+            const range = document.createRange();
+            range.selectNodeContents(ta);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            ta.setSelectionRange(0, url.length);
+            ok = document.execCommand('copy');
             document.body.removeChild(ta);
+          } catch {}
+
+          // 異步路徑：clipboard API（現代瀏覽器更可靠，但 Safari 對 await 嚴格）
+          if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).catch(() => {});
           }
+
+          // 視覺回饋
           const span = btn.querySelector('span');
           const original = span ? span.textContent : '';
-          if (span) span.textContent = '已複製！';
+          if (span) span.textContent = ok ? '已複製！' : '長按連結手動複製';
           btn.classList.add('is-copied');
           setTimeout(() => {
             if (span) span.textContent = original;
             btn.classList.remove('is-copied');
-          }, 2000);
+          }, 2200);
         });
       });
     }

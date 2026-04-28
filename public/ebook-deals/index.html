@@ -623,6 +623,155 @@
       width: 14px; height: 14px;
     }
 
+    /* --- Action Row（前往購買 + 加日曆） --- */
+    .deal-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .deal-cal {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+    }
+    .deal-cal:hover {
+      color: var(--color-sage-dark);
+      border-color: var(--color-sage);
+      background: var(--color-sage-bg);
+    }
+    html.dark .deal-cal:hover { color: var(--color-sage); }
+    .deal-cal svg {
+      width: 14px; height: 14px;
+    }
+    .deal-card.is-past .deal-cal { display: none; }
+
+    /* --- Subscribe Section（訂閱專區） --- */
+    .subscribe-section {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 16px;
+      text-align: center;
+    }
+    .subscribe-section h2 { margin-bottom: 4px; }
+    .subscribe-intro {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.8;
+      margin-bottom: 24px;
+    }
+    .subscribe-feeds {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+    .feed-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color var(--transition-fast), background var(--transition-fast);
+    }
+    .feed-card:hover {
+      border-color: var(--color-sage);
+      background: var(--bg-card-warm);
+    }
+    .feed-card-title {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feed-card-title svg {
+      width: 16px; height: 16px;
+      color: var(--color-sage);
+      flex-shrink: 0;
+    }
+    .feed-card-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .feed-card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+    .feed-btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 400;
+      font-family: var(--font-body);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--transition-fast);
+    }
+    .feed-btn:hover {
+      border-color: var(--color-sage);
+      color: var(--color-sage-dark);
+      background: var(--color-sage-bg);
+    }
+    html.dark .feed-btn:hover { color: var(--color-sage); }
+    .feed-btn svg { width: 13px; height: 13px; }
+    .feed-btn.is-copied {
+      border-color: var(--color-sage);
+      color: var(--color-sage-dark);
+      background: var(--color-sage-bg);
+    }
+    .subscribe-howto {
+      background: var(--bg-card-warm);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      text-align: left;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+    .subscribe-howto strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+    .subscribe-howto ol {
+      margin: 8px 0 0;
+      padding-left: 22px;
+    }
+    .subscribe-howto li { margin-bottom: 4px; }
+    .subscribe-howto a {
+      color: var(--color-sage-dark);
+      text-decoration: underline;
+      text-decoration-color: var(--color-sage-bg);
+      text-underline-offset: 3px;
+    }
+    html.dark .subscribe-howto a { color: var(--color-sage); }
+
     /* --- Gold Divider --- */
     .divider-gold {
       width: 120px;
@@ -1156,6 +1305,25 @@
 
 
 
+    <section id="subscribe-section" class="subscribe-section">
+      <div class="divider-gold"></div>
+      <h2>訂閱到我的日曆</h2>
+      <p class="subscribe-intro">把每日特價自動同步到 Google 日曆，看到喜歡的書當天就會跳通知，免得忘記。<br>選擇想追蹤的平台，複製連結貼到 Google 日曆即可。</p>
+
+      <div class="subscribe-feeds" id="subscribe-feeds">
+        <!-- 動態渲染 -->
+      </div>
+
+      <div class="subscribe-howto">
+        <strong>怎麼訂閱？</strong>
+        <ol>
+          <li>複製上方任一條訂閱連結</li>
+          <li>打開 <a href="https://calendar.google.com/" target="_blank" rel="noopener">Google 日曆</a> → 左側「其他日曆」旁邊的 <strong>+</strong> → 選「<strong>透過網址</strong>」</li>
+          <li>貼上連結 → 按「新增日曆」→ 完成。之後每天特價會自動進你的日曆。</li>
+        </ol>
+      </div>
+    </section>
+
     <section id="quick-links-section">
       <div class="divider-gold"></div>
       <h2>書展 &amp; 促銷活動</h2>
@@ -1345,6 +1513,8 @@
         ? '<img src="' + escapeHtml(deal.coverUrl) + '" alt="' + escapeHtml(displayTitle) + '" loading="lazy" onerror="this.outerHTML=\'<div class=book-cover-placeholder>' + escapeHtml(placeholderText) + '</div>\'">'
         : '<div class="book-cover-placeholder">' + escapeHtml(placeholderText) + '</div>';
 
+      const calUrl = isPast ? '' : buildGCalUrl(deal);
+
       return '<article class="deal-card' + (isToday ? ' is-today' : isPast ? ' is-past' : '') + '" data-platform="' + p + '">' +
         '<div class="book-cover-wrap"><div class="book-cover">' + cover + '</div></div>' +
         '<div class="deal-info">' +
@@ -1354,10 +1524,42 @@
             '<span class="price-deal">$' + deal.dealPrice + '</span>' +
             (deal.originalPrice > 0 ? '<span class="price-original">$' + deal.originalPrice + '</span>' : '') +
           '</div>' +
-          '<a href="' + escapeHtml(deal.bookUrl) + '" class="deal-link" target="_blank" rel="noopener">' +
-            '前往購買 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
-          '</a>' +
+          '<div class="deal-actions">' +
+            '<a href="' + escapeHtml(deal.bookUrl) + '" class="deal-link" target="_blank" rel="noopener">' +
+              '前往購買 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
+            '</a>' +
+            (calUrl ? '<a href="' + calUrl + '" class="deal-cal" target="_blank" rel="noopener" title="加入 Google 日曆，' + escapeHtml(deal.date) + ' 提醒入手">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>' +
+              '加日曆</a>' : '') +
+          '</div>' +
         '</div></article>';
+    }
+
+    // === Google Calendar URL Builder ===
+    function buildGCalUrl(deal) {
+      const dateStr = deal.date.replace(/-/g, '');
+      const next = new Date(deal.date + 'T00:00:00');
+      next.setDate(next.getDate() + 1);
+      const y = next.getFullYear();
+      const m = String(next.getMonth() + 1).padStart(2, '0');
+      const d = String(next.getDate()).padStart(2, '0');
+      const endStr = '' + y + m + d;
+      const platformLabel = (deal.platformName || deal.platform || '').toString();
+      const text = '\u{1F4DA} ' + (deal.title || '電子書特價') + ' $' + deal.dealPrice + '（' + platformLabel + '）';
+      const lines = [];
+      if (deal.author) lines.push('作者：' + deal.author);
+      if (deal.originalPrice > 0) lines.push('原價 $' + deal.originalPrice + ' 特價 $' + deal.dealPrice);
+      if (deal.bookUrl) lines.push('購買：' + deal.bookUrl);
+      lines.push('');
+      lines.push('—— HelloRuru 電子書每日特價 https://tools.helloruru.com/ebook-deals/');
+      const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: text,
+        dates: dateStr + '/' + endStr,
+        details: lines.join('\n'),
+        location: platformLabel,
+      });
+      return 'https://calendar.google.com/calendar/render?' + params.toString();
     }
 
     // === Load Rating (Async) ===
@@ -1628,8 +1830,78 @@
       }
     }
 
+    // === Subscribe Feeds ===
+    const SUBSCRIBE_BASE = (window.location.hostname === 'localhost'
+      ? 'http://localhost:8787'
+      : 'https://ebook-deals.vmpvmp1017.workers.dev') + '/api/deals.ics';
+
+    const FEEDS = [
+      {
+        title: '全部平台',
+        desc: '三平台每日特價一網打盡，最完整',
+        url: SUBSCRIBE_BASE,
+      },
+      {
+        title: 'Readmoo 讀墨',
+        desc: '只追讀墨每日 99 元書',
+        url: SUBSCRIBE_BASE + '?platform=readmoo',
+      },
+      {
+        title: '博客來',
+        desc: '只追博客來每日 50 元限時搶',
+        url: SUBSCRIBE_BASE + '?platform=books',
+      },
+      {
+        title: 'Kobo',
+        desc: '只追 Kobo 每週 99 元書單',
+        url: SUBSCRIBE_BASE + '?platform=kobo',
+      },
+    ];
+
+    function renderSubscribeFeeds() {
+      const wrap = document.getElementById('subscribe-feeds');
+      if (!wrap) return;
+      const calIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+      const copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+      const openIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+      wrap.innerHTML = FEEDS.map((f, i) => {
+        const gcalAdd = 'https://calendar.google.com/calendar/u/0/r?cid=' + encodeURIComponent(f.url);
+        return '<div class="feed-card">' +
+          '<div class="feed-card-title">' + calIcon + escapeHtml(f.title) + '</div>' +
+          '<div class="feed-card-desc">' + escapeHtml(f.desc) + '</div>' +
+          '<div class="feed-card-actions">' +
+            '<button type="button" class="feed-btn" data-copy="' + escapeHtml(f.url) + '">' + copyIcon + '<span>複製連結</span></button>' +
+            '<a class="feed-btn" href="' + escapeHtml(gcalAdd) + '" target="_blank" rel="noopener">' + openIcon + '一鍵加到 Google</a>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      wrap.querySelectorAll('.feed-btn[data-copy]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const url = btn.dataset.copy;
+          try {
+            await navigator.clipboard.writeText(url);
+          } catch {
+            const ta = document.createElement('textarea');
+            ta.value = url; document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); } catch {}
+            document.body.removeChild(ta);
+          }
+          const span = btn.querySelector('span');
+          const original = span ? span.textContent : '';
+          if (span) span.textContent = '已複製！';
+          btn.classList.add('is-copied');
+          setTimeout(() => {
+            if (span) span.textContent = original;
+            btn.classList.remove('is-copied');
+          }, 2000);
+        });
+      });
+    }
+
     // === Init ===
     fetchDeals();
+    renderSubscribeFeeds();
   </script>
 </body>
 </html>

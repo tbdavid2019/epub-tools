@@ -668,44 +668,70 @@ footer a:hover { text-decoration: underline; }
     <label>第三步：字級與選項</label>
 
     <div id="binPanel">
-      <label style="margin-top:8px;">官方常用字級（建議直接挑）</label>
+      <label style="margin-top:8px;">字級 (px) — 對齊 XTEink 工具用法</label>
       <div class="preset-row" id="binPresetRow">
-        <button type="button" class="preset-btn" data-pt="30">30 pt</button>
-        <button type="button" class="preset-btn active" data-pt="32">32 pt</button>
-        <button type="button" class="preset-btn" data-pt="34">34 pt</button>
-        <button type="button" class="preset-btn" data-pt="38">38 pt</button>
-        <button type="button" class="preset-btn" data-pt="42">42 pt</button>
+        <button type="button" class="preset-btn" data-pt="20">20</button>
+        <button type="button" class="preset-btn" data-pt="24">24</button>
+        <button type="button" class="preset-btn active" data-pt="32">32</button>
+        <button type="button" class="preset-btn" data-pt="40">40</button>
+        <button type="button" class="preset-btn" data-pt="48">48</button>
       </div>
 
-      <label style="margin-top:16px;">微調字級</label>
+      <label style="margin-top:16px;">微調字級 (px)</label>
       <div class="slider-wrap">
-        <input type="range" id="binSlider" min="12" max="72" value="32" step="1">
+        <input type="range" id="binSlider" min="8" max="80" value="32" step="1">
         <div class="slider-value">
-          <span id="binPtText">32</span> pt
-          <span class="slider-sub">→ <span id="binDimText">34 × 38</span> px</span>
+          <span id="binPtText">32</span> px
+          <span class="slider-sub">→ 字格 <span id="binDimText">32 × 42</span> px</span>
         </div>
       </div>
 
       <div class="field-row" style="margin-top:16px;">
         <div class="field">
-          <label for="binLetterSpacing">字距加成 (px)</label>
-          <input type="number" id="binLetterSpacing" min="0" max="20" value="0" step="1">
+          <label for="binLetterSpacing">字距 (px)</label>
+          <input type="number" id="binLetterSpacing" min="0" max="40" value="0" step="1">
         </div>
         <div class="field">
-          <label for="binLineSpacing">行距加成 (px)</label>
-          <input type="number" id="binLineSpacing" min="0" max="30" value="0" step="1">
+          <label for="binLineSpacing">行距 (px)</label>
+          <input type="number" id="binLineSpacing" min="0" max="40" value="0" step="1">
         </div>
       </div>
-      <div class="note" style="margin-top:8px; font-size:13px;">
-        <strong>什麼是字距/行距加成？</strong>每個字格的寬高在公式算出後再加 N px。例：32 pt 公式算 43×57，行距 +8 → 43×65（檔案大小同步變大）。XTEink 工具的「調行距」就是這個原理。
+
+      <div class="field-row" style="margin-top:12px;">
+        <div class="field">
+          <label for="binAAMode">字邊緣處理</label>
+          <select id="binAAMode">
+            <option value="System1BitGridFit" selected>1-bit 對齊網格（預設）</option>
+            <option value="System1Bit">1-bit 不對齊</option>
+            <option value="SystemAntiAltasGridFit">抗鋸齒對齊網格</option>
+            <option value="SystemAntiAltas">抗鋸齒</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="binLightThreshold">取色閾值</label>
+          <input type="number" id="binLightThreshold" min="0" max="255" value="128" step="1">
+        </div>
       </div>
 
-      <div class="field" style="margin-top:16px;">
-        <label for="orientation">排版方向</label>
-        <select id="orientation">
-          <option value="horizontal">橫排</option>
-          <option value="vertical">豎排（檔名加「豎-」前綴）</option>
-        </select>
+      <div class="field-row" style="margin-top:12px;">
+        <div class="field">
+          <label for="orientation">排版方向</label>
+          <select id="orientation">
+            <option value="horizontal">橫排</option>
+            <option value="vertical">豎排（檔名加「豎-」前綴）</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="binRenderBorder">字格邊框</label>
+          <select id="binRenderBorder">
+            <option value="0" selected>無</option>
+            <option value="1">有（白色 1px）</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="note" style="margin-top:12px; font-size:13px;">
+        <strong>對齊 XTEink 工具公式</strong>：字級 px → 用「坐」字測量 W×H，加上字距/行距即為 cell size。所有選項預設值跟 XTEink 一致。閾值 128 = 像素亮度大於 128 視為「字」（白色筆畫）。
       </div>
     </div>
 
@@ -851,7 +877,7 @@ footer a:hover { text-decoration: underline; }
 <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js" id="opentypeLib"></script>
 <script>
 // 版本號 — 改 worker.js / epdfont_ranges.json 時要 bump 這個值，瀏覽器才會抓新版
-const ASSET_VERSION = '20260428a';
+const ASSET_VERSION = '20260428b-xteink';
 const $ = (id) => document.getElementById(id);
 const dropzone = $('dropzone');
 const ttfInput = $('ttfInput');
@@ -913,6 +939,8 @@ async function handleFile(f) {
     if (!window.opentype) throw new Error('opentype.js 沒載入');
     opentypeFont = window.opentype.parse(ttfBuffer.slice(0));
     window._font = opentypeFont;
+    // 把 ttf 註冊給 Canvas，讓 measureText / 預覽渲染都用真實字體
+    await ensureBinCanvasFont(ttfBuffer.slice(0));
     updateBinSliderDisplay();
     renderPreview();
   } catch (e) {
@@ -932,84 +960,62 @@ formatRow.addEventListener('click', (e) => {
   $('epdfontPanel').hidden = fmt !== 'epdfont';
 });
 
-const BIN_MEASURE_CHARS = '一二三四五六七八九十百千萬億零的是不了在人有我他這個們中來上大為和國地到以說時要就出會可也你對生能而子那得於著下自之年過發後作裡用道行所然家種事成方多經麼去法學如都同現當沒動面起看定天分還進好小部其些主樣理心她本前開但因只從想實日軍者意無力它與長把機十重很點物—中文english12345AaBbCcXyZ字體大小標豐';
+// XTEink 公式：W/H 由 GDI MeasureString("坐") 決定。
+// 瀏覽器無 GDI，但 Canvas 的 measureText 在「pt 即 px、96 DPI」下接近 GDI 結果。
+// 仍會略有差異，所以 W/H 會在實際字體載入後（Canvas 用 ttf 渲染）重算一次。
+const BIN_BASE_CHAR = '坐';
+let _binFontFace = null;
+let _binFontFamily = null;
 
-const BIN_RENDER_PT_RATIO = 25 / 18;
-
-function getBinRenderPt(displayPt) {
-  return Math.round(displayPt * BIN_RENDER_PT_RATIO);
+async function ensureBinCanvasFont(buffer) {
+  if (_binFontFace) {
+    document.fonts.delete(_binFontFace);
+    _binFontFace = null;
+  }
+  _binFontFamily = `bin_font_${Date.now()}`;
+  _binFontFace = new FontFace(_binFontFamily, buffer);
+  await _binFontFace.load();
+  document.fonts.add(_binFontFace);
 }
 
-function measureBinDims(displayPt) {
-  if (!opentypeFont) return null;
-  const renderPt = getBinRenderPt(displayPt);
-  const scale = renderPt / opentypeFont.unitsPerEm;
-
-  const probe = Math.ceil(renderPt * 2);
+function measureBinBase(pxSize) {
+  if (!_binFontFamily) return null;
   const canvas = document.createElement('canvas');
-  canvas.width = probe;
-  canvas.height = probe;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-  let maxW = 0, maxTop = 0, minBottom = 0;
-
-  for (const ch of BIN_MEASURE_CHARS) {
-    const glyph = opentypeFont.charToGlyph(ch);
-    if (!glyph || glyph.index === 0) continue;
-
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, probe, probe);
-    ctx.fillStyle = 'black';
-    const ascent = Math.round(opentypeFont.ascender * scale);
-    const path = glyph.getPath(0, ascent, renderPt);
-    path.draw(ctx);
-
-    const px = ctx.getImageData(0, 0, probe, probe).data;
-    let bx0 = probe, by0 = probe, bx1 = -1, by1 = -1;
-    for (let y = 0; y < probe; y++) {
-      for (let x = 0; x < probe; x++) {
-        if (px[(y * probe + x) * 4] < 240) {
-          if (x < bx0) bx0 = x;
-          if (y < by0) by0 = y;
-          if (x > bx1) bx1 = x;
-          if (y > by1) by1 = y;
-        }
-      }
-    }
-    if (bx1 < 0) continue;
-    const bw = bx1 - bx0 + 1;
-    const top = ascent - by0;
-    const bottom = by1 - ascent;
-    if (bw > maxW) maxW = bw;
-    if (top > maxTop) maxTop = top;
-    if (bottom > minBottom) minBottom = bottom;
-  }
-  const cellH = maxTop + minBottom;
-  const hheaTable = opentypeFont.tables.hhea || {};
-  const lineGap = hheaTable.lineGap || 0;
-  const faceHeight = (opentypeFont.ascender - opentypeFont.descender + lineGap) * scale;
-  const w = Math.max(1, maxW - 2);
-  const h = Math.max(1, Math.round((faceHeight + cellH) / 2) - 3);
+  canvas.width = canvas.height = Math.ceil(pxSize * 2);
+  const ctx = canvas.getContext('2d');
+  ctx.font = `${pxSize}px "${_binFontFamily}"`;
+  const m = ctx.measureText(BIN_BASE_CHAR);
+  // 對齊 XTEink：Math.Round(measured.Width / Height)
+  const w = Math.round(m.width);
+  // measureText 沒給 Height，用 ascent + descent 算
+  const ascent = m.actualBoundingBoxAscent || pxSize * 0.85;
+  const descent = m.actualBoundingBoxDescent || pxSize * 0.25;
+  const h = Math.round(ascent + descent);
   return { w, h };
 }
 
 function getActiveBinPreset() {
-  const pt = parseInt($('binSlider').value);
-  const dW = parseInt($('binLetterSpacing')?.value || 0) || 0;
-  const dH = parseInt($('binLineSpacing')?.value || 0) || 0;
-  const dims = measureBinDims(pt);
-  const base = dims || { w: pt + 2, h: Math.round(pt * 1.18) };
-  return { pt, w: base.w + dW, h: base.h + dH };
+  const pxSize = parseInt($('binSlider').value);
+  const cs = parseInt($('binLetterSpacing')?.value || 0) || 0;
+  const ls = parseInt($('binLineSpacing')?.value || 0) || 0;
+  const base = measureBinBase(pxSize) || { w: pxSize, h: Math.round(pxSize * 1.3125) };
+  return {
+    pxSize,
+    charSpacing: cs,
+    lineSpacing: ls,
+    w: Math.max(5, base.w + cs),
+    h: Math.max(5, base.h + ls),
+  };
 }
 
 function updateBinSliderDisplay() {
-  const pt = parseInt($('binSlider').value);
+  const pxSize = parseInt($('binSlider').value);
   const { w, h } = getActiveBinPreset();
-  $('binPtText').textContent = pt;
-  $('binDimText').textContent = opentypeFont ? `${w} × ${h}（依此字體實測）` : `${w} × ${h}（預估，上傳字體後重算）`;
+  $('binPtText').textContent = pxSize;
+  $('binDimText').textContent = _binFontFamily ? `${w} × ${h}` : `${w} × ${h}（預估，上傳字體後重算）`;
 
   document.querySelectorAll('#binPresetRow .preset-btn').forEach(b => {
-    b.classList.toggle('active', parseInt(b.dataset.pt) === pt);
+    b.classList.toggle('active', parseInt(b.dataset.pt) === pxSize);
   });
 }
 function bindPresetSlider(presetRowId, sliderId, displayFn, afterChange) {
@@ -1096,15 +1102,24 @@ runBtn.addEventListener('click', () => {
 
   let payload;
   if (getCurrentFormat() === 'bin') {
-    const { pt, w: outerW, h: outerH } = getActiveBinPreset();
+    const { pxSize, w: outerW, h: outerH, charSpacing, lineSpacing } = getActiveBinPreset();
     const vertical = $('orientation').value === 'vertical';
-    const renderPt = getBinRenderPt(pt);
+    const aaMode = $('binAAMode').value;
+    const antiAlias = aaMode.startsWith('SystemAntiAltas');
+    const lightThreshold = parseInt($('binLightThreshold').value || 128);
+    const renderBorder = $('binRenderBorder').value === '1';
     payload = {
       format: 'bin',
       ttfBuffer: bufferCopy,
-      fontSizePt: renderPt, outerW, outerH,
-      threshold: 240,
-      vertical, fontName
+      fontSizePx: pxSize,
+      outerW, outerH,
+      charSpacingPx: charSpacing,
+      lineSpacingPx: lineSpacing,
+      lightThreshold,
+      antiAlias,
+      vertical,
+      renderBorder,
+      fontName,
     };
   } else {
     const fontSizePt = parseInt($('epdfontSlider').value);
@@ -1263,7 +1278,8 @@ function bindToggleRow(rowId, attr, onChange) {
 bindToggleRow('previewScreenRow', 'screen', (v) => { previewScreen = v; renderPreview(); });
 bindToggleRow('previewWritingRow', 'writing', (v) => { previewWriting = v; renderPreview(); });
 
-['orientation', 'previewText', 'binLetterSpacing', 'binLineSpacing'].forEach(id => {
+['orientation', 'previewText', 'binLetterSpacing', 'binLineSpacing',
+ 'binAAMode', 'binLightThreshold', 'binRenderBorder'].forEach(id => {
   const el = $(id);
   if (el) el.addEventListener('input', () => { updateBinSliderDisplay(); renderPreview(); });
 });

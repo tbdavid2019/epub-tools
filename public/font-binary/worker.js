@@ -27,30 +27,44 @@ function progress(current, total) {
   self.postMessage({ type: 'progress', current, total });
 }
 
-// ============ .bin encoder ============
-// 從 14 個官方 .bin 樣本實測：檔案大小 = slot_size × 65536（不是 0xFFFE=65534）
-// 例：宇文天穹 32 38×43.bin = 215 × 65536 = 14,090,240 byte ✓
-const BIN_GLYPH_COUNT = 0x10000;
+// ============ .bin encoder（對齊 XTEink 字体转换工具 v1.3.0.0）============
+// 完整逆向自 costura.xteinktools.dll 的 XTEinkFontRenderer.RenderFont
+// 規格文件：reference/xteink-spec.md
+//
+// 檔案 layout：fontbin = byte[slotSize * 65536]，無 header
+// slot index = unicode codepoint，bit MSB first
+// 字格 W/H 由 GDI MeasureString("坐") 決定，這裡用 Canvas measureText 模擬
+// 渲染：黑底白字 + 字置中（平移 CharSpacing/2, LineSpacing/2）
+// 取 bit：R channel > LightThrehold（128）視為前景
 
-async function runBin({ ttfBuffer, fontSizePt, outerW, outerH, threshold = 240, vertical = false, fontName = 'font' }) {
-  const font = opentype.parse(ttfBuffer);
+const BIN_GLYPH_COUNT = 0x10000;
+const BIN_BASE_CHAR = '坐';  // XTEink 用「坐」當基準字測量 W/H
+
+async function runBin({ ttfBuffer, fontSizePx, outerW, outerH, charSpacingPx = 0, lineSpacingPx = 0, lightThreshold = 128, antiAlias = true, vertical = false, renderBorder = false, fontName = 'font' }) {
+  // 透過 FontFace API 把 TTF 註冊給 OffscreenCanvas 用
+  const fontFamily = `xteink_font_${Date.now()}`;
+  const fontFace = new FontFace(fontFamily, ttfBuffer);
+  await fontFace.load();
+  self.fonts.add(fontFace);
+
   const widthByte = Math.ceil(outerW / 8);
   const slotSize = widthByte * outerH;
   const out = new Uint8Array(slotSize * BIN_GLYPH_COUNT);
 
-  const scale = fontSizePt / font.unitsPerEm;
-  const ascent = Math.round(font.ascender * scale);
-  const descent = Math.round(-font.descender * scale);
-  const yOff = outerH - (ascent + descent);
-  const xOff = 0;
-
   const canvas = new OffscreenCanvas(outerW, outerH);
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.textBaseline = 'alphabetic';
+  ctx.font = `${fontSizePx}px "${fontFamily}"`;
+  ctx.textBaseline = 'top';
+  // antiAlias=false 對應 XTEink 的 System1Bit（無 anti-alias）
+  // Canvas 沒法完全關掉，但用 'optimizeSpeed' 可以接近
+  if ('textRendering' in ctx) {
+    ctx.textRendering = antiAlias ? 'geometricPrecision' : 'optimizeSpeed';
+  }
 
+  // 從第 32 個 codepoint 開始（U+0020 之前都是控制字元）
   let lastReport = 0;
   for (let cp = 0x20; cp < BIN_GLYPH_COUNT; cp++) {
-    renderBinGlyph(font, cp, fontSizePt, outerW, outerH, xOff, yOff, ctx, out, cp * slotSize, widthByte, threshold);
+    renderBinGlyphXTEink(cp, ctx, out, cp * slotSize, outerW, outerH, widthByte, charSpacingPx, lineSpacingPx, lightThreshold, vertical, renderBorder);
     if (cp - lastReport >= PROGRESS_STEP) {
       progress(cp, BIN_GLYPH_COUNT);
       lastReport = cp;
@@ -58,31 +72,60 @@ async function runBin({ ttfBuffer, fontSizePt, outerW, outerH, threshold = 240, 
   }
   progress(BIN_GLYPH_COUNT, BIN_GLYPH_COUNT);
 
-  const filename = (vertical ? '豎-' : '') + `${fontName}_${fontSizePt}_${outerW}x${outerH}.bin`;
+  // 清掉註冊的字體（worker scope，可能其實不需要）
+  self.fonts.delete(fontFace);
+
+  const filename = (vertical ? '豎-' : '') + `${fontName}_${outerW}x${outerH}.bin`;
   self.postMessage({ type: 'done', buffer: out.buffer, filename }, [out.buffer]);
 }
 
-function renderBinGlyph(font, cp, fontSizePt, w, h, xOff, yOff, ctx, out, slotOffset, widthByte, threshold) {
-  ctx.fillStyle = 'white';
+function renderBinGlyphXTEink(cp, ctx, out, slotOffset, w, h, widthByte, charSpacing, lineSpacing, threshold, vertical, renderBorder) {
+  // 1. 黑底
+  ctx.resetTransform();
+  ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, w, h);
 
+  // 2. 邊框（選用）
+  if (renderBorder) {
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
+  }
+
+  // 3. 直排：先平移到底部、再逆時針 90 度
+  if (vertical) {
+    ctx.translate(0, h);
+    ctx.rotate(-Math.PI / 2);
+  }
+
+  // 4. 行距偏移（字往下移 LineSpacing/2 置中）
+  if (vertical) {
+    ctx.translate(Math.floor(lineSpacing / 2), 0);
+  } else {
+    ctx.translate(0, Math.floor(lineSpacing / 2));
+  }
+
+  // 5. 字距偏移（**只對非 ASCII 字生效**）
+  if (charSpacing > 0 && cp > 0xFF) {
+    if (vertical) {
+      ctx.translate(0, Math.floor(charSpacing / 2));
+    } else {
+      ctx.translate(Math.floor(charSpacing / 2), 0);
+    }
+  }
+
+  // 6. 畫字（白色字、黑底）
   const ch = String.fromCodePoint(cp);
-  const glyph = font.charToGlyph(ch);
-  if (!glyph || glyph.index === 0) return;
+  ctx.fillStyle = 'white';
+  ctx.fillText(ch, 0, 0);
 
-  const scale = fontSizePt / font.unitsPerEm;
-  const ascent = Math.round(font.ascender * scale);
-  const baselineY = yOff + ascent;
-
-  ctx.fillStyle = 'black';
-  const path = glyph.getPath(xOff, baselineY, fontSizePt);
-  path.fill = 'black';
-  path.draw(ctx);
-
+  // 7. 取 R channel，> threshold 即為前景
+  ctx.resetTransform();
   const px = ctx.getImageData(0, 0, w, h).data;
   for (let row = 0; row < h; row++) {
     for (let col = 0; col < w; col++) {
-      if (px[(row * w + col) * 4] < threshold) {
+      if (px[(row * w + col) * 4] > threshold) {
+        // MSB first：col=0 是 byte 的最高位
         out[slotOffset + row * widthByte + (col >>> 3)] |= 0x80 >>> (col & 7);
       }
     }

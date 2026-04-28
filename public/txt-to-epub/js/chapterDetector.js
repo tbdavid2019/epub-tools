@@ -209,7 +209,12 @@ window.ChapterDetector = {
     for (var i = 0; i < matches.length; i++) {
       var start = matches[i].index;
       var end = i < matches.length - 1 ? matches[i + 1].index : text.length;
-      chapters.push({ title: matches[i].title, content: text.slice(start, end).trim() });
+      // 剝掉章節標題那一行（避免內文重複出現標題行）
+      // epubGenerator 會自己印 <h1>{title}</h1>，content 不需要再含標題
+      var rawSlice = text.slice(start, end);
+      var firstNewline = rawSlice.indexOf('\n');
+      var bodyOnly = firstNewline === -1 ? '' : rawSlice.slice(firstNewline + 1);
+      chapters.push({ title: matches[i].title, content: bodyOnly.trim() });
     }
 
     if (matches.length > 0 && matches[0].index > 100) {
@@ -228,8 +233,11 @@ window.ChapterDetector = {
 
     return blocks.map(function (block, index) {
       var firstLine = block.split('\n')[0].trim();
-      var title = (firstLine.length <= 50 && firstLine.length > 0) ? firstLine : '章節 ' + (index + 1);
-      return { title: title, content: block };
+      var titleFromLine = firstLine.length <= 50 && firstLine.length > 0;
+      var title = titleFromLine ? firstLine : '章節 ' + (index + 1);
+      // 只有「第一行被當成標題」時才把那行從 content 剝掉，避免 <h1> 跟 <p> 重複
+      var content = titleFromLine ? block.slice(block.indexOf('\n') + 1).trim() : block;
+      return { title: title, content: content };
     });
   },
 
@@ -242,8 +250,10 @@ window.ChapterDetector = {
 
     return blocks.map(function (block, index) {
       var firstLine = block.split('\n')[0].trim();
-      var title = (firstLine.length <= 50 && firstLine.length > 0) ? firstLine : '章節 ' + (index + 1);
-      return { title: title, content: block };
+      var titleFromLine = firstLine.length <= 50 && firstLine.length > 0;
+      var title = titleFromLine ? firstLine : '章節 ' + (index + 1);
+      var content = titleFromLine ? block.slice(block.indexOf('\n') + 1).trim() : block;
+      return { title: title, content: content };
     });
   },
 
@@ -278,7 +288,11 @@ window.ChapterDetector = {
     for (var j = 0; j < matches.length; j++) {
       var start = matches[j].index;
       var end = j < matches.length - 1 ? matches[j + 1].index : text.length;
-      chapters.push({ title: matches[j].title, content: text.slice(start, end).trim() });
+      // 剝掉章節標題那一行（避免 <h1> 跟 <p> 內文第一段重複）
+      var rawSlice = text.slice(start, end);
+      var firstNewline = rawSlice.indexOf('\n');
+      var bodyOnly = firstNewline === -1 ? '' : rawSlice.slice(firstNewline + 1);
+      chapters.push({ title: matches[j].title, content: bodyOnly.trim() });
     }
 
     // 序言

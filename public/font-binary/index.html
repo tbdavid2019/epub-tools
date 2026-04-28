@@ -815,7 +815,7 @@ footer a:hover { text-decoration: underline; }
         <div style="font-size:13px; color:var(--text-heading); font-weight:500; margin-bottom:6px;">機型</div>
         <div class="preset-row" id="previewDeviceRow">
           <button type="button" class="preset-btn active" data-device="x3">閱星曈 X3 (528×792)</button>
-          <button type="button" class="preset-btn" data-device="x4" disabled style="opacity:0.5; cursor:not-allowed;">閱星曈 X4（待補尺寸）</button>
+          <button type="button" class="preset-btn" data-device="x4">閱星曈 X4 (480×800)</button>
         </div>
       </div>
 
@@ -864,7 +864,7 @@ footer a:hover { text-decoration: underline; }
     <div class="preview-card" style="background: linear-gradient(135deg, rgba(223,198,198,0.18), rgba(184,169,201,0.14)); border: 1px solid rgba(223,198,198,0.4);">
       <div class="preview-title">小提示</div>
       <div class="preview-sub" style="margin-bottom:0;">
-        畫面框模擬閱星曈墨水屏實際尺寸（X3 = 直版 528×792 / 橫版 792×528）。<br>
+        畫面框模擬實際裝置尺寸（X3 = 528×792 / X4 = 480×800，橫版自動翻轉）。<br>
         字按裝置實際吃的 px 渲染，預覽會自動縮放配合畫面框。
       </div>
     </div>
@@ -894,7 +894,7 @@ footer a:hover { text-decoration: underline; }
 <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js" id="opentypeLib"></script>
 <script>
 // 版本號 — 改 worker.js / epdfont_ranges.json 時要 bump 這個值，瀏覽器才會抓新版
-const ASSET_VERSION = '20260428e-x3';
+const ASSET_VERSION = '20260428f-x4';
 const $ = (id) => document.getElementById(id);
 const dropzone = $('dropzone');
 const ttfInput = $('ttfInput');
@@ -1175,8 +1175,8 @@ function hideError() {
 
 // 各機型螢幕尺寸（直版 W×H，橫版 = 直版翻轉）
 const DEVICE_SCREENS = {
-  x3: { w: 528,  h: 792 },
-  // x4: { w: ?, h: ? },  // 待補
+  x3: { w: 528, h: 792 },
+  x4: { w: 480, h: 800 },
 };
 let previewDevice = 'x3';
 function getScreenDims() {

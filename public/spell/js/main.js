@@ -8,6 +8,8 @@ import { copyToClipboard } from './clipboard.js';
 
 // === 設定 ===
 const DATA_PATH = './data';
+// 版本號 — 改 data/*.json 時要 bump，瀏覽器才會抓新版
+const ASSET_VERSION = '20260428a';
 
 // === 狀態 ===
 const state = {
@@ -24,7 +26,8 @@ const state = {
 
 // === 資料載入 ===
 async function loadJSON(path) {
-  const res = await fetch(path);
+  const sep = path.includes('?') ? '&' : '?';
+  const res = await fetch(`${path}${sep}v=${ASSET_VERSION}`);
   if (!res.ok) throw new Error(`Failed to load ${path}`);
   return res.json();
 }

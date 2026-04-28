@@ -250,6 +250,9 @@
   </footer>
 
   <script>
+    // 版本號 — 改 data/devices.json 時要 bump，瀏覽器才會抓新版
+    const ASSET_VERSION = '20260428a';
+
     // Footer year
     const startYear = 2026;
     const currentYear = new Date().getFullYear();
@@ -259,7 +262,7 @@
     // Load and render brands
     async function loadBrands() {
       try {
-        const response = await fetch('./data/devices.json');
+        const response = await fetch(`./data/devices.json?v=${ASSET_VERSION}`);
         if (!response.ok) throw new Error('Failed to load devices');
         const devices = await response.json();
 

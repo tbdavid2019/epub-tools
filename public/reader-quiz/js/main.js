@@ -8,6 +8,8 @@ import { calculateRecommendation, getReasonText, getRelevantTip, detectTaiwanOpe
 
 // === 設定 ===
 const DATA_PATH = './data';
+// 版本號 — 改 data/*.json 時要 bump，瀏覽器才會抓新版
+const ASSET_VERSION = '20260428a';
 
 // === 狀態 ===
 let quizData = null;
@@ -17,7 +19,8 @@ let app = null;
 
 // === 資料載入 ===
 async function loadJSON(path) {
-  const response = await fetch(path);
+  const sep = path.includes('?') ? '&' : '?';
+  const response = await fetch(`${path}${sep}v=${ASSET_VERSION}`);
   if (!response.ok) throw new Error(`Failed to load ${path}`);
   return response.json();
 }

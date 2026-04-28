@@ -12,6 +12,9 @@ import { computeStats, applyTemplate, validateTemplate, DEFAULT_PLATFORM } from 
 import { copyResult, showToast } from './clipboard.js'
 import { icons } from './icons.js'
 
+// 版本號 — 改 data/*.json 時要 bump，瀏覽器才會抓新版
+const ASSET_VERSION = '20260428a'
+
 // ─── 全域狀態 ───────────────────────────────────────────
 
 const state = {
@@ -45,7 +48,8 @@ let data = { emoji: null, symbols: null, kaomoji: null }
 // ─── 載入工具 ───────────────────────────────────────────
 
 async function loadJSON(path) {
-  const res = await fetch(path)
+  const sep = path.includes('?') ? '&' : '?'
+  const res = await fetch(`${path}${sep}v=${ASSET_VERSION}`)
   if (!res.ok) throw new Error(`載入 ${path} 失敗（${res.status}）`)
   try {
     return await res.json()

@@ -699,32 +699,38 @@ footer a:hover { text-decoration: underline; }
     <label>第三步：字級與選項</label>
 
     <div id="binPanel">
-      <label style="margin-top:8px;">字級 (px) — 對齊 XTEink 工具用法</label>
+      <label style="margin-top:8px;">字格規格快選（從閱星瞳真實 .bin 樣本歸納）</label>
       <div class="preset-row" id="binPresetRow">
-        <button type="button" class="preset-btn" data-pt="20">20</button>
-        <button type="button" class="preset-btn" data-pt="24">24</button>
-        <button type="button" class="preset-btn active" data-pt="32">32</button>
-        <button type="button" class="preset-btn" data-pt="40">40</button>
-        <button type="button" class="preset-btn" data-pt="48">48</button>
-      </div>
-
-      <label style="margin-top:16px;">微調字級 (px)</label>
-      <div class="slider-wrap">
-        <input type="range" id="binSlider" min="8" max="80" value="32" step="1">
-        <div class="slider-value">
-          <span id="binPtText">32</span> px
-          <span class="slider-sub">→ 字格 <span id="binDimText">32 × 42</span> px</span>
-        </div>
+        <button type="button" class="preset-btn" data-w="38" data-h="43">32號 38×43</button>
+        <button type="button" class="preset-btn" data-w="40" data-h="48">36號 40×48</button>
+        <button type="button" class="preset-btn" data-w="40" data-h="52">30pt 40×52</button>
+        <button type="button" class="preset-btn active" data-w="43" data-h="57">32pt 43×57</button>
+        <button type="button" class="preset-btn" data-w="43" data-h="65">32pt 寬行 43×65</button>
+        <button type="button" class="preset-btn" data-w="45" data-h="60">34pt 45×60</button>
+        <button type="button" class="preset-btn" data-w="50" data-h="51">48號 50×51</button>
+        <button type="button" class="preset-btn" data-w="51" data-h="63">36號大 51×63</button>
       </div>
 
       <div class="field-row" style="margin-top:16px;">
         <div class="field">
-          <label for="binLetterSpacing">字距 (px)</label>
-          <input type="number" id="binLetterSpacing" min="0" max="40" value="0" step="1">
+          <label for="binCellW">字寬 W (px)</label>
+          <input type="number" id="binCellW" min="8" max="120" value="43" step="1">
         </div>
         <div class="field">
-          <label for="binLineSpacing">行距 (px)</label>
-          <input type="number" id="binLineSpacing" min="0" max="40" value="0" step="1">
+          <label for="binCellH">字高 H (px)</label>
+          <input type="number" id="binCellH" min="8" max="120" value="57" step="1">
+        </div>
+      </div>
+      <div class="note" style="margin-top:8px; font-size:13px;">
+        <strong>每字佔 W×H px</strong>。直接決定 .bin 檔案大小（W×H×65536÷8 byte）。從快選挑或手動填，<strong>同一字級用不同 W/H 是行距/字距變化</strong>（例：43×57 vs 43×65 = 行距加 8 px）。
+      </div>
+
+      <label style="margin-top:16px;">字渲染大小 (px) — 字本身畫多大</label>
+      <div class="slider-wrap">
+        <input type="range" id="binSlider" min="8" max="80" value="32" step="1">
+        <div class="slider-value">
+          <span id="binPtText">32</span> px
+          <span class="slider-sub">字會在字格中央，建議 W 的 70-80%</span>
         </div>
       </div>
 
@@ -925,7 +931,7 @@ footer a:hover { text-decoration: underline; }
 <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js" id="opentypeLib"></script>
 <script>
 // 版本號 — 改 worker.js / epdfont_ranges.json 時要 bump 這個值，瀏覽器才會抓新版
-const ASSET_VERSION = '20260429e-real';
+const ASSET_VERSION = '20260429f-wh';
 const $ = (id) => document.getElementById(id);
 const dropzone = $('dropzone');
 const ttfInput = $('ttfInput');
@@ -1040,26 +1046,28 @@ function measureBinBase(pxSize) {
 
 function getActiveBinPreset() {
   const pxSize = parseInt($('binSlider').value);
-  const cs = parseInt($('binLetterSpacing')?.value || 0) || 0;
-  const ls = parseInt($('binLineSpacing')?.value || 0) || 0;
-  const base = measureBinBase(pxSize) || { w: pxSize, h: Math.round(pxSize * 1.3125) };
+  const w = parseInt($('binCellW')?.value || 43) || 43;
+  const h = parseInt($('binCellH')?.value || 57) || 57;
+  // 字距/行距已併入 W/H 直接設定，這裡保留 0 避免 worker 重複偏移
   return {
     pxSize,
-    charSpacing: cs,
-    lineSpacing: ls,
-    w: Math.max(5, base.w + cs),
-    h: Math.max(5, base.h + ls),
+    charSpacing: 0,
+    lineSpacing: 0,
+    w: Math.max(5, w),
+    h: Math.max(5, h),
   };
 }
 
 function updateBinSliderDisplay() {
   const pxSize = parseInt($('binSlider').value);
-  const { w, h } = getActiveBinPreset();
   $('binPtText').textContent = pxSize;
-  $('binDimText').textContent = _binFontFamily ? `${w} × ${h}` : `${w} × ${h}（預估，上傳字體後重算）`;
-
+  // 不再依字級對應 cell；preset 按鈕用 W×H 比對
+  const w = parseInt($('binCellW')?.value || 0);
+  const h = parseInt($('binCellH')?.value || 0);
   document.querySelectorAll('#binPresetRow .preset-btn').forEach(b => {
-    b.classList.toggle('active', parseInt(b.dataset.pt) === pxSize);
+    const bw = parseInt(b.dataset.w);
+    const bh = parseInt(b.dataset.h);
+    b.classList.toggle('active', bw === w && bh === h);
   });
 }
 function bindPresetSlider(presetRowId, sliderId, displayFn, afterChange) {
@@ -1073,7 +1081,19 @@ function bindPresetSlider(presetRowId, sliderId, displayFn, afterChange) {
     afterChange?.();
   });
 }
-bindPresetSlider('binPresetRow', 'binSlider', updateBinSliderDisplay, renderPreview);
+// bin slider 純粹改字渲染大小、不影響 cell W/H
+$('binSlider').addEventListener('input', () => { updateBinSliderDisplay(); renderPreview(); });
+// bin preset 按鈕一鍵套 W/H
+$('binPresetRow').addEventListener('click', (e) => {
+  const btn = e.target.closest('.preset-btn');
+  if (!btn) return;
+  $('binCellW').value = btn.dataset.w;
+  $('binCellH').value = btn.dataset.h;
+  // 順手把 slider 設成 W 的 78%（建議字渲染大小）
+  $('binSlider').value = Math.round(parseInt(btn.dataset.w) * 0.78);
+  updateBinSliderDisplay();
+  renderPreview();
+});
 
 function updateEpdfontSliderDisplay() {
   const pt = parseInt($('epdfontSlider').value);
@@ -1259,8 +1279,9 @@ function drawScreen(paragraphs, font, fontSizePt, cellW, cellH, screen, writing)
   ctx.imageSmoothingEnabled = false;
 
   // 預覽要如實反映 .bin 編碼結果：用同樣的 Canvas font + 設定逐字渲染
-  const cs = parseInt($('binLetterSpacing')?.value || 0) || 0;
-  const ls = parseInt($('binLineSpacing')?.value || 0) || 0;
+  // 字距/行距已併入 W/H 直接設定，這裡固定 0
+  const cs = 0;
+  const ls = 0;
   const threshold = parseInt($('binLightThreshold')?.value || 128) || 128;
   const aaMode = $('binAAMode')?.value || 'SystemAntiAltasGridFit';
   const antiAlias = aaMode.startsWith('SystemAntiAltas');
@@ -1410,7 +1431,7 @@ bindToggleRow('previewDeviceRow', 'device', (v) => { previewDevice = v; renderPr
 bindToggleRow('previewScreenRow', 'screen', (v) => { previewScreen = v; renderPreview(); });
 bindToggleRow('previewWritingRow', 'writing', (v) => { previewWriting = v; renderPreview(); });
 
-['orientation', 'previewText', 'binLetterSpacing', 'binLineSpacing',
+['orientation', 'previewText', 'binCellW', 'binCellH',
  'binAAMode', 'binLightThreshold', 'binRenderBorder', 'binBoldPx'].forEach(id => {
   const el = $(id);
   if (el) el.addEventListener('input', () => { updateBinSliderDisplay(); renderPreview(); });

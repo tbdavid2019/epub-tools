@@ -2405,3 +2405,27 @@ html.dark .rm-result-card:hover {
   font-style: italic;
   padding: var(--space-sm);
 }
+
+/* AP 紀錄橋接區 — 展開按鈕 */
+.chain-ap-log-toggle-btn {
+  margin-top: var(--space-xs);
+  width: 100%;
+  padding: var(--space-sm);
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all var(--transition-fast);
+}
+.chain-ap-log-toggle-btn:hover {
+  border-color: var(--color-rose);
+  color: var(--color-rose);
+  background: var(--bg-elevated);
+}
+.chain-ap-log-toggle-btn i { width: 14px; height: 14px; }

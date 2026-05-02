@@ -139,10 +139,41 @@ function initChain() {
       pendingEl.innerHTML = pending.map(renderItem).join('');
     }
 
+    // 「全部」區：預設只顯示未回禮，已回禮收摺到一個展開按鈕
+    const notReturned = log.filter(r => !r.returned);
+    const returnedList = log.filter(r => r.returned);
+    const expandedKey = 'chain-ap-log-show-returned';
+    const isExpanded = sessionStorage.getItem(expandedKey) === '1';
+
     allEmpty.style.display = 'none';
-    allEl.innerHTML = log.map(renderItem).join('');
+    let allHtml = notReturned.map(renderItem).join('');
+    if (returnedList.length > 0) {
+      if (isExpanded) {
+        allHtml += returnedList.map(renderItem).join('');
+        allHtml += `<button id="chain-ap-log-collapse-btn" class="btn-text btn-sm chain-ap-log-toggle-btn"><i data-lucide="chevron-up"></i> 收起已回禮（${returnedList.length} 人）</button>`;
+      } else {
+        allHtml += `<button id="chain-ap-log-expand-btn" class="btn-text btn-sm chain-ap-log-toggle-btn"><i data-lucide="chevron-down"></i> 顯示 ${returnedList.length} 個已回禮的人</button>`;
+      }
+    }
+    allEl.innerHTML = allHtml;
 
     if (window.lucide) lucide.createIcons();
+
+    // 展開/收合按鈕
+    const expandBtn = document.getElementById('chain-ap-log-expand-btn');
+    if (expandBtn) {
+      expandBtn.addEventListener('click', () => {
+        sessionStorage.setItem(expandedKey, '1');
+        renderApLogBridge();
+      });
+    }
+    const collapseBtn = document.getElementById('chain-ap-log-collapse-btn');
+    if (collapseBtn) {
+      collapseBtn.addEventListener('click', () => {
+        sessionStorage.setItem(expandedKey, '0');
+        renderApLogBridge();
+      });
+    }
 
     // 綁勾選事件
     bridgeEl.querySelectorAll('.chain-ap-log-check').forEach(cb => {

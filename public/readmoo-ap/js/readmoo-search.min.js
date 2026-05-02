@@ -112,17 +112,17 @@ function initReadmooSearch() {
         const q = encodeURIComponent(query);
         statusEl.innerHTML = `
           <div class="search-zero-result">
-            <p>找不到「${escapeHtml(query)}」相關書籍。</p>
-            <p class="search-zero-hint">讀墨內部搜尋只認得部分字，<strong>建議到讀墨網站查到書本網址後，貼到下方「貼網址加書單」</strong>。</p>
+            <p>「${escapeHtml(query)}」沒找到。</p>
+            <p class="search-zero-hint">讀墨自家搜尋有時候搜不全。可以到下面這些地方找找看，找到那本書時，<strong>把網址貼到下方「貼網址秒加」</strong>就好。</p>
             <div class="search-zero-actions">
               <a href="https://readmoo.com/search/keyword?q=${q}" target="_blank" rel="noopener" class="btn-secondary btn-sm">
                 <i data-lucide="external-link"></i> 到讀墨搜尋
               </a>
-              <a href="https://taiwan-ebook-lover.github.io/?q=${q}" target="_blank" rel="noopener" class="btn-secondary btn-sm">
-                <i data-lucide="external-link"></i> 跨書城比價
-              </a>
               <a href="https://www.google.com/search?q=site%3Areadmoo.com+${q}" target="_blank" rel="noopener" class="btn-secondary btn-sm">
                 <i data-lucide="external-link"></i> Google 搜讀墨
+              </a>
+              <a href="https://taiwan-ebook-lover.github.io/?q=${q}" target="_blank" rel="noopener" class="btn-secondary btn-sm">
+                <i data-lucide="external-link"></i> 跨書城比價
               </a>
             </div>
           </div>

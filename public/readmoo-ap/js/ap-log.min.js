@@ -1,10 +1,18 @@
 /**
- * AP 紀錄（私人筆記）
+ * AP 紀錄（私人筆記）— 批次模式
  * 從 LINE 對話解析「誰送了 AP 給我」，存 localStorage（本機，別人看不到）
+ *
+ * 規則：
+ * - 一段對話 = 一個送禮人（嚕寶手動填名字，因 LINE 複製不帶名）
+ * - 一段對話可有多個 AP 區塊，每區塊自己看有沒有 @ 我
+ * - 訂單末碼支援 *#＊＃ + AP*17+*68 多筆組合
+ * - 同「送禮人 + 訂單末碼」自動去重
  */
 
 const AP_LOG_KEY = 'readmoo-ap-log';
 const AP_LOG_NICK_KEY = 'readmoo-ap-nick';
+
+let batchEntries = []; // 批次清單 [{from, body}]
 
 function initApLog() {
   const nickInput = document.getElementById('ap-log-nick-input');
@@ -13,9 +21,9 @@ function initApLog() {
   const pasteSection = document.getElementById('ap-log-paste-section');
   const listSection = document.getElementById('ap-log-list-section');
   const dateInput = document.getElementById('ap-log-date');
-  const textarea = document.getElementById('ap-log-textarea');
+  const batchListEl = document.getElementById('ap-log-batch-list');
+  const addBtn = document.getElementById('ap-log-add-btn');
   const parseBtn = document.getElementById('ap-log-parse-btn');
-  const clearBtn = document.getElementById('ap-log-clear-btn');
   const parseResult = document.getElementById('ap-log-parse-result');
   const filterSelect = document.getElementById('ap-log-filter');
   const exportBtn = document.getElementById('ap-log-export-btn');
@@ -23,9 +31,9 @@ function initApLog() {
   const emptyEl = document.getElementById('ap-log-empty');
   const countEl = document.getElementById('ap-log-count');
 
-  if (!nickInput) return; // 不在 ap-log tab 不啟動
+  if (!nickInput) return;
 
-  // 初始化暱稱
+  // 暱稱
   const savedNick = localStorage.getItem(AP_LOG_NICK_KEY) || '';
   nickInput.value = savedNick;
   if (savedNick) {
@@ -33,53 +41,115 @@ function initApLog() {
     listSection.style.display = 'block';
     nickStatus.innerHTML = `<i data-lucide="check"></i> 已設定：「${escapeHtml(savedNick)}」`;
     if (window.lucide) lucide.createIcons();
+    initBatchList();
+    renderList();
   }
 
-  // 預設日期 = 今天
   if (dateInput && !dateInput.value) {
     dateInput.valueAsDate = new Date();
   }
 
   nickSaveBtn.addEventListener('click', () => {
     const v = nickInput.value.trim();
-    if (!v) {
-      showToast && showToast('請輸入暱稱');
-      return;
-    }
+    if (!v) { showToast && showToast('請輸入暱稱'); return; }
     localStorage.setItem(AP_LOG_NICK_KEY, v);
     nickStatus.innerHTML = `<i data-lucide="check"></i> 已儲存：「${escapeHtml(v)}」`;
     pasteSection.style.display = 'block';
     listSection.style.display = 'block';
     if (window.lucide) lucide.createIcons();
+    initBatchList();
     renderList();
   });
 
-  parseBtn.addEventListener('click', () => {
-    const text = textarea.value.trim();
-    if (!text) {
-      showToast && showToast('請貼上 LINE 對話');
-      return;
-    }
-    const nick = localStorage.getItem(AP_LOG_NICK_KEY);
-    if (!nick) {
-      showToast && showToast('請先設定暱稱');
-      return;
-    }
-    const date = dateInput.value || new Date().toISOString().slice(0, 10);
-    const parsed = parseLineConversation(text, nick);
-    renderParseResult(parsed, date);
+  addBtn.addEventListener('click', () => {
+    batchEntries.push({ from: '', body: '' });
+    renderBatchList();
   });
 
-  clearBtn.addEventListener('click', () => {
-    textarea.value = '';
-    parseResult.innerHTML = '';
+  parseBtn.addEventListener('click', () => {
+    const nick = localStorage.getItem(AP_LOG_NICK_KEY);
+    if (!nick) { showToast && showToast('請先設定暱稱'); return; }
+
+    // 蒐集表單值（從 DOM 讀，避免 input 事件沒同步）
+    syncBatchFromDom();
+
+    const date = dateInput.value || new Date().toISOString().slice(0, 10);
+    const allParsed = [];
+    const issues = [];
+
+    batchEntries.forEach((entry, idx) => {
+      if (!entry.body.trim()) return;
+      if (!entry.from.trim()) {
+        issues.push(`第 ${idx + 1} 塊沒填送禮人，已跳過`);
+        return;
+      }
+      const parsed = parseConversation(entry.body, nick, entry.from.trim());
+      allParsed.push(...parsed);
+    });
+
+    renderParseResult(allParsed, date, issues);
   });
 
   filterSelect.addEventListener('change', renderList);
   exportBtn.addEventListener('click', exportCsv);
 
-  function renderParseResult(parsed, date) {
-    if (parsed.length === 0) {
+  function initBatchList() {
+    if (batchEntries.length === 0) {
+      batchEntries = [{ from: '', body: '' }];
+    }
+    renderBatchList();
+  }
+
+  function renderBatchList() {
+    batchListEl.innerHTML = batchEntries.map((entry, idx) => `
+      <div class="ap-log-batch-card" data-idx="${idx}">
+        <div class="ap-log-batch-header">
+          <span class="ap-log-batch-num">${idx + 1}</span>
+          <input type="text" class="input-field ap-log-batch-from" data-idx="${idx}" placeholder="送禮人名字（例：小魚）" value="${escapeHtml(entry.from)}">
+          ${batchEntries.length > 1 ? `<button class="btn-icon ap-log-batch-remove" data-idx="${idx}" title="刪除這塊"><i data-lucide="x"></i></button>` : ''}
+        </div>
+        <textarea class="input-field ap-log-batch-body" data-idx="${idx}" rows="6" placeholder="貼這個人的 LINE 對話進來&#10;例：&#10;AP*68&#10;@Nancy Tsai&#10;@嚕嚕在看書！">${escapeHtml(entry.body)}</textarea>
+      </div>
+    `).join('');
+
+    if (window.lucide) lucide.createIcons();
+
+    // 綁事件
+    batchListEl.querySelectorAll('.ap-log-batch-from').forEach(inp => {
+      inp.addEventListener('input', e => {
+        const i = parseInt(e.target.dataset.idx, 10);
+        batchEntries[i].from = e.target.value;
+      });
+    });
+    batchListEl.querySelectorAll('.ap-log-batch-body').forEach(ta => {
+      ta.addEventListener('input', e => {
+        const i = parseInt(e.target.dataset.idx, 10);
+        batchEntries[i].body = e.target.value;
+      });
+    });
+    batchListEl.querySelectorAll('.ap-log-batch-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = parseInt(btn.dataset.idx, 10);
+        batchEntries.splice(i, 1);
+        if (batchEntries.length === 0) batchEntries = [{ from: '', body: '' }];
+        renderBatchList();
+      });
+    });
+  }
+
+  function syncBatchFromDom() {
+    batchListEl.querySelectorAll('.ap-log-batch-from').forEach(inp => {
+      const i = parseInt(inp.dataset.idx, 10);
+      if (batchEntries[i]) batchEntries[i].from = inp.value;
+    });
+    batchListEl.querySelectorAll('.ap-log-batch-body').forEach(ta => {
+      const i = parseInt(ta.dataset.idx, 10);
+      if (batchEntries[i]) batchEntries[i].body = ta.value;
+    });
+  }
+
+  function renderParseResult(parsed, date, issues) {
+    if (parsed.length === 0 && issues.length === 0) {
       parseResult.innerHTML = '<div class="ap-log-warn"><i data-lucide="alert-circle"></i> 沒有解析到任何送你 AP 的紀錄。檢查暱稱有沒有打對，或對話格式是否正確。</div>';
       if (window.lucide) lucide.createIcons();
       return;
@@ -95,6 +165,11 @@ function initApLog() {
     });
 
     let html = '';
+    if (issues.length > 0) {
+      html += '<div class="ap-log-warn"><i data-lucide="alert-circle"></i><div>';
+      issues.forEach(s => html += `<div>${escapeHtml(s)}</div>`);
+      html += '</div></div>';
+    }
     if (newRecords.length > 0) {
       html += '<div class="ap-log-result-block"><strong>新紀錄（' + newRecords.length + ' 筆）：</strong><ul>';
       newRecords.forEach(r => {
@@ -110,6 +185,9 @@ function initApLog() {
         html += `<li><i data-lucide="skip-forward"></i> ${escapeHtml(r.from)} 訂單 *${escapeHtml(r.code)}</li>`;
       });
       html += '</ul></div>';
+    }
+    if (newRecords.length === 0 && dupRecords.length > 0 && issues.length === 0) {
+      html += '<div class="ap-log-warn-soft">這批對話都已經登記過了。</div>';
     }
     parseResult.innerHTML = html;
     if (window.lucide) lucide.createIcons();
@@ -132,7 +210,9 @@ function initApLog() {
         });
         saveLog(log);
         showToast && showToast(`已登記 ${newRecords.length} 筆`);
-        textarea.value = '';
+        // 清空批次表單
+        batchEntries = [{ from: '', body: '' }];
+        renderBatchList();
         parseResult.innerHTML = '';
         renderList();
       });
@@ -146,7 +226,6 @@ function initApLog() {
     if (filter === 'pending') filtered = log.filter(r => !r.returned);
     else if (filter === 'returned') filtered = log.filter(r => r.returned);
 
-    // 按日期新到舊
     filtered.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
     countEl.textContent = filtered.length > 0 ? `共 ${filtered.length} 筆` : '';
@@ -188,11 +267,7 @@ function initApLog() {
         const id = e.target.dataset.id;
         const log = getLog();
         const r = log.find(x => x.id === id);
-        if (r) {
-          r.returned = e.target.checked;
-          saveLog(log);
-          renderList();
-        }
+        if (r) { r.returned = e.target.checked; saveLog(log); renderList(); }
       });
     });
     listEl.querySelectorAll('.ap-log-points-input').forEach(inp => {
@@ -200,10 +275,7 @@ function initApLog() {
         const id = e.target.dataset.id;
         const log = getLog();
         const r = log.find(x => x.id === id);
-        if (r) {
-          r.apPoints = e.target.value.trim();
-          saveLog(log);
-        }
+        if (r) { r.apPoints = e.target.value.trim(); saveLog(log); }
       });
     });
     listEl.querySelectorAll('.ap-log-note-input').forEach(inp => {
@@ -211,10 +283,7 @@ function initApLog() {
         const id = e.target.dataset.id;
         const log = getLog();
         const r = log.find(x => x.id === id);
-        if (r) {
-          r.note = e.target.value.trim();
-          saveLog(log);
-        }
+        if (r) { r.note = e.target.value.trim(); saveLog(log); }
       });
     });
     listEl.querySelectorAll('.ap-log-delete-btn').forEach(btn => {
@@ -230,10 +299,7 @@ function initApLog() {
 
   function exportCsv() {
     const log = getLog();
-    if (log.length === 0) {
-      showToast && showToast('還沒有紀錄可以匯出');
-      return;
-    }
+    if (log.length === 0) { showToast && showToast('還沒有紀錄可以匯出'); return; }
     const header = ['日期', '送禮人', '訂單末碼', 'AP 點數', '備註', '已回禮'];
     const rows = log.map(r => [
       r.date || '',
@@ -254,78 +320,34 @@ function initApLog() {
     a.click();
     URL.revokeObjectURL(url);
   }
-
-  // 初次渲染
-  if (savedNick) renderList();
 }
 
-// ============ Parser ============
-// 規則：
-// 1. 訊息按行切，遇到「名字：」開頭視為新訊息
-// 2. 每則訊息內，按 AP 區塊切（每個 AP*XX 或 *XX+*YY 算一個區塊起點）
-// 3. 區塊內有 @我的暱稱 → 把區塊內所有訂單末碼登記給訊息發起人
-function parseLineConversation(text, myNick) {
+// ============ Parser（單人對話）============
+// 一段對話 = 一個送禮人，可能有多個 AP 區塊
+// 區塊內有 @我的暱稱 → 把區塊內所有訂單末碼登記給該送禮人
+function parseConversation(body, myNick, fromName) {
   const records = [];
-  // 把全形冒號統一成半形，方便切名字
-  const normalized = text.replace(/：/g, ':');
-  const lines = normalized.split('\n');
+  const blocks = splitIntoBlocks(body);
 
-  // 把對話切成「訊息群組」（每個訊息有一個發起人）
-  const messages = [];
-  let current = null;
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (!line) continue;
-    // 偵測「名字: 內容」格式（名字不含 @ 不含空格冒號）
-    const m = line.match(/^([^:@\s][^:]{0,20}?):\s*(.*)$/);
-    if (m) {
-      if (current) messages.push(current);
-      current = { from: m[1].trim(), body: m[2] };
-    } else if (current) {
-      current.body += '\n' + line;
-    }
-  }
-  if (current) messages.push(current);
+  for (const block of blocks) {
+    // 抓區塊內所有訂單末碼
+    const codes = [];
+    const re = /[*#＊＃]\s*(\d{1,6})/g;
+    let bm;
+    while ((bm = re.exec(block)) !== null) codes.push(bm[1]);
+    if (codes.length === 0) continue;
 
-  for (const msg of messages) {
-    const fromName = msg.from;
-    if (!fromName || fromName === myNick) continue; // 跳過自己發的
+    // 抓區塊內 @ 名單
+    const mentions = extractMentions(block);
+    const meMentioned = mentions.some(m => m === myNick || m.includes(myNick) || myNick.includes(m));
+    if (!meMentioned) continue;
 
-    // 找所有訂單末碼位置（[*#＊＃] 後接 1-6 位數字）
-    // 也支援「*17+*68」這種多筆組合
-    const codeRegex = /[*#＊＃]\s*(\d{1,6})/g;
-    const codeMatches = [];
-    let cm;
-    while ((cm = codeRegex.exec(msg.body)) !== null) {
-      codeMatches.push({ code: cm[1], pos: cm.index });
-    }
-    if (codeMatches.length === 0) continue;
-
-    // 按區塊分組：相鄰（中間沒有 @ 段落）的訂單末碼算同一區塊
-    // 簡化策略：把訊息按「AP 出現位置」切段，每段內的所有 codes + @ 名單算一組
-    // 更穩健：把 message body 用空行或 AP 關鍵字斷成區塊
-    const blocks = splitIntoBlocks(msg.body);
-    for (const block of blocks) {
-      // 區塊內的訂單末碼
-      const codes = [];
-      let bm;
-      const re = /[*#＊＃]\s*(\d{1,6})/g;
-      while ((bm = re.exec(block)) !== null) codes.push(bm[1]);
-      if (codes.length === 0) continue;
-
-      // 區塊內的 @ 名單
-      const mentions = extractMentions(block);
-      const meMentioned = mentions.some(m => m === myNick || m.includes(myNick) || myNick.includes(m));
-      if (!meMentioned) continue;
-
-      // 登記每個 code
-      for (const code of codes) {
-        records.push({ from: fromName, code });
-      }
+    for (const code of codes) {
+      records.push({ from: fromName, code });
     }
   }
 
-  // 同訊息內去重（避免一個區塊有兩個一樣的 *68）
+  // 去重（同一塊內可能有重複）
   const seen = new Set();
   return records.filter(r => {
     const k = `${r.from}|${r.code}`;
@@ -335,25 +357,24 @@ function parseLineConversation(text, myNick) {
   });
 }
 
-// 把訊息內文切成「區塊」
-// 規則：以「空行」或「AP*XX 出現」當區塊分界
 function splitIntoBlocks(body) {
-  // 先按連續空行切
+  // 用空行切區塊
   const paragraphs = body.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean);
-  // 如果沒空行（只有一段），整則就是一個區塊
   if (paragraphs.length <= 1) return [body];
   return paragraphs;
 }
 
-// 抽取 @ 名單（支援中英數、底線、括號內字符、Emoji）
 function extractMentions(text) {
   const mentions = [];
-  // @ 後抓到下一個 @ 之前 / 換行 / 字串結尾
-  const re = /@([^@\n]+?)(?=\s*@|\s*$|\n)/g;
+  // @ 後抓到下一個 @ 之前 / 換行 / AP 字樣 / 字串結尾
+  // 不要吃進下一個 @
+  const re = /@([^@\n]+?)(?=\s*@|\s*$|\n|\s+AP[*#＊＃])/g;
   let m;
   while ((m = re.exec(text)) !== null) {
-    const raw = m[1].trim();
-    // 跳過 +1, +2 這種
+    let raw = m[1].trim();
+    // 移除尾巴的 AP 字樣（例如「@瑞瑞 AP*17+68」中 raw 會是「瑞瑞」，但有時會吃到「瑞瑞 AP」）
+    raw = raw.replace(/\s*AP[*#＊＃].*$/, '').trim();
+    // 跳過 +1, +2, +N 這種
     if (/^\+\d+$/.test(raw)) continue;
     if (raw.length === 0) continue;
     mentions.push(raw);
@@ -361,20 +382,15 @@ function extractMentions(text) {
   return mentions;
 }
 
-// ============ 工具 ============
 function getLog() {
-  try {
-    return JSON.parse(localStorage.getItem(AP_LOG_KEY) || '[]');
-  } catch (e) {
-    return [];
-  }
+  try { return JSON.parse(localStorage.getItem(AP_LOG_KEY) || '[]'); }
+  catch (e) { return []; }
 }
 
 function saveLog(log) {
   localStorage.setItem(AP_LOG_KEY, JSON.stringify(log));
 }
 
-// 載入時初始化（等 DOM ready）
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('ap-log-nick-input')) {
     initApLog();

@@ -60,7 +60,7 @@
     onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js'"></script>
 
   <!-- Styles -->
-  <link rel="stylesheet" href="css/style.min.css?v=20260502d">
+  <link rel="stylesheet" href="css/style.min.css?v=20260502e">
 
   <!-- 每日好書 tab 樣式 -->
   <style>
@@ -968,22 +968,22 @@
           <div id="ap-log-nick-status" class="ap-log-nick-status"></div>
         </div>
 
-        <!-- 貼對話解析 -->
+        <!-- 批次貼對話解析 -->
         <div class="ap-log-section" id="ap-log-paste-section" style="display:none;">
-          <h2>貼 LINE 對話 → 解析</h2>
-          <p class="section-desc">把整段 LINE 對話貼進來，自動找出「誰送 AP 給你」。</p>
+          <h2>批次登記 AP</h2>
+          <p class="section-desc">每一塊填「送禮人」+ 貼那個人的 LINE 對話，可以加很多塊。一次解析全部。</p>
           <div class="ap-log-date-row">
             <label for="ap-log-date">對話日期：</label>
             <input type="date" id="ap-log-date" class="input-field">
-            <span class="ap-log-date-hint">（預設今天，可改成對話實際發生的日期）</span>
+            <span class="ap-log-date-hint">（這批對話通通用這個日期）</span>
           </div>
-          <textarea id="ap-log-textarea" class="input-field ap-log-textarea" rows="10" placeholder="例：&#10;小魚：AP*68&#10;@Nancy Tsai&#10;@嚕嚕在看書！&#10;&#10;雲雲：@嚕嚕在看書！ #634請收"></textarea>
+          <div id="ap-log-batch-list" class="ap-log-batch-list"></div>
           <div class="ap-log-paste-actions">
-            <button id="ap-log-parse-btn" class="btn-primary btn-sm">
-              <i data-lucide="scan-search"></i> 解析
+            <button id="ap-log-add-btn" class="btn-secondary btn-sm">
+              <i data-lucide="plus"></i> 加一筆送禮人
             </button>
-            <button id="ap-log-clear-btn" class="btn-secondary btn-sm">
-              <i data-lucide="x"></i> 清空
+            <button id="ap-log-parse-btn" class="btn-primary btn-sm">
+              <i data-lucide="scan-search"></i> 解析全部
             </button>
           </div>
           <div id="ap-log-parse-result" class="ap-log-parse-result"></div>
@@ -1260,7 +1260,7 @@
   <script src="js/changelog.min.js?v=20260303n"></script>
   <script src="js/export-utils.min.js?v=20260303n"></script>
   <script src="js/readmoo-search.min.js?v=20260502c"></script>
-  <script src="js/ap-log.min.js?v=20260502d"></script>
+  <script src="js/ap-log.min.js?v=20260502e"></script>
   <script src="js/deals.js?v=20260319b"></script>
 </body>
 </html>

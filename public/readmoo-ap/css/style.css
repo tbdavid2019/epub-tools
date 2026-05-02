@@ -2250,3 +2250,53 @@ html.dark .rm-result-card:hover {
     width: 100%;
   }
 }
+
+/* ============ AP 紀錄 — 批次模式 ============ */
+.ap-log-batch-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+.ap-log-batch-card {
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  background: var(--bg-page);
+}
+.ap-log-batch-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+.ap-log-batch-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-rose);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.ap-log-batch-from {
+  flex: 1;
+}
+.ap-log-batch-remove {
+  flex-shrink: 0;
+}
+.ap-log-batch-body {
+  width: 100%;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 13px;
+  resize: vertical;
+}
+.ap-log-warn-soft {
+  padding: var(--space-sm) var(--space-md);
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}

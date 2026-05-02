@@ -15,15 +15,22 @@ export async function onRequest(context) {
   }
 
   const url = new URL(context.request.url);
-  const query = url.searchParams.get('q')?.trim();
+  const rawQuery = url.searchParams.get('q')?.trim();
 
-  if (!query || query.length < 1 || query.length > 100) {
+  if (!rawQuery || rawQuery.length < 1 || rawQuery.length > 100) {
     return resp({ error: '請輸入 1~100 字的搜尋關鍵字' }, 400);
   }
 
   // 健康檢查
-  if (query === '__ping__') {
+  if (rawQuery === '__ping__') {
     return resp({ ok: true, ts: Date.now() });
+  }
+
+  // 讀墨搜尋不接受全形/半形標點（哈利波特：神秘的魔法石 → 0 筆）
+  // 把標點換成空格，再壓掉多餘空白
+  const query = stripPunctuation(rawQuery);
+  if (!query) {
+    return resp({ query: rawQuery, count: 0, books: [] });
   }
 
   try {
@@ -66,7 +73,7 @@ export async function onRequest(context) {
     // 平行抓每本書的出版日期（從詳情頁）
     await fetchPublishDates(books);
 
-    const body = JSON.stringify({ query, count: books.length, books });
+    const body = JSON.stringify({ query: rawQuery, count: books.length, books });
 
     // 寫入 cache（失敗不影響回應）
     if (cache && cacheKey) {
@@ -88,6 +95,14 @@ export async function onRequest(context) {
 
 function resp(obj, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers: CORS_HEADERS });
+}
+
+function stripPunctuation(s) {
+  return s
+    .replace(/[：，。、？！「」『』（）〈〉《》【】〔〕——…・·~～\-—‧'"'']/g, ' ')
+    .replace(/[:,.?!"'`()\[\]{}<>~\-—|/\\;]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function parseSearchResults(html) {

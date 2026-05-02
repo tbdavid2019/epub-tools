@@ -339,10 +339,50 @@
     .deal-card.is-today {
       background: rgba(168, 181, 160, 0.15);
       box-shadow: inset 0 0 0 2px rgba(168, 181, 160, 0.3);
+      position: relative;
+    }
+    /* A: 左側鼠尾草色粗條 — 一眼看到「這本是今天」 */
+    .deal-card.is-today::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--color-sage-dark);
+      border-radius: 4px 0 0 4px;
+      z-index: 2;
+    }
+    /* B: 封面右上角「今日」徽章 */
+    .deal-card.is-today .book-cover-wrap {
+      position: relative;
+    }
+    .deal-card.is-today .book-cover-wrap::after {
+      content: '今日';
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: var(--color-sage-dark);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(92, 74, 58, 0.25);
+      letter-spacing: 0.05em;
+      z-index: 3;
+      line-height: 1;
     }
     html.dark .deal-card.is-today {
       background: rgba(168, 181, 160, 0.10);
       box-shadow: inset 0 0 0 2px rgba(168, 181, 160, 0.2);
+    }
+    html.dark .deal-card.is-today::before {
+      background: var(--color-sage);
+    }
+    html.dark .deal-card.is-today .book-cover-wrap::after {
+      background: var(--color-sage);
+      color: var(--bg-page);
     }
     .deal-card.is-past { opacity: 0.45; }
     .deal-card.is-past .deal-link { display: none; }
@@ -1567,7 +1607,7 @@
     // === Fetch Deals ===
     async function fetchDeals(endpoint = '/api/deals') {
       try {
-        const res = await fetch(API_BASE + endpoint + '?v=20260502-1');
+        const res = await fetch(API_BASE + endpoint + '?v=20260502-2');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         allDealsData = data;

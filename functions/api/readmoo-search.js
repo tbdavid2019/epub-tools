@@ -40,6 +40,9 @@ export async function onRequest(context) {
     return resp({ query: rawQuery, count: 0, books: [] });
   }
 
+  // ?nocache=1 → 強制繞過快取
+  const noCache = url.searchParams.get('nocache') === '1';
+
   try {
     // Cache（安全包裝，失敗就跳過）
     let cache = null;
@@ -47,13 +50,16 @@ export async function onRequest(context) {
     try {
       cache = caches.default;
       const cacheUrl = new URL(context.request.url);
-      cacheUrl.searchParams.set('_ck', query.toLowerCase());
+      // _ck 加版本碼，改演算法時 bump 版本能清掉舊快取
+      cacheUrl.searchParams.set('_ck', 'v3-' + query.toLowerCase());
       cacheKey = new Request(cacheUrl.toString());
-      const cached = await cache.match(cacheKey);
-      if (cached) {
-        return new Response(cached.body, {
-          headers: { ...CORS_HEADERS, 'X-Cache': 'HIT' },
-        });
+      if (!noCache) {
+        const cached = await cache.match(cacheKey);
+        if (cached) {
+          return new Response(cached.body, {
+            headers: { ...CORS_HEADERS, 'X-Cache': 'HIT' },
+          });
+        }
       }
     } catch (e) {
       // cache 不可用就跳過

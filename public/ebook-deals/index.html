@@ -263,6 +263,18 @@
     .platform-column {
       min-width: 0;
     }
+    /* 「今日資料更新中」橘黃提示條 */
+    .data-notice {
+      margin: 0 0 14px;
+      padding: 10px 16px;
+      background: var(--color-gold-bg);
+      border-left: 4px solid var(--color-gold);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 14px;
+      color: var(--color-gold-dark);
+      line-height: 1.6;
+    }
+    html.dark .data-notice { color: var(--color-gold); }
     .column-header {
       font-family: var(--font-serif);
       font-size: 18px;
@@ -1607,7 +1619,7 @@
     // === Fetch Deals ===
     async function fetchDeals(endpoint = '/api/deals') {
       try {
-        const res = await fetch(API_BASE + endpoint + '?v=20260502-3');
+        const res = await fetch(API_BASE + endpoint + '?v=20260502-4');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         allDealsData = data;
@@ -1711,10 +1723,30 @@
         const calHeader = document.getElementById('cal-header-' + platform);
         const columnHeader = grid.closest('.platform-column').querySelector('.column-header');
 
+        // 偵測「有未來資料但今天沒資料」 — 通常是爬蟲還沒跑、資料延遲
+        // HyRead 不適用（它本來就是週末才有，平日沒資料是正常的）
+        const hasToday = showDeals.some(d => d.date === today);
+        const showNoTodayNotice = !hasToday && showDeals.length > 0 && platform !== 'hyread';
+
+        // 找/建 notice 元素（放在 calendar-wrap 之前）
+        const calWrap = grid.closest('.calendar-wrap');
+        const platformCol = grid.closest('.platform-column');
+        let noticeEl = platformCol.querySelector('.data-notice');
+        if (showNoTodayNotice) {
+          if (!noticeEl) {
+            noticeEl = document.createElement('div');
+            noticeEl.className = 'data-notice';
+            calWrap.parentNode.insertBefore(noticeEl, calWrap);
+          }
+          noticeEl.textContent = '今日資料更新中（每天 00:15 自動更新），先看接下來幾天的好書 ↓';
+        } else if (noticeEl) {
+          noticeEl.remove();
+        }
+
         if (showDeals.length === 0) {
           if (calHeader) calHeader.innerHTML = '';
           columnHeader.innerHTML = platformNames[platform];
-          grid.innerHTML = '<div class="empty-state"><p>今天無特價</p></div>';
+          grid.innerHTML = '<div class="empty-state"><p>今天無特價</p><p style="font-size:13px;color:var(--text-muted);margin-top:6px;">資料每日 00:15 自動更新</p></div>';
         } else if (platform === 'hyread') {
           // HyRead 特例：本週末同一批書（不分日，只顯示一個「本週末」標頭）
           const dates = [...new Set(showDeals.map(d => d.date))].sort();

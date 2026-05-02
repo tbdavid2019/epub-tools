@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "source": "蘇諾 Skill / references/suno-prompt-rules.md（dawgshart 反重力井派 + ZML 觀察）",
+    "source": "蘇諾 Skill / references/suno-prompt-rules.md（反重力井邏輯）",
     "principle": "Suno 是統計模型，每個關鍵詞都會把它拖進預設引力井。用『負向排除』把它拉回來。",
     "lastSync": "2026-05-02"
   },

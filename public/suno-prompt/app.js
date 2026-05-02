@@ -102,7 +102,7 @@
       no: 6, eyebrow: 'Elements · 特殊元素',
       title: '想塞點什麼特別的嗎？',
       hint: '選 1-3 個（太多 Suno 會打架）',
-      suno: '這是 ZML 招牌——音景跟跨類型混血，最容易讓 Suno 離開俗套。',
+      suno: '塞點音景跟跨類型混血，最容易讓 Suno 離開俗套。',
       type: 'chips-multi',
       key: 'elements',
       auto: false,

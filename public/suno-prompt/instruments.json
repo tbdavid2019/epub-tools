@@ -1,0 +1,97 @@
+{
+  "_meta": {
+    "source": "蘇諾 Skill / references/templates.md + suno-prompt-rules.md（步驟 2-4）",
+    "principle": "樂器要寫具體不要抽象（不要 guitar，要 fingerpicked nylon guitar）；音景是 ZML 招牌；製作手法增加層次",
+    "lastSync": "2026-05-02"
+  },
+  "instruments": {
+    "弦樂": [
+      { "name": "fingerpicked nylon guitar", "vibe": ["溫暖", "溫柔", "敘事"] },
+      { "name": "acoustic guitar strumming", "vibe": ["夢幻", "希望", "indie"] },
+      { "name": "crunchy distorted guitar", "vibe": ["爆發", "搖滾"] },
+      { "name": "shamisen bass", "vibe": ["東方", "戲劇", "迷幻"] },
+      { "name": "upright bass", "vibe": ["爵士", "懷舊", "懸疑"] },
+      { "name": "808 sub bass", "vibe": ["興奮", "電子", "衝突"] },
+      { "name": "funk bass", "vibe": ["懷舊", "city pop"] },
+      { "name": "dark pluck bass", "vibe": ["techno", "深沉"] }
+    ],
+    "鼓組": [
+      { "name": "soft brush drums", "vibe": ["溫暖", "敘事", "爵士"] },
+      { "name": "brushed snare", "vibe": ["懷舊", "爵士", "敘事"] },
+      { "name": "soft kick", "vibe": ["夢幻", "indie"] },
+      { "name": "driving kick", "vibe": ["興奮", "techno", "爆發"] },
+      { "name": "tribal percussion", "vibe": ["部落", "深沉", "techno"] },
+      { "name": "contact mic percussion", "vibe": ["實驗", "懸疑"] },
+      { "name": "analog drum machine", "vibe": ["懷舊", "city pop", "夢幻"] }
+    ],
+    "鍵盤": [
+      { "name": "felt piano", "vibe": ["溫暖", "敘事", "懷舊", "想哭"] },
+      { "name": "vintage piano", "vibe": ["懷舊", "老上海"] },
+      { "name": "gentle piano", "vibe": ["療癒", "夢幻"] },
+      { "name": "bowed piano harmonics", "vibe": ["實驗", "懸疑", "深沉"] },
+      { "name": "soft synth pad", "vibe": ["療癒", "夢幻", "ambient"] },
+      { "name": "analog synth pad", "vibe": ["夢幻", "indie"] },
+      { "name": "neon synth pad", "vibe": ["東方", "迷幻", "電子"] },
+      { "name": "distorted synth stabs", "vibe": ["興奮", "衝突", "hyperpop"] }
+    ],
+    "管樂": [
+      { "name": "muted trumpet", "vibe": ["懷舊", "爵士", "懸疑"] },
+      { "name": "saxophone solo", "vibe": ["懷舊", "city pop"] }
+    ],
+    "特殊樂器": [
+      { "name": "crystal singing bowl", "vibe": ["療癒", "ambient"] },
+      { "name": "crystal chimes", "vibe": ["夢幻", "city pop"] }
+    ]
+  },
+  "soundscapes": [
+    { "name": "vinyl crackle", "vibe": ["懷舊", "lo-fi"], "purpose": "全場鋪底" },
+    { "name": "vinyl warmth", "vibe": ["溫暖", "懷舊"], "purpose": "全場鋪底" },
+    { "name": "rain on glass", "vibe": ["療癒", "想哭", "孤單"], "purpose": "氛圍音" },
+    { "name": "distant thunder", "vibe": ["懸疑", "深沉"], "purpose": "氛圍音" },
+    { "name": "neon hum", "vibe": ["東方", "迷幻", "城市"], "purpose": "全場鋪底" },
+    { "name": "pachinko bell", "vibe": ["東方", "戲劇"], "purpose": "intro/outro 點綴" },
+    { "name": "key turning sound", "vibe": ["懸疑", "敘事", "故事"], "purpose": "intro 場景音" },
+    { "name": "door creaks open", "vibe": ["懸疑", "敘事"], "purpose": "intro 場景音" },
+    { "name": "vinyl record spinning", "vibe": ["懷舊", "敘事"], "purpose": "intro 場景音" },
+    { "name": "tape hiss", "vibe": ["懷舊", "lo-fi"], "purpose": "全場鋪底" },
+    { "name": "distant radio static", "vibe": ["懷舊", "復古"], "purpose": "intro/outro" },
+    { "name": "tape splice glitch", "vibe": ["實驗", "衝突", "hyperpop"], "purpose": "點綴" },
+    { "name": "walkie-talkie vocal effect", "vibe": ["實驗", "工業"], "purpose": "vocal 處理" }
+  ],
+  "production": [
+    { "name": "tape saturation", "vibe": ["懷舊", "溫暖", "lo-fi"] },
+    { "name": "sidechain pump", "vibe": ["電子", "techno", "東方"] },
+    { "name": "vocal pitch shift", "vibe": ["實驗", "hyperpop", "衝突"] },
+    { "name": "reverb-drenched backing vocals", "vibe": ["夢幻", "indie"] },
+    { "name": "low-pass filter sweep", "vibe": ["techno", "電子"] },
+    { "name": "spring reverb", "vibe": ["懷舊", "復古"] },
+    { "name": "stadium reverb", "vibe": ["爆發", "戲劇"] },
+    { "name": "industrial texture", "vibe": ["工業", "techno", "深沉"] }
+  ],
+  "vocalStyles": {
+    "女聲": [
+      { "name": "breathy female vocal", "vibe": ["溫暖", "夢幻", "indie"] },
+      { "name": "ethereal female whisper", "vibe": ["療癒", "ambient"] },
+      { "name": "kobushi female vocal", "vibe": ["東方", "戲劇", "演歌"] },
+      { "name": "smoky female vocal", "vibe": ["懷舊", "老上海", "孤單"] },
+      { "name": "breathy japanese female vocal", "vibe": ["懷舊", "city pop"] }
+    ],
+    "男聲": [
+      { "name": "raspy male vocal", "vibe": ["敘事", "故事", "懸疑"] },
+      { "name": "smooth male vocal", "vibe": ["溫暖", "敘事"] }
+    ],
+    "純配樂": [
+      { "name": "no vocal, instrumental only", "vibe": ["純配樂"] },
+      { "name": "whispered adlibs only", "vibe": ["techno", "氛圍"] }
+    ]
+  },
+  "energyArcs": {
+    "慢-溫": "intimate verse → gentle chorus",
+    "慢-濃": "intimate confession → dark reveal",
+    "中-暖": "wistful → hopeful arc",
+    "中-濃": "intimate verse → explosive chorus",
+    "快-爆": "chaotic → euphoric arc",
+    "快-持續": "slow build → relentless drop",
+    "氛圍": "floating ambience"
+  }
+}

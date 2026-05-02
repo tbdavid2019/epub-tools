@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>蘇諾大姊姊 · Suno 提示詞產生器 | HelloRuru Tools</title>
+  <meta name="description" content="3 分鐘配出一首 Suno 不會跑掉的歌。蘇諾大姊姊用 PM 追問式幫你寫好 Style 字串、歌詞結構、Persona 命名，一鍵複製貼到 Suno。">
+  <meta name="keywords" content="Suno, AI 寫歌, 提示詞產生器, Style prompt, 歌詞結構, HelloRuru">
+  <meta property="og:title" content="蘇諾大姊姊 · Suno 提示詞產生器">
+  <meta property="og:description" content="蘇諾姊姊一題一題問你，3 分鐘配出 Suno 不會跑掉的好歌。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tools.helloruru.com/suno-prompt/">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="canonical" href="https://tools.helloruru.com/suno-prompt/">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=Playfair+Display:ital,wght@1,900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 頂部唱針進度條 -->
+  <div class="progress-bar" id="progress-bar" hidden>
+    <div class="progress-track"></div>
+    <div class="progress-needle" id="progress-needle"></div>
+    <div class="progress-label" id="progress-label">Q.0 / 7</div>
+  </div>
+
+  <!-- 蘇諾浮動小卡 -->
+  <div class="suno-bubble" id="suno-bubble" hidden>
+    <button class="suno-bubble-close" id="suno-bubble-close" aria-label="關閉提示">×</button>
+    <div class="suno-bubble-avatar">蘇</div>
+    <div class="suno-bubble-content">
+      <div class="suno-bubble-name">蘇諾</div>
+      <div class="suno-bubble-text" id="suno-bubble-text">我是蘇諾，HelloRuru 音樂部門總監。等等問你的問題不是表單，是姊姊真的會問的問題。</div>
+    </div>
+  </div>
+
+  <!-- ============= Hero 入口頁 ============= -->
+  <section class="screen screen-hero" id="screen-hero">
+    <div class="hero-watermark">SUNO</div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">HelloRuru × Suno</div>
+      <h1 class="hero-title">
+        <span class="hero-title-zh">來，姊姊問你幾題</span>
+        <span class="hero-title-en">Let's Make a Record</span>
+      </h1>
+      <p class="hero-sub">3 分鐘配出一首 Suno 不會跑掉的歌</p>
+
+      <div class="hero-entry-cards">
+        <button class="entry-card" data-mode="pm" id="btn-mode-pm">
+          <div class="entry-card-num">01</div>
+          <div class="entry-card-title">從零開始</div>
+          <div class="entry-card-desc">姊姊問你 7 題，幫你客製整套 Style</div>
+          <div class="entry-card-cta">開始追問 →</div>
+        </button>
+
+        <button class="entry-card" data-mode="template" id="btn-mode-template">
+          <div class="entry-card-num">02</div>
+          <div class="entry-card-title">挑張範本</div>
+          <div class="entry-card-desc">10 張預設組合，挑一張微調再用</div>
+          <div class="entry-card-cta">看範本 →</div>
+        </button>
+      </div>
+
+      <button class="hero-resume" id="hero-resume" hidden>
+        繼續上次（停在 Q<span id="resume-q">3</span>）→
+      </button>
+    </div>
+  </section>
+
+  <!-- ============= PM 追問流程 ============= -->
+  <section class="screen screen-pm" id="screen-pm" hidden>
+    <div class="pm-watermark" id="pm-watermark">Q.01</div>
+    <div class="pm-eyebrow" id="pm-eyebrow">Purpose & Use Case</div>
+
+    <div class="pm-question-area" id="pm-question-area">
+      <!-- 動態插入題目 -->
+    </div>
+
+    <div class="pm-nav">
+      <button class="btn-prev" id="btn-prev">← 上一題</button>
+      <button class="btn-next" id="btn-next" disabled>下一題 →</button>
+    </div>
+  </section>
+
+  <!-- ============= 範本選擇頁 ============= -->
+  <section class="screen screen-templates" id="screen-templates" hidden>
+    <div class="templates-header">
+      <button class="btn-back" id="btn-back-from-templates">← 回首頁</button>
+      <h2 class="templates-title">挑一張範本</h2>
+      <p class="templates-sub">10 張姊姊精選組合，點開可以微調再用</p>
+    </div>
+    <div class="templates-grid" id="templates-grid">
+      <!-- 動態插入 -->
+    </div>
+  </section>
+
+  <!-- ============= 範本預覽抽屜 ============= -->
+  <div class="drawer-overlay" id="drawer-overlay" hidden></div>
+  <aside class="drawer" id="template-drawer" hidden>
+    <button class="drawer-close" id="drawer-close" aria-label="關閉">×</button>
+    <div class="drawer-content" id="drawer-content"></div>
+  </aside>
+
+  <!-- ============= 結果頁 ============= -->
+  <section class="screen screen-result" id="screen-result" hidden>
+    <div class="result-header">
+      <button class="btn-back" id="btn-back-from-result">← 回首頁</button>
+      <div class="result-eyebrow">Side A · Track 01</div>
+      <h2 class="result-title">姊姊幫你配好了</h2>
+      <p class="result-sub" id="result-sub">這套組合 Suno 應該不會亂跑</p>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-label">
+        <span>STYLE</span>
+        <span class="char-counter"><span id="char-count">0</span> / 950</span>
+      </div>
+      <div class="result-card style-card">
+        <textarea class="result-output style-output" id="style-output" spellcheck="false"></textarea>
+        <button class="btn-copy" data-target="style-output">複製 Style</button>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-label"><span>LYRICS STRUCTURE</span></div>
+      <div class="result-card lyrics-card">
+        <pre class="result-output lyrics-output" id="lyrics-output"></pre>
+        <button class="btn-copy" data-target="lyrics-output">複製歌詞結構</button>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-label"><span>PERSONA NAMING</span></div>
+      <div class="result-card persona-card">
+        <div class="persona-output" id="persona-output"></div>
+        <p class="persona-hint">生完滿意的一首後 → More ··· → Create Persona → 用這個名字存起來，下次同系列直接 call</p>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-secondary" id="btn-regen-keep">保留答案微調</button>
+      <button class="btn-secondary" id="btn-regen-fresh">換個方向重來</button>
+    </div>
+
+    <div class="result-checklist" id="result-checklist">
+      <div class="result-section-label"><span>姊姊的檢查清單</span></div>
+      <ul class="checklist-list" id="checklist-list"></ul>
+    </div>
+  </section>
+
+  <!-- Toast 通知 -->
+  <div class="toast" id="toast" hidden></div>
+
+  <!-- 重生選擇 modal -->
+  <div class="modal-overlay" id="modal-regen" hidden>
+    <div class="modal">
+      <h3 class="modal-title">重新生一首？</h3>
+      <p class="modal-text">想怎麼重來？</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" data-regen="keep">保留答案微調</button>
+        <button class="btn-secondary" data-regen="lyrics">只重生歌詞結構</button>
+        <button class="btn-secondary" data-regen="fresh">完全重來</button>
+      </div>
+      <button class="modal-cancel" id="modal-cancel">取消</button>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p>© 2026 Kaoru Tsai. All Rights Reserved. | Contact: hello@helloruru.com</p>
+    <p class="footer-credit">蘇諾大姊姊 v1.0 · 規則庫來自 HelloRuru Suno Skill</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

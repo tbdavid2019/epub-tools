@@ -1,0 +1,140 @@
+{
+  "_meta": {
+    "source": "蘇諾 Skill / references/templates.md + suno-prompt-rules.md",
+    "principle": "只列已驗證過的罕見配對（避開 pop / rap / edm 引力井），每個配對都有對應 BPM 範圍 + 適合情境",
+    "lastSync": "2026-05-02"
+  },
+  "genrePairs": [
+    {
+      "id": "warm-indie-folk",
+      "primary": "warm indie folk",
+      "secondary": "j-pop ballad tint",
+      "bpmRange": [70, 90],
+      "keyHint": ["D major", "C major", "G major"],
+      "moodMatch": ["溫暖", "敘事", "療癒", "想哭"],
+      "purposeMatch": ["品牌", "自己聽", "電子書"],
+      "vocalMatch": ["女聲"]
+    },
+    {
+      "id": "healing-ambient",
+      "primary": "healing ambient pop",
+      "secondary": "spa lo-fi",
+      "bpmRange": [60, 80],
+      "keyHint": ["G major", "C major"],
+      "moodMatch": ["療癒", "平靜", "舒服", "想睡"],
+      "purposeMatch": ["客戶廣告", "電子書"],
+      "vocalMatch": ["女聲", "純配樂"]
+    },
+    {
+      "id": "cinematic-dark-jazz",
+      "primary": "cinematic dark jazz",
+      "secondary": "lo-fi storytelling",
+      "bpmRange": [60, 80],
+      "keyHint": ["E minor", "F minor", "A minor"],
+      "moodMatch": ["懸疑", "敘事", "深沉", "想哭"],
+      "purposeMatch": ["電子書", "品牌"],
+      "vocalMatch": ["純配樂", "男聲"]
+    },
+    {
+      "id": "dark-lofi-jazz-narrative",
+      "primary": "dark lo-fi jazz",
+      "secondary": "cinematic narrative",
+      "bpmRange": [65, 85],
+      "keyHint": ["F minor", "E minor", "D minor"],
+      "moodMatch": ["懸疑", "故事", "深沉"],
+      "purposeMatch": ["電子書", "自己聽"],
+      "vocalMatch": ["男聲", "女聲"]
+    },
+    {
+      "id": "electronic-enka",
+      "primary": "electronic enka",
+      "secondary": "cyber oriental concept",
+      "bpmRange": [85, 105],
+      "keyHint": ["A minor", "F minor", "D minor"],
+      "moodMatch": ["濃烈", "戲劇", "孤單", "迷幻"],
+      "purposeMatch": ["品牌", "客戶廣告"],
+      "vocalMatch": ["女聲"]
+    },
+    {
+      "id": "old-shanghai-jazz",
+      "primary": "old shanghai jazz",
+      "secondary": "1940s crooner",
+      "bpmRange": [60, 80],
+      "keyHint": ["G minor", "F minor", "E minor"],
+      "moodMatch": ["懷舊", "孤單", "濃烈"],
+      "purposeMatch": ["客戶廣告", "品牌"],
+      "vocalMatch": ["女聲", "男聲"]
+    },
+    {
+      "id": "bedroom-indie-pop",
+      "primary": "bedroom indie pop",
+      "secondary": "dream folk",
+      "bpmRange": [85, 110],
+      "keyHint": ["C major", "D major", "G major"],
+      "moodMatch": ["溫暖", "夢幻", "想念", "希望"],
+      "purposeMatch": ["自己聽", "品牌"],
+      "vocalMatch": ["女聲"]
+    },
+    {
+      "id": "hyperpop-glitch",
+      "primary": "hyperpop",
+      "secondary": "glitch pop",
+      "bpmRange": [130, 160],
+      "keyHint": ["F minor", "A minor"],
+      "moodMatch": ["興奮", "衝突", "迷幻"],
+      "purposeMatch": ["自己聽", "客戶廣告"],
+      "vocalMatch": ["女聲", "純配樂"]
+    },
+    {
+      "id": "dark-tribal-techno",
+      "primary": "dark deep techno",
+      "secondary": "tribal trap",
+      "tertiary": "swancore",
+      "bpmRange": [125, 145],
+      "keyHint": ["D minor", "F minor"],
+      "moodMatch": ["興奮", "爆發", "深沉"],
+      "purposeMatch": ["自己聽"],
+      "vocalMatch": ["純配樂"]
+    },
+    {
+      "id": "japanese-city-pop",
+      "primary": "japanese city pop",
+      "secondary": "80s synth pop",
+      "bpmRange": [95, 120],
+      "keyHint": ["F major", "C major", "D major"],
+      "moodMatch": ["懷舊", "舒服", "夢幻"],
+      "purposeMatch": ["自己聽", "客戶廣告"],
+      "vocalMatch": ["女聲"]
+    },
+    {
+      "id": "polar-ambient-industrial",
+      "primary": "polar ambient",
+      "secondary": "industrial sound art",
+      "bpmRange": [60, 80],
+      "keyHint": ["A minor", "D minor"],
+      "moodMatch": ["孤單", "深沉", "懸疑"],
+      "purposeMatch": ["電子書", "自己聽"],
+      "vocalMatch": ["純配樂"]
+    },
+    {
+      "id": "orchestral-phonk",
+      "primary": "orchestral phonk",
+      "secondary": "dark cinematic trap",
+      "bpmRange": [120, 140],
+      "keyHint": ["F minor", "D minor", "A minor"],
+      "moodMatch": ["濃烈", "戲劇", "爆發"],
+      "purposeMatch": ["客戶廣告", "自己聽"],
+      "vocalMatch": ["純配樂", "男聲"]
+    },
+    {
+      "id": "mandarin-folk-appalachian",
+      "primary": "mandarin folk",
+      "secondary": "appalachian folk",
+      "bpmRange": [70, 95],
+      "keyHint": ["D major", "G major", "A minor"],
+      "moodMatch": ["敘事", "溫暖", "懷舊"],
+      "purposeMatch": ["品牌", "自己聽"],
+      "vocalMatch": ["女聲", "男聲"]
+    }
+  ]
+}

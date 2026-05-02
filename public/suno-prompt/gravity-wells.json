@@ -1,0 +1,104 @@
+{
+  "_meta": {
+    "source": "蘇諾 Skill / references/suno-prompt-rules.md（dawgshart 反重力井派 + ZML 觀察）",
+    "principle": "Suno 是統計模型，每個關鍵詞都會把它拖進預設引力井。用『負向排除』把它拉回來。",
+    "lastSync": "2026-05-02"
+  },
+  "rules": [
+    {
+      "trigger": "中文歌",
+      "condition": "vocal 是中文 OR 流派含 mandarin",
+      "mustExclude": ["no c-pop", "no anime opening", "no tiktok"],
+      "reason": "中文歌不擋會變抖音味",
+      "severity": "critical"
+    },
+    {
+      "trigger": "pop",
+      "condition": "流派或樂器含 pop（除非 hyperpop / city pop / indie pop 等限定組合）",
+      "mustExclude": ["no western pop"],
+      "reason": "pop 會把生成拖進主流流行樂",
+      "severity": "high"
+    },
+    {
+      "trigger": "rap",
+      "condition": "流派或 vocal 含 rap",
+      "mustExclude": ["no trap"],
+      "reason": "rap 自動連 trap（訓練共現 3270 億次）",
+      "severity": "high"
+    },
+    {
+      "trigger": "orchestral",
+      "condition": "樂器或流派含 orchestral",
+      "mustExclude": ["no epic", "no cinematic cliché"],
+      "reason": "orchestral 自動連 epic / cinematic 俗套",
+      "severity": "medium"
+    },
+    {
+      "trigger": "edm",
+      "condition": "流派含 edm",
+      "mustExclude": ["no edm drop", "no big room"],
+      "reason": "edm 自動連 commercial drop",
+      "severity": "high"
+    },
+    {
+      "trigger": "hip hop",
+      "condition": "流派含 hip hop",
+      "mustExclude": ["no trap", "no commercial rap"],
+      "reason": "hip hop 自動連 trap",
+      "severity": "high"
+    },
+    {
+      "trigger": "jazz",
+      "condition": "流派含 jazz（除非已含 dark / lo-fi / cinematic 修飾）",
+      "mustExclude": ["no smooth jazz"],
+      "reason": "jazz 自動連 smooth jazz（咖啡廳俗套）",
+      "severity": "medium"
+    },
+    {
+      "trigger": "復古/懷舊",
+      "condition": "情緒含懷舊 OR 流派含 vintage / 1940s / old shanghai",
+      "mustExclude": ["no modern production", "no auto-tune"],
+      "reason": "懷舊類最怕現代製作味",
+      "severity": "critical"
+    },
+    {
+      "trigger": "電子東方",
+      "condition": "流派含 electronic enka / cyber oriental / mandarin",
+      "mustExclude": ["no c-pop", "no anime opening", "no k-pop"],
+      "reason": "東方+電子最容易掉進三個引力井",
+      "severity": "critical"
+    },
+    {
+      "trigger": "Hyperpop/實驗",
+      "condition": "流派含 hyperpop / glitch / experimental",
+      "mustExclude": ["no mainstream pop", "no edm drop"],
+      "reason": "實驗類最怕被拖回主流",
+      "severity": "high"
+    },
+    {
+      "trigger": "Techno",
+      "condition": "流派含 techno",
+      "mustExclude": ["no commercial edm", "no big room"],
+      "reason": "techno 不擋會變商業 EDM",
+      "severity": "high"
+    },
+    {
+      "trigger": "City Pop",
+      "condition": "流派含 city pop",
+      "mustExclude": ["no modern pop", "no anime opening"],
+      "reason": "city pop 跟 anime opening 訓練共現高",
+      "severity": "medium"
+    }
+  ],
+  "checklistAfterAssembly": [
+    "至少 2 個流派詞？",
+    "至少 2-3 個具體樂器？（不是 guitar，是 fingerpicked nylon guitar）",
+    "至少 1-2 個音景元素？",
+    "有 BPM 數字？",
+    "有 Key？",
+    "有 vocal style 描述？",
+    "有能量弧線？",
+    "有負向排除？",
+    "字元數 < 950？"
+  ]
+}

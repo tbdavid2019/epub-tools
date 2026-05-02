@@ -59,6 +59,117 @@ function initChain() {
     memberListEl.querySelectorAll('.member-item').forEach(item => {
       item.classList.toggle('selected', selectedIds.has(item.dataset.id));
     });
+    // 同步 AP 紀錄橋接區的勾選狀態
+    syncApLogBridgeChecks();
+  }
+
+  // ============ AP 紀錄橋接區 ============
+  // 從 localStorage 讀 AP 紀錄，渲染兩個清單：待回禮 / 全部
+  // 勾選後比對 AP 名冊，自動勾選對應的成員
+  function getApLog() {
+    try { return JSON.parse(localStorage.getItem('readmoo-ap-log') || '[]'); }
+    catch (e) { return []; }
+  }
+
+  // 比對名冊找相似名字（完全相同 / 互相包含）
+  function findMatchingMember(apFromName) {
+    if (!AppState.members || AppState.members.length === 0) return null;
+    const norm = (s) => (s || '').toLowerCase().trim();
+    const target = norm(apFromName);
+    if (!target) return null;
+    // 完全相同優先
+    let exact = AppState.members.find(m => norm(m.name) === target);
+    if (exact) return exact;
+    // 互相包含（例如 AP 紀錄「小魚」對名冊「小魚（Yu）」）
+    let partial = AppState.members.find(m => {
+      const mn = norm(m.name);
+      return mn.includes(target) || target.includes(mn);
+    });
+    return partial || null;
+  }
+
+  function renderApLogBridge() {
+    const bridgeEl = document.getElementById('chain-ap-log-bridge');
+    if (!bridgeEl) return;
+    const log = getApLog();
+
+    if (log.length === 0) {
+      bridgeEl.style.display = 'block';
+      const allEl = document.getElementById('chain-ap-log-all');
+      const allEmpty = document.getElementById('chain-ap-log-all-empty');
+      const pendingEl = document.getElementById('chain-ap-log-pending');
+      const pendingEmpty = document.getElementById('chain-ap-log-pending-empty');
+      if (allEl) allEl.innerHTML = '';
+      if (pendingEl) pendingEl.innerHTML = '';
+      if (allEmpty) allEmpty.style.display = 'block';
+      if (pendingEmpty) pendingEmpty.style.display = 'block';
+      return;
+    }
+
+    bridgeEl.style.display = 'block';
+    const pendingEl = document.getElementById('chain-ap-log-pending');
+    const pendingEmpty = document.getElementById('chain-ap-log-pending-empty');
+    const allEl = document.getElementById('chain-ap-log-all');
+    const allEmpty = document.getElementById('chain-ap-log-all-empty');
+
+    const pending = log.filter(r => !r.returned);
+
+    function renderItem(r) {
+      const matched = findMatchingMember(r.from);
+      const isChecked = matched ? selectedIds.has(matched.id) : false;
+      const matchHint = matched
+        ? `<span class="chain-ap-log-match" title="會對應到名冊：${escapeHtml(matched.name)}"><i data-lucide="check"></i> ${escapeHtml(matched.name)}</span>`
+        : `<span class="chain-ap-log-nomatch" title="名冊找不到此人，這次接龍不會包含"><i data-lucide="alert-circle"></i> 名冊查無</span>`;
+      return `
+        <label class="chain-ap-log-item ${isChecked ? 'selected' : ''} ${matched ? '' : 'unmatched'}" data-from="${escapeHtml(r.from)}">
+          <input type="checkbox" class="chain-ap-log-check" data-from="${escapeHtml(r.from)}" ${matched ? '' : 'disabled'} ${isChecked ? 'checked' : ''}>
+          <span class="chain-ap-log-name">${escapeHtml(r.from)}</span>
+          <span class="chain-ap-log-meta">*${escapeHtml(r.code)} · ${escapeHtml(r.date || '')}</span>
+          ${matchHint}
+          ${r.returned ? '<span class="chain-ap-log-returned">已回禮</span>' : ''}
+        </label>
+      `;
+    }
+
+    if (pending.length === 0) {
+      pendingEl.innerHTML = '';
+      pendingEmpty.style.display = 'block';
+    } else {
+      pendingEmpty.style.display = 'none';
+      pendingEl.innerHTML = pending.map(renderItem).join('');
+    }
+
+    allEmpty.style.display = 'none';
+    allEl.innerHTML = log.map(renderItem).join('');
+
+    if (window.lucide) lucide.createIcons();
+
+    // 綁勾選事件
+    bridgeEl.querySelectorAll('.chain-ap-log-check').forEach(cb => {
+      cb.addEventListener('change', e => {
+        const fromName = e.target.dataset.from;
+        const matched = findMatchingMember(fromName);
+        if (!matched) return;
+        if (e.target.checked) selectedIds.add(matched.id);
+        else selectedIds.delete(matched.id);
+        renderMembers(searchEl.value);
+        updateSelection();
+      });
+    });
+  }
+
+  function syncApLogBridgeChecks() {
+    const bridgeEl = document.getElementById('chain-ap-log-bridge');
+    if (!bridgeEl) return;
+    bridgeEl.querySelectorAll('.chain-ap-log-check').forEach(cb => {
+      const fromName = cb.dataset.from;
+      const matched = findMatchingMember(fromName);
+      if (!matched) return;
+      const shouldCheck = selectedIds.has(matched.id);
+      if (cb.checked !== shouldCheck) cb.checked = shouldCheck;
+      const item = cb.closest('.chain-ap-log-item');
+      if (item) item.classList.toggle('selected', shouldCheck);
+    });
   }
 
   // Select all
@@ -289,6 +400,17 @@ function initChain() {
   // Initial render
   renderMembers();
   updateSelection();
+  renderApLogBridge();
+
+  // 切到 AP 接龍分頁時，重新渲染（讓 AP 紀錄新增的人即時出現）
+  document.addEventListener('tab-changed', (e) => {
+    if (e.detail && e.detail.tab === 'chain') {
+      renderApLogBridge();
+    }
+  });
+
+  // 暴露給外部呼叫（從 ap-log.js 登記後可以觸發）
+  window.refreshChainApLogBridge = renderApLogBridge;
 }
 
 // Copy helper

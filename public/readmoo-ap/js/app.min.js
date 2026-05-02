@@ -43,6 +43,7 @@ function initTabs() {
       p.classList.toggle('active', p.id === `tab-${tabId}`);
     });
     window.location.hash = tabId;
+    document.dispatchEvent(new CustomEvent('tab-changed', { detail: { tab: tabId } }));
   }
 
   function switchTab(tabId) {

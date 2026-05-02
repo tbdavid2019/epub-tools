@@ -57,7 +57,7 @@
     onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js'"></script>
 
   <!-- Styles -->
-  <link rel="stylesheet" href="css/style.min.css?v=20260502h">
+  <link rel="stylesheet" href="css/style.min.css?v=20260502i">
 
   <!-- 每日好書 tab 樣式 -->
   <style>
@@ -736,6 +736,22 @@
             <!-- Dynamically populated -->
           </div>
 
+          <!-- AP 紀錄回禮人選導引 -->
+          <div id="chain-ap-log-bridge" class="chain-ap-log-bridge" style="display:none;">
+            <div class="chain-ap-log-section">
+              <h3><i data-lucide="gift"></i> 待回禮的人</h3>
+              <p class="chain-ap-log-hint">AP 紀錄裡還沒勾選「已回禮」的人，勾起來會自動對到上面 AP 名冊。</p>
+              <div id="chain-ap-log-pending" class="chain-ap-log-list"></div>
+              <div id="chain-ap-log-pending-empty" class="chain-ap-log-empty-text" style="display:none;">沒有待回禮的人。</div>
+            </div>
+            <div class="chain-ap-log-section">
+              <h3><i data-lucide="users"></i> 全部送過 AP 給你的人</h3>
+              <p class="chain-ap-log-hint">已回禮的人也可以再次接龍喔。</p>
+              <div id="chain-ap-log-all" class="chain-ap-log-list"></div>
+              <div id="chain-ap-log-all-empty" class="chain-ap-log-empty-text" style="display:none;">AP 紀錄裡還沒有人。先到「AP 紀錄」分頁登記。</div>
+            </div>
+          </div>
+
           <div class="chain-actions">
             <button id="btn-start-chain" class="btn-primary" disabled>
               <i data-lucide="play"></i> 開始接龍
@@ -1249,15 +1265,15 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="js/app.min.js?v=20260303n"></script>
+  <script src="js/app.min.js?v=20260502i"></script>
   <script src="js/quiz.min.js?v=20260303n"></script>
   <script src="js/ap-directory.min.js?v=20260303n"></script>
-  <script src="js/ap-chain.min.js?v=20260303n"></script>
+  <script src="js/ap-chain.min.js?v=20260502i"></script>
   <script src="js/books.min.js?v=20260502c"></script>
   <script src="js/changelog.min.js?v=20260303n"></script>
   <script src="js/export-utils.min.js?v=20260303n"></script>
   <script src="js/readmoo-search.min.js?v=20260502c"></script>
-  <script src="js/ap-log.min.js?v=20260502e"></script>
+  <script src="js/ap-log.min.js?v=20260502i"></script>
   <script src="js/deals.js?v=20260319b"></script>
 </body>
 </html>

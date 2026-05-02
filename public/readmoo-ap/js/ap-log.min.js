@@ -215,6 +215,8 @@ function initApLog() {
         renderBatchList();
         parseResult.innerHTML = '';
         renderList();
+        // 同步 AP 接龍頁的橋接區
+        if (window.refreshChainApLogBridge) window.refreshChainApLogBridge();
       });
     }
   }
@@ -267,7 +269,12 @@ function initApLog() {
         const id = e.target.dataset.id;
         const log = getLog();
         const r = log.find(x => x.id === id);
-        if (r) { r.returned = e.target.checked; saveLog(log); renderList(); }
+        if (r) {
+          r.returned = e.target.checked;
+          saveLog(log);
+          renderList();
+          if (window.refreshChainApLogBridge) window.refreshChainApLogBridge();
+        }
       });
     });
     listEl.querySelectorAll('.ap-log-points-input').forEach(inp => {
@@ -293,6 +300,7 @@ function initApLog() {
         const log = getLog().filter(r => r.id !== id);
         saveLog(log);
         renderList();
+        if (window.refreshChainApLogBridge) window.refreshChainApLogBridge();
       });
     });
   }

@@ -2308,3 +2308,100 @@ html.dark .rm-result-card:hover {
   color: var(--text-muted);
   font-style: italic;
 }
+
+/* ============ AP 接龍 — AP 紀錄橋接區 ============ */
+.chain-ap-log-bridge {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px dashed var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+.chain-ap-log-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-xs);
+  font-size: 18px;
+}
+.chain-ap-log-section h3 i {
+  width: 18px;
+  height: 18px;
+  color: var(--color-rose);
+}
+.chain-ap-log-hint {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+}
+.chain-ap-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.chain-ap-log-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 15px;
+}
+.chain-ap-log-item:hover {
+  border-color: var(--color-rose);
+  background: var(--bg-elevated);
+}
+.chain-ap-log-item.selected {
+  border-color: var(--color-rose);
+  background: var(--status-info-bg);
+}
+.chain-ap-log-item.unmatched {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.chain-ap-log-name {
+  font-weight: 400;
+  color: var(--text-primary);
+}
+.chain-ap-log-meta {
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.chain-ap-log-match {
+  font-size: 13px;
+  color: var(--status-success);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+.chain-ap-log-match i { width: 14px; height: 14px; }
+.chain-ap-log-nomatch {
+  font-size: 13px;
+  color: var(--status-warning);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+.chain-ap-log-nomatch i { width: 14px; height: 14px; }
+.chain-ap-log-returned {
+  font-size: 12px;
+  background: var(--status-success-bg);
+  color: var(--status-success);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+.chain-ap-log-empty-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: var(--space-sm);
+}

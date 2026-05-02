@@ -1619,7 +1619,7 @@
     // === Fetch Deals ===
     async function fetchDeals(endpoint = '/api/deals') {
       try {
-        const res = await fetch(API_BASE + endpoint + '?v=20260502-4');
+        const res = await fetch(API_BASE + endpoint + '?v=20260502-5');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         allDealsData = data;
@@ -1719,6 +1719,19 @@
           return true;
         });
 
+        // Pubu 限時 99：一週內到期的才顯示在 UI（一週後的留在訂閱日曆裡，不塞爆畫面）
+        if (platform === 'pubu') {
+          const todayMs = Date.parse(today + 'T00:00:00');
+          const sevenDaysMs = todayMs + 7 * 86400000;
+          showDeals = showDeals.filter(d => {
+            // 每日精選照常顯示（短期、不會塞爆）
+            if (d.promoMessage !== '限時 99 最後一天') return true;
+            // 限時 99：到期日 ≤ 一週內才顯示
+            const dealMs = Date.parse(d.date + 'T00:00:00');
+            return dealMs <= sevenDaysMs;
+          });
+        }
+
         const grid = document.getElementById('grid-' + platform);
         const calHeader = document.getElementById('cal-header-' + platform);
         const columnHeader = grid.closest('.platform-column').querySelector('.column-header');
@@ -1814,6 +1827,11 @@
         if (deal.platform === 'readmoo') promoLabel = '每日 99';
         else if (deal.platform === 'books') promoLabel = deal.dealType || '每日限時搶';
         else if (deal.platform === 'kobo') promoLabel = '每週 99 選書';
+      }
+      // Pubu「限時 99 最後一天」→ 直接帶日期：「5/4 到期 $99」
+      if (deal.platform === 'pubu' && promoLabel === '限時 99 最後一天' && deal.date) {
+        const dt = new Date(deal.date + 'T00:00:00');
+        promoLabel = (dt.getMonth() + 1) + '/' + dt.getDate() + ' 到期 $99';
       }
 
       let promoTag = '';

@@ -1,4 +1,9 @@
 {
+  "_meta": {
+    "version": "v1.1 - Suno V5/V5.5 規範",
+    "principle": "Style 欄位只放想要的元素；Exclude 欄位獨立列出不要的（不加 no 前綴）",
+    "lastSync": "2026-05-02"
+  },
   "templates": [
     {
       "id": 1,
@@ -7,9 +12,13 @@
       "scenario": "品牌影片 / About 頁 / 自我介紹",
       "tags": ["lo-fi", "木吉他", "78 BPM"],
       "colors": ["#D4A656", "#A89580", "#1A1614"],
-      "style": "warm indie folk, j-pop ballad tint, fingerpicked nylon guitar, felt piano, soft brush drums, vinyl warmth, BPM 78, Key D major, breathy female vocal, intimate verse → gentle chorus, no western pop, no anime opening, no edm",
-      "structure": "[Intro]\n（鋼琴單音 + 木吉他撥弦）\n\n[Verse 1]\n（敘述品牌起點，4 行，敘事口吻）\n\n[Pre-Chorus]\n（情緒鋪陳，2 行）\n\n[Chorus]\n（品牌 hook，「HelloRuru」重複一次，4 行）\n\n[Verse 2]\n（深化故事）\n\n[Pre-Chorus]\n\n[Chorus]\n\n[Outro]\n（吉他 fade out）",
-      "persona": "溫柔嗓"
+      "style": "warm indie folk, j-pop ballad tint, fingerpicked nylon guitar, felt piano, soft brush drums, vinyl warmth, BPM 78, Key D major, breathy female vocal, intimate verse → gentle chorus",
+      "exclude": "western pop, anime opening, edm",
+      "structure": "[角色設定]\n（HelloRuru 品牌起點：你的故事 / 為什麼開始 / 想對誰說話）\n\n[Intro]\n（鋼琴單音 + 木吉他撥弦）\n\n[Verse 1]\n（敘述品牌起點，4 行，敘事口吻）\n\n[Pre-Chorus]\n（情緒鋪陳，2 行）\n\n[Chorus]\n（品牌 hook，「HelloRuru」重複一次，4 行）\n\n[Verse 2]\n（深化故事）\n\n[Pre-Chorus]\n\n[Chorus]\n\n[Outro]\n（吉他 fade out）",
+      "voice": "溫柔嗓",
+      "weirdness": 25,
+      "styleInfluence": 70,
+      "songNames": ["〈第一首〉", "〈我的開始〉", "〈Hello, Ruru〉"]
     },
     {
       "id": 2,
@@ -18,9 +27,13 @@
       "scenario": "美容院 / SPA / IG Reels 30 秒",
       "tags": ["療癒", "水晶缽", "70 BPM"],
       "colors": ["#E8D5C4", "#A89580", "#5BAF8E"],
-      "style": "healing ambient pop, spa lo-fi, crystal singing bowl, soft synth pad, gentle piano, rain on glass, BPM 70, Key G major, ethereal female whisper, floating ambience, no energetic drop, no commercial jingle, no pop punch",
-      "structure": "[Intro]\n（水晶缽聲 + 雨聲）\n\n[Hook]\n（品牌名重複 × 2，8 秒內抓住人）\n\n[Verse]\n（產品訴求，短句 × 3）\n\n[Final Hook]\n（品牌名 + CTA）",
-      "persona": "療癒嗓"
+      "style": "healing ambient pop, spa lo-fi, crystal singing bowl, soft synth pad, gentle piano, rain on glass, BPM 70, Key G major, ethereal female whisper, floating ambience",
+      "exclude": "energetic drop, commercial jingle, pop punch",
+      "structure": "[品牌設定]\n（品牌名 + 服務性質 + 給人的感覺，3 行內）\n\n[Intro]\n（水晶缽聲 + 雨聲）\n\n[Hook]\n（品牌名重複 × 2，8 秒內抓住人）\n\n[Verse]\n（產品訴求，短句 × 3）\n\n[Final Hook]\n（品牌名 + CTA）",
+      "voice": "療癒嗓",
+      "weirdness": 20,
+      "styleInfluence": 75,
+      "songNames": ["〈深呼吸〉", "〈時光暫停〉", "〈柔軟的房間〉"]
     },
     {
       "id": 3,
@@ -29,9 +42,13 @@
       "scenario": "故事朗讀 / Podcast 開場 / 有聲書",
       "tags": ["純配樂", "低音提琴", "65 BPM"],
       "colors": ["#1A1614", "#6B5D4F", "#D4A656"],
-      "style": "cinematic dark jazz, lo-fi storytelling, upright bass, brushed snare, muted trumpet, felt piano, vinyl crackle, distant thunder, BPM 65, Key E minor, no vocal, instrumental only, no modern production, no smooth jazz",
+      "style": "cinematic dark jazz, lo-fi storytelling, upright bass, brushed snare, muted trumpet, felt piano, vinyl crackle, distant thunder, BPM 65, Key E minor, no vocal, instrumental only",
+      "exclude": "modern production, smooth jazz",
       "structure": "[Intro - 8s]\n（低音提琴 solo）\n\n[Section A - 30s]\n（刷掃鼓進入，氛圍建立）\n\n[Section B - 30s]\n（小號進入，情緒爬升）\n\n[Outro - 12s]\n（回到低音提琴淡出）",
-      "persona": "純配樂不需要 Persona"
+      "voice": "純配樂不需要 Voice",
+      "weirdness": 30,
+      "styleInfluence": 70,
+      "songNames": ["〈夜談〉", "〈第一頁〉", "〈未完的章節〉"]
     },
     {
       "id": 4,
@@ -40,9 +57,13 @@
       "scenario": "想講一個故事 / 寫一個角色",
       "tags": ["懸疑", "場景音", "72 BPM"],
       "colors": ["#1A1614", "#E94F37", "#A89580"],
-      "style": "dark lo-fi jazz, cinematic narrative, upright bass, muted trumpet, felt piano, key turning sound, door creaks open, vinyl record spinning, BPM 72, Key F minor, raspy male vocal, storytelling delivery, intimate confession → dark reveal, no smooth jazz, no modern pop",
-      "structure": "[角色設定 - 寫在歌詞開頭當引言]\n（角色年齡、職業、發生什麼事、現在的狀態）\n\n[Intro]\n（場景音：鑰匙轉動、門吱呀）\n\n[Verse 1 - 回憶]\n（角色過去發生什麼）\n\n[Pre-Chorus - 情緒轉折]\n\n[Chorus - hook 句]\n（一句話總結角色心情，重複）\n\n[Verse 2 - 現況]\n（角色現在怎麼了）\n\n[Bridge - 獨白／反轉]\n（最深的那句話）\n\n[Final Chorus]\n\n[Outro]\n（場景音淡出）",
-      "persona": "敘事嗓"
+      "style": "dark lo-fi jazz, cinematic narrative, upright bass, muted trumpet, felt piano, key turning sound, door creaks open, vinyl record spinning, BPM 72, Key F minor, raspy male vocal, storytelling delivery, intimate confession → dark reveal",
+      "exclude": "smooth jazz, modern pop",
+      "structure": "[角色設定]\n（年齡？職業？發生什麼事？現在的狀態？— 越具體越好）\n\n[Intro]\n（場景音：鑰匙轉動、門吱呀）\n\n[Verse 1 - 回憶]\n（角色過去發生什麼）\n\n[Pre-Chorus - 情緒轉折]\n\n[Chorus - hook 句]\n（一句話總結角色心情，重複）\n\n[Verse 2 - 現況]\n（角色現在怎麼了）\n\n[Bridge - 獨白／反轉]\n（最深的那句話）\n\n[Final Chorus]\n\n[Outro]\n（場景音淡出）",
+      "voice": "敘事嗓",
+      "weirdness": 35,
+      "styleInfluence": 75,
+      "songNames": ["〈他的房間〉", "〈最後一個故事〉", "〈空椅子〉"]
     },
     {
       "id": 5,
@@ -51,9 +72,13 @@
       "scenario": "概念專輯 / MV / 視覺企劃",
       "tags": ["三味線", "霓虹", "92 BPM"],
       "colors": ["#E94F37", "#1A1614", "#D4A656"],
-      "style": "electronic enka, cyber oriental concept, mandarin vocal, shamisen bass, neon synth pad, breathy whisper layer, pachinko bell, neon hum, tape saturation, sidechain pump, BPM 92, Key A minor, kobushi female vocal, intimate verse → explosive chorus, no c-pop, no anime opening, no k-pop",
-      "structure": "[Intro]\n（柏青哥鈴 + 霓虹嗡鳴 fade in）\n\n[Verse 1]\n（敘事，四行）\n\n[Pre-Chorus]\n（情緒爬升，shamisen 強進）\n\n[Chorus]\n（kobushi 唱腔爆發，4 行 hook）\n\n[Verse 2]\n\n[Pre-Chorus]\n\n[Chorus]\n\n[Bridge]\n（三味線 solo + 喘息聲）\n\n[Final Chorus]\n（升 key 加層次）\n\n[Outro]\n（柏青哥鈴 fade out）",
-      "persona": "花魁嗓"
+      "style": "electronic enka, cyber oriental concept, mandarin vocal, shamisen bass, neon synth pad, breathy whisper layer, pachinko bell, neon hum, tape saturation, sidechain pump, BPM 92, Key A minor, kobushi female vocal, intimate verse → explosive chorus",
+      "exclude": "c-pop, anime opening, k-pop, tiktok",
+      "structure": "[角色設定]\n（這個女人是誰？她在哪？她要表演什麼？— 寫一段引言）\n\n[Intro]\n（柏青哥鈴 + 霓虹嗡鳴 fade in）\n\n[Verse 1]\n（敘事，四行）\n\n[Pre-Chorus]\n（情緒爬升，shamisen 強進）\n\n[Chorus]\n（kobushi 唱腔爆發，4 行 hook）\n\n[Verse 2]\n\n[Pre-Chorus]\n\n[Chorus]\n\n[Bridge]\n（三味線 solo + 喘息聲）\n\n[Final Chorus]\n（升 key 加層次）\n\n[Outro]\n（柏青哥鈴 fade out）",
+      "voice": "花魁嗓",
+      "weirdness": 45,
+      "styleInfluence": 78,
+      "songNames": ["〈電子花魁〉", "〈霓虹藝伎〉", "〈賽博京都〉"]
     },
     {
       "id": 6,
@@ -62,9 +87,13 @@
       "scenario": "懷舊影片 / 年代劇感 / 復古文案",
       "tags": ["菸嗓", "黑膠雜訊", "68 BPM"],
       "colors": ["#6B5D4F", "#D4A656", "#F5F1EA"],
-      "style": "old shanghai jazz, 1940s crooner, vintage chinese ballad, upright bass, muted trumpet, vintage piano, tape hiss, vinyl crackle, distant radio static, BPM 68, Key G minor, smoky female vocal, slow swing, no modern production, no auto-tune, no c-pop",
-      "structure": "[Intro]\n（收音機雜訊淡入 + 鋼琴）\n\n[Verse 1]\n（四行，押韻，文言味）\n\n[Chorus]\n（Hook 重複，拉長音尾）\n\n[Verse 2]\n\n[Chorus]\n\n[Bridge]\n（小號 solo，無人聲）\n\n[Final Chorus]\n\n[Outro]\n（收音機雜訊淡出）",
-      "persona": "老上海嗓"
+      "style": "old shanghai jazz, 1940s crooner, vintage chinese ballad, upright bass, muted trumpet, vintage piano, tape hiss, vinyl crackle, distant radio static, BPM 68, Key G minor, smoky female vocal, slow swing",
+      "exclude": "modern production, auto-tune, c-pop, tiktok",
+      "structure": "[角色設定]\n（誰在唱？那個年代的什麼人？她在等誰？）\n\n[Intro]\n（收音機雜訊淡入 + 鋼琴）\n\n[Verse 1]\n（四行，押韻，文言味）\n\n[Chorus]\n（Hook 重複，拉長音尾）\n\n[Verse 2]\n\n[Chorus]\n\n[Bridge]\n（小號 solo，無人聲）\n\n[Final Chorus]\n\n[Outro]\n（收音機雜訊淡出）",
+      "voice": "老上海嗓",
+      "weirdness": 30,
+      "styleInfluence": 78,
+      "songNames": ["〈外灘月色〉", "〈最後一杯〉", "〈舞廳菸圈〉"]
     },
     {
       "id": 7,
@@ -73,9 +102,13 @@
       "scenario": "送人 / 情人節 / 告白 / 自己聽",
       "tags": ["夢幻", "吉他刷", "96 BPM"],
       "colors": ["#E8B4B8", "#FEDFE1", "#D4A5A5"],
-      "style": "bedroom indie pop, dream folk, acoustic guitar strumming, analog synth pad, soft kick, reverb-drenched backing vocals, BPM 96, Key C major, breathy female lead, wistful → hopeful arc, no edm, no big production, no auto-tune",
-      "structure": "[Intro]\n（吉他刷 4 小節）\n\n[Verse 1]\n（日常場景敘述，4 行）\n\n[Pre-Chorus]\n（情緒升）\n\n[Chorus]\n（告白 hook，8 行）\n\n[Verse 2]\n（回憶 callback）\n\n[Pre-Chorus]\n\n[Chorus]\n\n[Bridge]\n（內心獨白）\n\n[Final Chorus]\n（升 key 或加和聲）\n\n[Outro]",
-      "persona": "清新嗓"
+      "style": "bedroom indie pop, dream folk, acoustic guitar strumming, analog synth pad, soft kick, reverb-drenched backing vocals, BPM 96, Key C major, breathy female lead, wistful → hopeful arc",
+      "exclude": "edm, big production, auto-tune, tiktok",
+      "structure": "[角色設定]\n（你想對誰唱這首？你跟對方什麼關係？想說的那句話是什麼？）\n\n[Intro]\n（吉他刷 4 小節）\n\n[Verse 1]\n（日常場景敘述，4 行）\n\n[Pre-Chorus]\n（情緒升）\n\n[Chorus]\n（告白 hook，8 行）\n\n[Verse 2]\n（回憶 callback）\n\n[Pre-Chorus]\n\n[Chorus]\n\n[Bridge]\n（內心獨白）\n\n[Final Chorus]\n（升 key 或加和聲）\n\n[Outro]",
+      "voice": "清新嗓",
+      "weirdness": 25,
+      "styleInfluence": 72,
+      "songNames": ["〈第一封〉", "〈想說的那句〉", "〈你不在的午後〉"]
     },
     {
       "id": 8,
@@ -84,9 +117,13 @@
       "scenario": "視覺藝術 / 實驗 MV / 衝突美學",
       "tags": ["故障", "童聲", "140 BPM"],
       "colors": ["#FF6B1A", "#E94F37", "#3DD68C"],
-      "style": "hyperpop, glitch pop, experimental electronic, pitched-up vocal chops, 808 sub bass, distorted synth stabs, tape splice glitch, vocal pitch shift, BPM 140, Key F minor, toddler vocal pitch-shifted up, chaotic → euphoric arc, no mainstream pop, no edm drop",
-      "structure": "[Intro]\n（故障音 + 808 進入）\n\n[Verse 1]\n（短句、跳躍、童聲）\n\n[Drop]\n（合成器爆發 + pitch shift）\n\n[Verse 2]\n\n[Drop]\n\n[Bridge]\n（突然安靜，只有 vocal chop）\n\n[Final Drop]\n（全部疊上去）\n\n[Outro]\n（突然切掉）",
-      "persona": "故障嗓"
+      "style": "hyperpop, glitch pop, experimental electronic, pitched-up vocal chops, 808 sub bass, distorted synth stabs, tape splice glitch, vocal pitch shift, BPM 140, Key F minor, toddler vocal pitch-shifted up, chaotic → euphoric arc",
+      "exclude": "mainstream pop, edm drop, tiktok",
+      "structure": "[概念設定]\n（這首要表達什麼衝突？視覺對應什麼？反差點在哪？）\n\n[Intro]\n（故障音 + 808 進入）\n\n[Verse 1]\n（短句、跳躍、童聲）\n\n[Drop]\n（合成器爆發 + pitch shift）\n\n[Verse 2]\n\n[Drop]\n\n[Bridge]\n（突然安靜，只有 vocal chop）\n\n[Final Drop]\n（全部疊上去）\n\n[Outro]\n（突然切掉）",
+      "voice": "故障嗓",
+      "weirdness": 60,
+      "styleInfluence": 70,
+      "songNames": ["〈故障兒歌〉", "〈Glitch Lullaby〉", "〈電池快沒電〉"]
     },
     {
       "id": 9,
@@ -95,9 +132,13 @@
       "scenario": "派對 / 深夜跑步 / 想爆發",
       "tags": ["部落", "工業", "132 BPM"],
       "colors": ["#1A1614", "#FF6B1A", "#6B5D4F"],
-      "style": "dark deep techno, tribal trap, swancore, driving kick, dark pluck bass, tribal percussion, industrial texture, sidechain pump, BPM 132, Key D minor, no vocal / whispered adlibs only, slow build → relentless drop, no commercial edm, no big room",
-      "structure": "[Intro - 16 bars]\n（單獨 kick + 漸進 percussion）\n\n[Build - 16 bars]\n（部落鼓加入，能量爬升）\n\n[Drop - 32 bars]\n（全部進來，dark pluck bass 主導）\n\n[Break]\n（whispered adlibs，剩下 percussion）\n\n[Final Drop - 32 bars]\n（再次爆發，industrial texture 加重）\n\n[Outro]\n（淡出剩下 kick）",
-      "persona": "暗夜嗓"
+      "style": "dark deep techno, tribal trap, swancore, driving kick, dark pluck bass, tribal percussion, industrial texture, sidechain pump, BPM 132, Key D minor, no vocal / whispered adlibs only, slow build → relentless drop",
+      "exclude": "commercial edm, big room",
+      "structure": "[氛圍設定]\n（這場是什麼派對？黑夜還是凌晨？你在哪？）\n\n[Intro - 16 bars]\n（單獨 kick + 漸進 percussion）\n\n[Build - 16 bars]\n（部落鼓加入，能量爬升）\n\n[Drop - 32 bars]\n（全部進來，dark pluck bass 主導）\n\n[Break]\n（whispered adlibs，剩下 percussion）\n\n[Final Drop - 32 bars]\n（再次爆發，industrial texture 加重）\n\n[Outro]\n（淡出剩下 kick）",
+      "voice": "暗夜嗓",
+      "weirdness": 50,
+      "styleInfluence": 72,
+      "songNames": ["〈黑夜跑〉", "〈不要停〉", "〈3 AM Tribe〉"]
     },
     {
       "id": 10,
@@ -106,9 +147,13 @@
       "scenario": "懷舊影片 / 復古視覺 / 駕駛音樂",
       "tags": ["昭和", "薩克斯風", "108 BPM"],
       "colors": ["#5BAF8E", "#D4A656", "#E94F37"],
-      "style": "japanese city pop, 80s synth pop, funk bass, analog drum machine, crystal chimes, saxophone solo, BPM 108, Key F major, breathy japanese female vocal, romaji lyrics, nostalgic groove, no modern pop, no anime opening",
-      "structure": "[Intro]\n（合成器 + 水晶鈴）\n\n[Verse 1]\n（羅馬拼音日文歌詞，4 行）\n\n[Pre-Chorus]\n（funk bass 強化）\n\n[Chorus]\n（hook 重複，加和聲）\n\n[Verse 2]\n\n[Pre-Chorus]\n\n[Chorus]\n\n[Sax Solo]\n（薩克斯風 solo，16 小節）\n\n[Final Chorus]\n（升 key）\n\n[Outro]\n（合成器淡出）",
-      "persona": "東京嗓"
+      "style": "japanese city pop, 80s synth pop, funk bass, analog drum machine, crystal chimes, saxophone solo, tape saturation, BPM 108, Key F major, breathy japanese female vocal, romaji lyrics, nostalgic groove",
+      "exclude": "modern pop, anime opening, c-pop, tiktok",
+      "structure": "[角色設定]\n（夜晚的城市裡，一個女人，她在做什麼？想念誰？）\n\n[Intro]\n（合成器 + 水晶鈴）\n\n[Verse 1]\n（羅馬拼音日文歌詞，4 行）\n\n[Pre-Chorus]\n（funk bass 強化）\n\n[Chorus]\n（hook 重複，加和聲）\n\n[Verse 2]\n\n[Pre-Chorus]\n\n[Chorus]\n\n[Sax Solo]\n（薩克斯風 solo，16 小節）\n\n[Final Chorus]\n（升 key）\n\n[Outro]\n（合成器淡出）",
+      "voice": "東京嗓",
+      "weirdness": 30,
+      "styleInfluence": 75,
+      "songNames": ["〈深夜駕駛〉", "〈霓虹之間〉", "〈昭和的房間〉"]
     }
   ]
 }

@@ -532,10 +532,12 @@
   function generateResult() {
     const composed = composeStyle(answers);
     const lyrics = composeLyrics(answers);
-    const persona = suggestPersona(answers);
-    const checks = runChecklist(composed.styleString);
+    const voice = suggestVoice(answers);
+    const songNames = suggestSongNames(answers, composed.pair);
+    const nextSong = suggestNextSong(answers, voice, composed.pair);
+    const checks = runChecklist(composed.styleString, composed.excludeString);
 
-    showResult(composed, lyrics, persona, checks);
+    showResult({ composed, lyrics, voice, songNames, nextSong, checks });
     clearDraft();
   }
 
@@ -573,10 +575,10 @@
     const vocalDesc = pickVocalDesc({ vocal, moodAll });
     const arc = pickEnergyArc({ moodAll, tempoBpm });
 
-    // Step 6: 反引力井
+    // Step 6: 反引力井（Exclude 獨立輸出，不混進 Style）
     const exclusions = collectExclusions({ pair, vocal, elements, moodAll });
 
-    // 組裝
+    // 組裝 Style（不含 no XX）
     const parts = [];
     if (pair.tertiary) {
       parts.push(`${pair.primary}, ${pair.secondary}, ${pair.tertiary}`);
@@ -589,22 +591,72 @@
     parts.push(`BPM ${bpm}, Key ${key}`);
     if (vocalDesc) parts.push(vocalDesc);
     if (arc) parts.push(arc);
-    if (exclusions.length) parts.push(exclusions.join(', '));
 
     let styleString = parts.join(', ');
+    if (styleString.length > 950) styleString = trimToLimit(styleString, 950);
 
-    // 字元數控制
-    if (styleString.length > 950) {
-      styleString = trimToLimit(styleString, 950);
-    }
+    // Exclude 字串（不含 no 前綴）
+    const excludeString = exclusions.map(e => e.replace(/^no\s+/i, '')).join(', ');
+
+    // Suno 參數建議（Weirdness + Style Influence）
+    const sunoParams = calcSunoParams({ pair, elements, purpose, styleString, excludeString });
 
     return {
       styleString,
+      excludeString,
       pair,
       bpm,
       key,
       exclusions,
+      sunoParams,
       reasoning: buildReasoning({ pair, instruments, soundscapes, exclusions }),
+    };
+  }
+
+  // ---------- Suno 參數計算（Weirdness + Style Influence）----------
+  function calcSunoParams({ pair, elements, purpose, styleString, excludeString }) {
+    // Weirdness 算法
+    let weirdness = 30;
+    const allTerms = (pair.primary + ' ' + pair.secondary + (pair.tertiary || '')).toLowerCase();
+    if (/hyperpop|glitch|experimental/.test(allTerms)) weirdness += 25;
+    else if (/dark|cinematic|noir|industrial/.test(allTerms)) weirdness += 12;
+    if (pair.tertiary) weirdness += 8; // 三流派疊
+    if (elements.includes('電子') || elements.includes('lo-fi 雜訊')) weirdness += 5;
+    if (purpose === '客戶廣告') weirdness -= 8;
+    else if (purpose === '品牌影片') weirdness -= 5;
+    weirdness = Math.max(20, Math.min(65, weirdness));
+
+    // Style Influence 算法
+    let styleInf = 65;
+    const itemCount = styleString.split(',').length;
+    if (itemCount >= 12) styleInf += 10;
+    else if (itemCount >= 8) styleInf += 5;
+    if (/key\s+/i.test(styleString)) styleInf += 3;
+    if (excludeString && excludeString.length > 0) styleInf += 3;
+    styleInf = Math.max(50, Math.min(85, styleInf));
+
+    // 給範圍而非死值（更人性化）
+    const weirdnessRange = `${weirdness - 5}-${weirdness + 5}%`;
+    const styleInfRange = `${styleInf - 5}-${styleInf + 5}%`;
+
+    // 提醒文案（依風格）
+    let hint = '';
+    if (weirdness >= 50) {
+      hint = '這首走實驗路線，姊姊把 Weirdness 推高了一點。如果第一版太亂，往下調 5%。';
+    } else if (weirdness <= 25) {
+      hint = '商業向的歌，Weirdness 鎖低保險。穩定優先。';
+    } else if (/japanese|enka|shanghai|vintage/.test(allTerms)) {
+      hint = '復古東方類最怕跑成抖音翻唱。Weirdness 別調太高，三味線會變噪音。';
+    } else if (/techno|tribal|hyperpop/.test(allTerms)) {
+      hint = '這首要的是失控感。Weirdness 推到建議值上限試試。';
+    } else {
+      hint = 'Style Influence 70% 是甜蜜點，Suno 聽你話又留一點驚喜。';
+    }
+
+    return {
+      weirdness, weirdnessRange,
+      styleInfluence: styleInf, styleInfluenceRange: styleInfRange,
+      hint,
     };
   }
 
@@ -864,15 +916,15 @@
     ].join('\n');
   }
 
-  // ---------- Persona 命名建議 ----------
-  function suggestPersona(a) {
-    if (a.vocal === '純配樂') return '純配樂不需要 Persona（不能存 Voice）';
+  // ---------- Voice 命名建議（V5.5 從 Persona 改名為 Voice）----------
+  function suggestVoice(a) {
+    if (a.vocal === '純配樂') return '純配樂不需要 Voice';
 
     const moodMap = {
       '溫暖': '溫柔', '想哭': '夜雨', '懷舊': '懷舊',
       '夢幻': '夢遊', '迷幻': '霓虹', '興奮': '爆發',
       '懸疑': '敘事', '深沉': '暗夜', '療癒': '療癒',
-      '孤單': '夜雨', '濃烈': '花魁',
+      '孤單': '夜雨', '濃烈': '花魁', '解脫': '解脫',
     };
     let nick = '';
     for (const k in moodMap) {
@@ -889,8 +941,76 @@
     return `${nick}嗓`;
   }
 
+  // ---------- 歌名建議（3 選 1）----------
+  function suggestSongNames(a, pair) {
+    const namesByMood = {
+      '想哭': ['〈晚安〉', '〈眼角是濕的〉', '〈那句沒說的話〉'],
+      '孤單': ['〈一個人〉', '〈空椅子〉', '〈深夜便利商店〉'],
+      '解脫': ['〈解脫〉', '〈終於〉', '〈最後一句晚安〉'],
+      '溫暖': ['〈溫柔的時候〉', '〈夏天的房間〉', '〈剛剛好〉'],
+      '懷舊': ['〈昭和的房間〉', '〈外灘月色〉', '〈舊唱片〉'],
+      '夢幻': ['〈夢遊〉', '〈漂浮〉', '〈第三杯咖啡〉'],
+      '興奮': ['〈點亮〉', '〈跑起來〉', '〈天還沒亮〉'],
+      '懸疑': ['〈他的房間〉', '〈最後一個故事〉', '〈空椅子〉'],
+      '深沉': ['〈黑夜〉', '〈凌晨三點〉', '〈不要說話〉'],
+      '療癒': ['〈深呼吸〉', '〈柔軟的房間〉', '〈時光暫停〉'],
+      '迷幻': ['〈霓虹〉', '〈倒數〉', '〈失重〉'],
+      '濃烈': ['〈花魁〉', '〈不留痕跡〉', '〈最後一夜〉'],
+    };
+
+    // 元素優先（如果有「日本味」「老上海」之類，覆蓋情緒）
+    const elemFirst = {
+      '日本味': ['〈深夜駕駛〉', '〈昭和的房間〉', '〈霓虹之間〉'],
+      '老上海': ['〈外灘月色〉', '〈最後一杯〉', '〈舞廳菸圈〉'],
+    };
+    for (const el of a.elements) {
+      if (elemFirst[el]) return elemFirst[el];
+    }
+
+    // 找匹配的情緒
+    for (const k in namesByMood) {
+      if (a.mood.includes(k) || a.moodChips.includes(k)) return namesByMood[k];
+    }
+
+    // 純配樂
+    if (a.vocal === '純配樂') return ['〈第一頁〉', '〈未完的章節〉', '〈夜談〉'];
+
+    // 預設
+    return ['〈寫給你〉', '〈那個下午〉', '〈不確定〉'];
+  }
+
+  // ---------- 下一首推薦（同 Voice 衍生）----------
+  function suggestNextSong(a, voiceName, pair) {
+    if (a.vocal === '純配樂') {
+      return `配樂類沒 Voice 可衍生，但你可以拿這套 Style 換個歌詞結構，做「同氛圍不同章節」的系列。`;
+    }
+
+    const allTerms = (pair.primary + ' ' + pair.secondary).toLowerCase();
+    let nextScene = '';
+
+    if (/japanese|city pop|enka/.test(allTerms)) {
+      nextScene = '凌晨 3 點便利商店買啤酒的女人';
+    } else if (/shanghai|vintage|crooner/.test(allTerms)) {
+      nextScene = '舞廳散場後一個人走回家的女人';
+    } else if (/jazz|lo-fi|narrative/.test(allTerms)) {
+      nextScene = '深夜廚房一邊洗碗一邊回想往事的男人';
+    } else if (/hyperpop|glitch|experimental/.test(allTerms)) {
+      nextScene = '在便利商店發呆但其實在崩潰的人';
+    } else if (/techno|tribal/.test(allTerms)) {
+      nextScene = '凌晨 5 點派對散場 一個人走回家的釋放';
+    } else if (/indie|folk|dream/.test(allTerms)) {
+      nextScene = '搬家前最後一晚 一個人坐在空房間的告別';
+    } else if (/healing|ambient|spa/.test(allTerms)) {
+      nextScene = '雨後早晨 一個人喝第一杯熱茶的安靜';
+    } else {
+      nextScene = '同樣情緒的另一個場景';
+    }
+
+    return `下首想做「${nextScene}」嗎？同一顆「${voiceName}」就能用，音色鎖住，自動變系列。`;
+  }
+
   // ---------- Checklist ----------
-  function runChecklist(styleString) {
+  function runChecklist(styleString, excludeString = '') {
     const list = rules.gravityWells.checklistAfterAssembly;
     const s = styleString.toLowerCase();
     return list.map(item => {
@@ -902,18 +1022,52 @@
       else if (item.includes('Key')) pass = /key\s+\w+/i.test(s);
       else if (item.includes('vocal style')) pass = /vocal|whisper|instrumental/i.test(s);
       else if (item.includes('能量弧線')) pass = /→|verse|chorus|build|drop|arc/i.test(s);
-      else if (item.includes('負向排除')) pass = /\bno\s+/i.test(s);
+      else if (item.includes('負向排除')) pass = !!(excludeString && excludeString.trim().length > 0);
       else if (item.includes('字元數')) pass = styleString.length < 950;
       return { item, pass };
     });
   }
 
   // ---------- 結果頁渲染 ----------
-  function showResult(composed, lyrics, persona, checks) {
+  function showResult({ composed, lyrics, voice, songNames, nextSong, checks }) {
     showScreen('screen-result');
+
+    // Style 字串
     $('#style-output').value = composed.styleString;
+
+    // Exclude 字串（獨立輸出，不含 no 前綴）
+    $('#exclude-output').value = composed.excludeString || '（這首沒需要排除的引力井）';
+
+    // Suno 參數
+    if (composed.sunoParams) {
+      $('#param-weirdness').textContent = composed.sunoParams.weirdnessRange;
+      $('#param-style-influence').textContent = composed.sunoParams.styleInfluenceRange;
+      $('#param-weirdness-bar').style.width = composed.sunoParams.weirdness + '%';
+      $('#param-style-bar').style.width = composed.sunoParams.styleInfluence + '%';
+      $('#params-hint').textContent = '姊姊提醒：' + composed.sunoParams.hint;
+    }
+
+    // 歌詞結構
     $('#lyrics-output').textContent = lyrics;
-    $('#persona-output').textContent = persona;
+
+    // Voice 命名
+    $('#voice-output').textContent = voice;
+
+    // 歌名建議
+    const songNamesUl = $('#songnames-list');
+    if (songNamesUl) {
+      songNamesUl.innerHTML = '';
+      songNames.forEach(n => {
+        const li = document.createElement('li');
+        li.textContent = n;
+        songNamesUl.appendChild(li);
+      });
+    }
+
+    // 下一首推薦
+    $('#nextsong-text').textContent = nextSong;
+
+    // Reasoning 摘要
     $('#result-sub').textContent = composed.reasoning.join(' · ');
 
     // Checklist
@@ -978,9 +1132,16 @@
         <div class="drawer-style">${t.style}</div>
       </div>
 
+      ${t.exclude ? `
       <div class="drawer-section">
-        <div class="drawer-section-label">PERSONA 建議</div>
-        <div style="font-family:var(--font-zh-display); font-weight:700; font-size:1.25rem;">${t.persona}</div>
+        <div class="drawer-section-label">EXCLUDE 預覽</div>
+        <div class="drawer-style" style="color:var(--c-warn);">${t.exclude}</div>
+      </div>
+      ` : ''}
+
+      <div class="drawer-section">
+        <div class="drawer-section-label">VOICE 建議</div>
+        <div style="font-family:var(--font-zh-display); font-weight:700; font-size:1.25rem;">${t.voice || t.persona || '溫柔嗓'}</div>
       </div>
 
       <div class="drawer-actions">
@@ -1006,16 +1167,32 @@
 
   function applyTemplate(t) {
     closeDrawer();
+    const w = t.weirdness || 30;
+    const si = t.styleInfluence || 70;
     const composed = {
       styleString: t.style,
+      excludeString: t.exclude || '',
       pair: { primary: t.nameEn, secondary: '' },
-      bpm: '',
-      key: '',
-      exclusions: [],
+      bpm: '', key: '',
+      exclusions: t.exclude ? t.exclude.split(',').map(s => s.trim()) : [],
+      sunoParams: {
+        weirdness: w,
+        weirdnessRange: `${Math.max(15, w - 5)}-${Math.min(70, w + 5)}%`,
+        styleInfluence: si,
+        styleInfluenceRange: `${Math.max(50, si - 5)}-${Math.min(85, si + 5)}%`,
+        hint: `這是「${t.nameZh}」範本。Weirdness ${w}% 是這類風格的甜蜜點，第一版可以照建議跑。`,
+      },
       reasoning: [`範本：${t.nameZh}`, `情境：${t.scenario}`],
     };
-    const checks = runChecklist(t.style);
-    showResult(composed, t.structure, t.persona, checks);
+    const checks = runChecklist(t.style, t.exclude || '');
+    showResult({
+      composed,
+      lyrics: t.structure,
+      voice: t.voice || t.persona || '溫柔嗓',
+      songNames: t.songNames || ['〈待命名〉', '〈第一首〉', '〈未完成〉'],
+      nextSong: `滿意這版後存成 Voice「${t.voice || '溫柔嗓'}」，下次同系列直接套同一顆音色。`,
+      checks,
+    });
   }
 
   function customizeTemplate(t) {

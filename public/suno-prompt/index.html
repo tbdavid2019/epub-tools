@@ -117,7 +117,7 @@
 
     <div class="result-section">
       <div class="result-section-label">
-        <span>STYLE</span>
+        <span>STYLE（複製到 Suno Style 欄位）</span>
         <span class="char-counter"><span id="char-count">0</span> / 950</span>
       </div>
       <div class="result-card style-card">
@@ -127,18 +127,65 @@
     </div>
 
     <div class="result-section">
-      <div class="result-section-label"><span>LYRICS STRUCTURE</span></div>
-      <div class="result-card lyrics-card">
-        <pre class="result-output lyrics-output" id="lyrics-output"></pre>
-        <button class="btn-copy" data-target="lyrics-output">複製歌詞結構</button>
+      <div class="result-section-label"><span>EXCLUDE STYLES（複製到 Suno Exclude Styles 欄位）</span></div>
+      <div class="result-card exclude-card">
+        <textarea class="result-output exclude-output" id="exclude-output" spellcheck="false"></textarea>
+        <button class="btn-copy" data-target="exclude-output">複製 Exclude</button>
+      </div>
+      <p class="exclude-hint">Exclude 欄位裡不用加「no」前綴，Suno 自己知道這格是「不要的」</p>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-label"><span>SUNO 參數建議（V5 / V5.5 通用）</span></div>
+      <div class="result-card params-card">
+        <div class="params-grid">
+          <div class="param-item">
+            <div class="param-label">Weirdness</div>
+            <div class="param-value" id="param-weirdness">30%</div>
+            <div class="param-bar"><div class="param-bar-fill" id="param-weirdness-bar"></div></div>
+          </div>
+          <div class="param-item">
+            <div class="param-label">Style Influence</div>
+            <div class="param-value" id="param-style-influence">70%</div>
+            <div class="param-bar"><div class="param-bar-fill" id="param-style-bar"></div></div>
+          </div>
+          <div class="param-item">
+            <div class="param-label">Audio Influence</div>
+            <div class="param-value param-skip">沒參考音檔，跳過</div>
+          </div>
+        </div>
+        <p class="params-hint" id="params-hint"></p>
       </div>
     </div>
 
     <div class="result-section">
-      <div class="result-section-label"><span>PERSONA NAMING</span></div>
-      <div class="result-card persona-card">
-        <div class="persona-output" id="persona-output"></div>
-        <p class="persona-hint">生完滿意的一首後 → More ··· → Create Persona → 用這個名字存起來，下次同系列直接 call</p>
+      <div class="result-section-label"><span>LYRICS STRUCTURE（複製到 Suno Lyrics 欄位）</span></div>
+      <div class="result-card lyrics-card">
+        <pre class="result-output lyrics-output" id="lyrics-output"></pre>
+        <button class="btn-copy" data-target="lyrics-output">複製歌詞結構</button>
+      </div>
+      <p class="lyrics-hint">姊姊把「[角色設定]」寫在最上面，Suno 看到方括號標籤會吸收當情境，<strong>不會唱出來</strong>，但會讓人聲帶情緒</p>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-label"><span>VOICE 命名（V5.5 從 Personas 改名為 Voices）</span></div>
+      <div class="result-card voice-card">
+        <div class="voice-output" id="voice-output"></div>
+        <p class="voice-hint">滿意的版本 → More ··· → Create Voice → 用這個名字存起來。<br>V5.5 也可以直接<strong>上傳你自己的聲音</strong>當 Voice，讓 Suno 用你聲音唱這首</p>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-label"><span>歌名建議（3 選 1）</span></div>
+      <div class="result-card songnames-card">
+        <ul class="songnames-list" id="songnames-list"></ul>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-section-label"><span>下一首推薦（同 Voice 衍生系列）</span></div>
+      <div class="result-card nextsong-card">
+        <p class="nextsong-text" id="nextsong-text"></p>
       </div>
     </div>
 

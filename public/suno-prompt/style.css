@@ -836,8 +836,114 @@ body::before {
   box-shadow: var(--shadow-sm);
 }
 .style-card { border-top: 3px solid var(--c-gold); }
+.exclude-card { border-top: 3px solid var(--c-warn); }
+.exclude-output { min-height: 60px; color: var(--c-warn); }
+.exclude-hint, .lyrics-hint, .voice-hint, .params-hint, .nextsong-text {
+  font-size: var(--fs-small);
+  color: var(--c-ink-soft);
+  margin-top: var(--sp-3);
+  line-height: 1.7;
+}
+.exclude-hint { color: var(--c-warn); }
+
+.params-card { background: var(--c-paper-deep); border: 1px solid var(--c-line); }
+.params-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-4);
+}
+@media (min-width: 600px) {
+  .params-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+.param-item { padding: var(--sp-3); background: #fff; border-radius: var(--r-sm); border: 1px solid var(--c-line); }
+.param-label {
+  font-family: var(--font-en-display);
+  font-style: italic;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.15em;
+  color: var(--c-mute);
+  text-transform: uppercase;
+  margin-bottom: var(--sp-2);
+}
+.param-value {
+  font-family: var(--font-en-display);
+  font-style: italic;
+  font-weight: 900;
+  font-size: 1.875rem;
+  color: var(--c-rec);
+  line-height: 1;
+  margin-bottom: var(--sp-2);
+}
+.param-skip {
+  font-size: var(--fs-small);
+  color: var(--c-mute);
+  font-family: var(--font-zh-body);
+  font-weight: 500;
+  font-style: normal;
+}
+.param-bar {
+  height: 4px;
+  background: var(--c-line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.param-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--c-gold), var(--c-rec));
+  transition: width 600ms var(--ease-out);
+}
+
 .lyrics-card { border-left: 3px solid var(--c-rec); }
+.voice-card { background: var(--c-paper-deep); border: 1px solid var(--c-line); border-top: 3px solid var(--c-mint); }
+.voice-output {
+  font-family: var(--font-zh-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--c-ink);
+  margin-bottom: var(--sp-3);
+}
+
+.songnames-card { background: #fff; border: 1px solid var(--c-line); }
+.songnames-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.songnames-list li {
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--c-paper-deep);
+  border-radius: var(--r-sm);
+  font-family: var(--font-zh-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--c-ink);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.songnames-list li::before {
+  content: counter(songname);
+  counter-increment: songname;
+  font-family: var(--font-en-display);
+  font-style: italic;
+  font-size: 1.5rem;
+  color: var(--c-gold);
+  font-weight: 900;
+}
+.songnames-list { counter-reset: songname; }
+
+.nextsong-card { background: var(--c-paper-deep); border-left: 3px solid var(--c-gold); }
+
+/* 保留舊 persona class 相容 */
 .persona-card { background: var(--c-paper-deep); border: 1px solid var(--c-line); }
+.persona-output {
+  font-family: var(--font-zh-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--c-ink);
+  margin-bottom: var(--sp-3);
+}
+.persona-hint {
+  font-size: var(--fs-small);
+  color: var(--c-ink-soft);
+  line-height: 1.7;
+}
 
 .result-output {
   width: 100%;

@@ -146,11 +146,29 @@ async function diagDdg(t) {
     const re = /share\.readmoo\.com%2Fbook%2F(\d+)/g;
     let m;
     while ((m = re.exec(html)) !== null) shareIds.push(m[1]);
+    const uniqIds = [...new Set(shareIds)].slice(0, 3);
+
+    // 測試打 share 頁是否能通
+    const shareTest = await Promise.allSettled(
+      uniqIds.map(async id => {
+        const sr = await fetch(`https://share.readmoo.com/book/${id}`, { headers: FETCH_HEADERS });
+        const sh = await sr.text();
+        const idMatch = sh.match(/(?:^|[^\d])(2\d{14})(?:[^\d]|$)/);
+        return {
+          shareId: id,
+          status: sr.status,
+          size: sh.length,
+          realId: idMatch ? idMatch[1] : null,
+          firstTitle: (sh.match(/<title>([^<]+)<\/title>/) || [])[1] || ''
+        };
+      })
+    );
+
     return resp({
       ddgStatus: r.status,
       ddgSize: html.length,
-      shareIds: [...new Set(shareIds)].slice(0, 10),
-      first200: html.substring(0, 200),
+      shareIds: uniqIds,
+      shareTest: shareTest.map(r => r.status === 'fulfilled' ? r.value : { err: r.reason?.message }),
       hasBlocked: html.includes('Anomaly') || html.includes('blocked') || html.includes('captcha'),
     });
   } catch (e) {

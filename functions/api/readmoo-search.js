@@ -26,6 +26,13 @@ export async function onRequest(context) {
     return resp({ ok: true, ts: Date.now() });
   }
 
+  // 診斷模式：直接看 DDG 回的內容
+  // 用法：?q=__diag__&t=書名
+  if (rawQuery === '__diag__') {
+    const t = url.searchParams.get('t') || '出社會第N年';
+    return diagDdg(t);
+  }
+
   // 讀墨搜尋不接受全形/半形標點（哈利波特：神秘的魔法石 → 0 筆）
   // 把標點換成空格，再壓掉多餘空白
   const query = stripPunctuation(rawQuery);
@@ -122,6 +129,27 @@ function stripPunctuation(s) {
     .replace(/[:,.?!"'`()\[\]{}<>~\-—|/\\;]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+async function diagDdg(t) {
+  const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent('site:readmoo.com ' + t)}`;
+  try {
+    const r = await fetch(ddgUrl, { headers: FETCH_HEADERS });
+    const html = await r.text();
+    const shareIds = [];
+    const re = /share\.readmoo\.com%2Fbook%2F(\d+)/g;
+    let m;
+    while ((m = re.exec(html)) !== null) shareIds.push(m[1]);
+    return resp({
+      ddgStatus: r.status,
+      ddgSize: html.length,
+      shareIds: [...new Set(shareIds)].slice(0, 10),
+      first200: html.substring(0, 200),
+      hasBlocked: html.includes('Anomaly') || html.includes('blocked') || html.includes('captcha'),
+    });
+  } catch (e) {
+    return resp({ error: e.message, name: e.name });
+  }
 }
 
 // 讀墨自家搜尋找不到時的備援：

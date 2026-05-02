@@ -181,20 +181,21 @@ async function fallbackSearch(query) {
       if (!shareRes.ok) return null;
       const shareHtml = await shareRes.text();
 
-      // 從 Base64 編碼的 share URL 解出 13 位數正規 ID
+      // 找 15 位數正規 book ID（讀墨格式：2XXXXXXXXXXXXXX）
+      // 優先從 HTML 內文抓（讀墨 share 頁的 base64 share URL 結尾被截，解出來是 13 位不完整 ID）
       let realId = null;
-      const b64Match = shareHtml.match(/\/ap\/target\/share\?url=([A-Za-z0-9+/=]+)/);
-      if (b64Match) {
-        try {
-          const decoded = atob(b64Match[1]);
-          const idMatch = decoded.match(/\/book\/(\d{13,})/);
-          if (idMatch) realId = idMatch[1];
-        } catch (e) { /* 解碼失敗 */ }
-      }
-      // 退而求其次：從 HTML 內文找 13+ 位數 ID
+      const idMatch = shareHtml.match(/(?:^|[^\d])(2\d{14})(?:[^\d]|$)/);
+      if (idMatch) realId = idMatch[1];
+      // 退而求其次：base64 share URL（如果剛好沒被截）
       if (!realId) {
-        const idMatch = shareHtml.match(/[^\d](2\d{14})[^\d]/);
-        if (idMatch) realId = idMatch[1];
+        const b64Match = shareHtml.match(/\/ap\/target\/share\?url=([A-Za-z0-9+/=]+)/);
+        if (b64Match) {
+          try {
+            const decoded = atob(b64Match[1]);
+            const m2 = decoded.match(/\/book\/(2\d{14})/);
+            if (m2) realId = m2[1];
+          } catch (e) { /* 跳過 */ }
+        }
       }
       if (!realId) return null;
 

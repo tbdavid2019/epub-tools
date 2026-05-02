@@ -57,7 +57,7 @@
     onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js'"></script>
 
   <!-- Styles -->
-  <link rel="stylesheet" href="css/style.min.css?v=20260502f-presbyopia">
+  <link rel="stylesheet" href="css/style.min.css?v=20260502g">
 
   <!-- 每日好書 tab 樣式 -->
   <style>
@@ -444,6 +444,12 @@
   <hello-ruru-header title="讀墨 AP 接龍工具" href="https://tools.helloruru.com/readmoo-ap/"></hello-ruru-header>
 
   <!-- Tab Navigation -->
+  <!-- 身份狀態列（獨立靠右）-->
+  <div id="user-bar" class="user-bar" style="display:none;">
+    <span><i data-lucide="user"></i> <strong id="user-bar-name"></strong></span>
+    <button id="btn-logout" class="btn-text btn-sm">切換身份</button>
+  </div>
+
   <nav class="tab-nav" role="tablist">
     <button class="tab-btn active" data-tab="guide" role="tab" aria-selected="true">
       <i data-lucide="book-open"></i>
@@ -474,12 +480,6 @@
       <span>修改紀錄</span>
     </button>
   </nav>
-
-  <!-- 身份狀態列 -->
-  <div id="user-bar" class="user-bar" style="display:none;">
-    <span><i data-lucide="user"></i> <strong id="user-bar-name"></strong></span>
-    <button id="btn-logout" class="btn-text btn-sm">切換身份</button>
-  </div>
 
   <main class="main-content">
     <!-- ============ Tab 1: 使用指南 ============ -->

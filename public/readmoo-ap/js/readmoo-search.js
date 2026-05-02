@@ -78,7 +78,8 @@ function initReadmooSearch() {
         return;
       }
 
-      statusEl.innerHTML = `「${escapeHtml(query)}」找到 ${books.length} 本${cacheHit ? ' <span class="cache-badge">快取</span>' : ''}`;
+      const fbBadge = data.fallback ? ' <span class="cache-badge" title="讀墨內部搜不到，從 Google 索引找到">擴充搜尋</span>' : '';
+      statusEl.innerHTML = `「${escapeHtml(query)}」找到 ${books.length} 本${cacheHit ? ' <span class="cache-badge">快取</span>' : ''}${fbBadge}`;
       renderResults(books);
     } catch (err) {
       const isTimeout = err.name === 'AbortError';

@@ -4,15 +4,79 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>蘇諾大姊姊 · Suno 提示詞產生器 | HelloRuru Tools</title>
-  <meta name="description" content="3 分鐘配出一首 Suno 不會跑掉的歌。蘇諾大姊姊用 PM 追問式幫你寫好 Style 字串、歌詞結構、Persona 命名，一鍵複製貼到 Suno。">
-  <meta name="keywords" content="Suno, AI 寫歌, 提示詞產生器, Style prompt, 歌詞結構, HelloRuru">
-  <meta property="og:title" content="蘇諾大姊姊 · Suno 提示詞產生器">
-  <meta property="og:description" content="蘇諾姊姊一題一題問你，3 分鐘配出 Suno 不會跑掉的好歌。">
+  <meta name="description" content="3 分鐘配出一首 Suno 不會跑掉的歌。蘇諾大姊姊用 PM 追問式幫你寫好 Style 字串、Exclude 排除、歌詞結構、Voice 命名、Suno 參數建議、封面 prompt — 一鍵複製貼到 Suno V5/V5.5。">
+  <meta name="keywords" content="Suno 提示詞, Suno prompt, AI 寫歌工具, Suno Style 字串, Suno V5.5, Voice 命名, 歌詞結構, HelloRuru, 蘇諾大姊姊">
+  <meta name="author" content="HelloRuru / Kaoru Tsai">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#F5F1EA">
+
+  <!-- Open Graph -->
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="HelloRuru Tools">
+  <meta property="og:locale" content="zh_TW">
   <meta property="og:url" content="https://tools.helloruru.com/suno-prompt/">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:title" content="蘇諾大姊姊 · Suno 提示詞產生器">
+  <meta property="og:description" content="姊姊一題一題問你，3 分鐘配出一首 Suno 不會跑掉的歌。Style + Exclude + 歌詞結構 + 封面 prompt 一鍵複製。">
+  <meta property="og:image" content="https://tools.helloruru.com/suno-prompt/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="蘇諾大姊姊 Suno 提示詞產生器 — 黑膠唱片紅標，Let's Make a Record">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="蘇諾大姊姊 · Suno 提示詞產生器">
+  <meta name="twitter:description" content="姊姊一題一題問你，3 分鐘配出一首 Suno 不會跑掉的歌。">
+  <meta name="twitter:image" content="https://tools.helloruru.com/suno-prompt/og-image.png">
+
+  <!-- Icons（用 Suno 工具自己的紅標黑膠 favicon） -->
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="canonical" href="https://tools.helloruru.com/suno-prompt/">
+
+  <!-- JSON-LD 結構化資料（SGE / AIO 友善） -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "蘇諾大姊姊 · Suno 提示詞產生器",
+    "alternateName": "Suno Prompt Builder by HelloRuru",
+    "url": "https://tools.helloruru.com/suno-prompt/",
+    "description": "用 PM 追問式幫你配出 Suno 不會跑掉的 Style 字串、Exclude 排除、歌詞結構、Voice 命名、Weirdness 與 Style Influence 參數、封面 prompt。支援 Suno V5 / V5.5。",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Web Browser",
+    "browserRequirements": "Requires JavaScript",
+    "inLanguage": "zh-Hant",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "TWD"
+    },
+    "creator": {
+      "@type": "Person",
+      "name": "Kaoru Tsai",
+      "alternateName": "嚕嚕 / Ruru",
+      "url": "https://helloruru.com",
+      "email": "hello@helloruru.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "HelloRuru",
+      "url": "https://helloruru.com"
+    },
+    "featureList": [
+      "PM 追問式 7 題流程",
+      "10 張預設範本微調",
+      "Style 字串 + Exclude 獨立輸出",
+      "Suno Weirdness / Style Influence 參數推薦",
+      "歌詞結構模板（含方括號標籤）",
+      "Voice 命名建議（V5.5 友善）",
+      "歌名 3 選 1",
+      "下一首推薦（同 Voice 衍生系列）",
+      "封面 image prompt 自動生成"
+    ]
+  }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

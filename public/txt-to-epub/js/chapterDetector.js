@@ -185,7 +185,7 @@ window.ChapterDetector = {
         // 清理符號前綴和多餘編號（如 ☆、1第 1 章 → 第 1 章、★ 番外 → 番外）
         rawTitle = rawTitle.replace(/^[☆★✦✧❖◆◇●○■□▲△▼▽♦♠♣♥♡※＊✿❀❁✾✽❃❋✯✰⊙◎►◀▶◁☉✠✡✢✣✤✥✩✪✫✬✭✮][、，,.\s]*\d*[、，,.\s]*/, '');
         if (!rawTitle) rawTitle = found[f][1].trim(); // fallback
-        group.push({ title: rawTitle, index: found[f].index });
+        group.push({ title: rawTitle, index: found[f].index, endIndex: found[f].index + found[f][0].length });
       }
       if (group.length >= 2) groups.push(group);
     }
@@ -207,14 +207,13 @@ window.ChapterDetector = {
 
     var chapters = [];
     for (var i = 0; i < matches.length; i++) {
-      var start = matches[i].index;
-      var end = i < matches.length - 1 ? matches[i + 1].index : text.length;
-      // 剝掉章節標題那一行（避免內文重複出現標題行）
+      // body 從「標題行結尾」之後開始切，不從 match.index 切
+      // （match[0] 因為 [　\s]* 會吃掉標題行前的空白，match.index 不是標題行行首）
       // epubGenerator 會自己印 <h1>{title}</h1>，content 不需要再含標題
-      var rawSlice = text.slice(start, end);
-      var firstNewline = rawSlice.indexOf('\n');
-      var bodyOnly = firstNewline === -1 ? '' : rawSlice.slice(firstNewline + 1);
-      chapters.push({ title: matches[i].title, content: bodyOnly.trim() });
+      var bodyStart = matches[i].endIndex;
+      var bodyEnd = i < matches.length - 1 ? matches[i + 1].index : text.length;
+      var bodyOnly = text.slice(bodyStart, bodyEnd).trim();
+      chapters.push({ title: matches[i].title, content: bodyOnly });
     }
 
     if (matches.length > 0 && matches[0].index > 100) {
@@ -273,7 +272,7 @@ window.ChapterDetector = {
       var lineEnd = text.indexOf('\n', found[i].index);
       var fullLine = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd).trim();
       if (fullLine.length > 40) continue;
-      matches.push({ title: found[i][1].trim(), index: found[i].index });
+      matches.push({ title: found[i][1].trim(), index: found[i].index, endIndex: found[i].index + found[i][0].length });
     }
 
     // 去重
@@ -286,13 +285,11 @@ window.ChapterDetector = {
 
     var chapters = [];
     for (var j = 0; j < matches.length; j++) {
-      var start = matches[j].index;
-      var end = j < matches.length - 1 ? matches[j + 1].index : text.length;
-      // 剝掉章節標題那一行（避免 <h1> 跟 <p> 內文第一段重複）
-      var rawSlice = text.slice(start, end);
-      var firstNewline = rawSlice.indexOf('\n');
-      var bodyOnly = firstNewline === -1 ? '' : rawSlice.slice(firstNewline + 1);
-      chapters.push({ title: matches[j].title, content: bodyOnly.trim() });
+      // 從標題行結尾切（match.index 因為 [　\s]* 吃了前置空白，不是行首）
+      var bodyStart = matches[j].endIndex;
+      var bodyEnd = j < matches.length - 1 ? matches[j + 1].index : text.length;
+      var bodyOnly = text.slice(bodyStart, bodyEnd).trim();
+      chapters.push({ title: matches[j].title, content: bodyOnly });
     }
 
     // 序言

@@ -14,6 +14,33 @@ var FONT_CONFIG = {
   'custom': { id: 'custom', name: '自訂字體', family: 'CustomUserFont', description: '上傳你自己的字體檔（請確認授權）' },
 };
 
+// 內建字體 CDN 來源（直接抓得到 ttf/otf 的 URL，子集化後內嵌進 EPUB）
+// Noto Sans/Serif 走 google/fonts repo（VF 版有 wght 軸，子集化會保留 Regular 字重）
+// 粉圓走 justfont 官方 repo，原俠正楷走 lab.helloruru.com 自家 CDN（GitHub release 無 CORS）
+// 所有 URL 都實測過 200 + 有 CORS（2026-05-04）
+var BUILTIN_FONT_SOURCES = {
+  'noto-sans': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosanstc/NotoSansTC%5Bwght%5D.ttf',
+  'noto-serif': 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notoseriftc/NotoSerifTC%5Bwght%5D.ttf',
+  'guankiap': 'https://lab.helloruru.com/fonts/xtc/GuanKiapTsingKhai-TW.ttf',
+  'huninn': 'https://cdn.jsdelivr.net/gh/justfont/open-huninn-font@2.0/font/jf-openhuninn-2.0.ttf',
+};
+
+// 內建字體下載快取（同一 session 不重複抓）
+var _builtinFontCache = {};
+
+async function fetchBuiltinFont(fontId, onProgress) {
+  if (_builtinFontCache[fontId]) return _builtinFontCache[fontId];
+  var url = BUILTIN_FONT_SOURCES[fontId];
+  if (!url) throw new Error('未知的內建字體：' + fontId);
+  var fontName = (FONT_CONFIG[fontId] || {}).name || fontId;
+  onProgress && onProgress({ stage: 'font', message: '正在下載字體：' + fontName + '（約 5-15 秒，下次轉檔會用快取）...' });
+  var resp = await fetch(url);
+  if (!resp.ok) throw new Error('下載字體失敗：' + resp.status);
+  var buf = await resp.arrayBuffer();
+  _builtinFontCache[fontId] = buf;
+  return buf;
+}
+
 // 副檔名對應的 MIME type 與 EPUB 內檔名
 function getCustomFontMeta(file) {
   var name = (file.name || '').toLowerCase();
@@ -215,12 +242,21 @@ window.EpubGenerator = {
     var isVertical = writingMode === 'vertical';
 
     var useCustom = fontFamily === 'custom' && customFont;
+    // 內建字體（非 custom）也要走內嵌流程，讓所有閱讀器都能正確顯示
+    var useBuiltin = !useCustom && BUILTIN_FONT_SOURCES[fontFamily];
+    var willEmbed = useCustom || useBuiltin;
     var fontConfig = useCustom ? FONT_CONFIG['custom'] : (FONT_CONFIG[fontFamily] || FONT_CONFIG['noto-sans']);
     // 自訂字體拿不到時退回思源黑體
-    if (fontFamily === 'custom' && !customFont) fontConfig = FONT_CONFIG['noto-sans'];
-    var fontImportant = useCustom ? ' !important' : '';
-    // fontFamilyCSS 自訂字體分支會等讀完字體真實 family name 再決定（在下方字體處理區塊）
-    var fontFamilyCSS = useCustom
+    if (fontFamily === 'custom' && !customFont) {
+      fontConfig = FONT_CONFIG['noto-sans'];
+      useBuiltin = true;
+      willEmbed = true;
+      fontFamily = 'noto-sans';
+    }
+    // 內嵌字體都用 !important 強制套用（避免被閱讀器系統字體蓋掉）
+    var fontImportant = willEmbed ? ' !important' : '';
+    // fontFamilyCSS 等字體處理完才決定（讀到真實 family name 後）
+    var fontFamilyCSS = willEmbed
       ? null
       : '"' + fontConfig.family + '", "Noto Sans TC", sans-serif';
     var fontSizeValue = SIZE_MAP[fontSize] || SIZE_MAP['medium'];
@@ -264,65 +300,99 @@ window.EpubGenerator = {
 
     onProgress({ stage: 'css', message: '正在產生樣式表...' });
 
-    // 自訂字體：子集化（只保留書中用到的字）後嵌入 EPUB
+    // 字體內嵌：子集化（只保留書中用到的字）後嵌入 EPUB
+    // useCustom：使用者上傳的字體；useBuiltin：從 CDN 抓的內建字體
     var fontFaceCSS = '';
     var fontManifest = '';
-    var actualFontFamily = 'CustomUserFont';  // 預設名稱，之後若能讀到字體真實 family name 就會被覆蓋
-    if (useCustom) {
-      var fontMeta = getCustomFontMeta(customFont);
-      var rawFontData = await customFont.arrayBuffer();
-      var fontDataToEmbed = rawFontData;
-      var subsetExt = fontMeta.ext;
-      var subsetMime = fontMeta.mime;
-      var subsetFormat = fontMeta.format;
-      // hb-subset 輸出統一是 sfnt（TTF/OTF），把 woff/woff2 子集化後也改用 ttf 副檔名
-      try {
-        var codepoints = collectCodepoints(chapters, title, author);
-        var subsetBuffer = await subsetFontWithHarfBuzz(rawFontData, codepoints, onProgress);
-        fontDataToEmbed = subsetBuffer;
-        // 子集化輸出是 sfnt，直接用 ttf
-        subsetExt = 'ttf';
-        subsetMime = 'font/ttf';
-        subsetFormat = 'truetype';
-        var origMB = (rawFontData.byteLength / 1048576).toFixed(2);
-        var subMB = (subsetBuffer.byteLength / 1048576).toFixed(2);
-        onProgress({ stage: 'font', message: '字體精簡完成（' + origMB + ' MB → ' + subMB + ' MB）' });
-      } catch (subErr) {
-        console.warn('字體子集化失敗，改用原始字體：', subErr);
-        onProgress({ stage: 'font', message: '字體子集化失敗，改用原始字體（' + (rawFontData.byteLength / 1048576).toFixed(1) + ' MB）' });
+    var actualFontFamily = useCustom ? 'CustomUserFont' : fontConfig.family;
+    if (willEmbed) {
+      var rawFontData;
+      var fontMeta;
+      if (useCustom) {
+        fontMeta = getCustomFontMeta(customFont);
+        rawFontData = await customFont.arrayBuffer();
+      } else {
+        // 內建字體：CDN 抓 ttf/otf，副檔名從 URL 推
+        try {
+          rawFontData = await fetchBuiltinFont(fontFamily, onProgress);
+        } catch (fetchErr) {
+          console.warn('內建字體下載失敗，改用字體名稱不嵌入：', fetchErr);
+          onProgress({ stage: 'font', message: '字體下載失敗，改用閱讀器內建字體' });
+          willEmbed = false;
+          fontFamilyCSS = '"' + fontConfig.family + '", "Noto Sans TC", sans-serif';
+        }
+        if (willEmbed) {
+          var srcUrl = BUILTIN_FONT_SOURCES[fontFamily];
+          var srcExt = srcUrl.toLowerCase().endsWith('.otf') ? 'otf' : 'ttf';
+          fontMeta = {
+            ext: srcExt,
+            mime: srcExt === 'otf' ? 'font/otf' : 'font/ttf',
+            format: srcExt === 'otf' ? 'opentype' : 'truetype',
+          };
+        }
       }
-      // 讀字體實際 family name（從子集化後的字體讀，因為閱讀器看到的是這個檔案）
-      var realName = readFontFamilyName(fontDataToEmbed);
-      if (realName) {
-        actualFontFamily = realName;
-        onProgress({ stage: 'font', message: '字體名稱：' + realName });
+
+      if (willEmbed) {
+        var fontDataToEmbed = rawFontData;
+        var subsetExt = fontMeta.ext;
+        var subsetMime = fontMeta.mime;
+        var subsetFormat = fontMeta.format;
+        // hb-subset 輸出統一是 sfnt（TTF/OTF），把 woff/woff2 子集化後也改用 ttf 副檔名
+        try {
+          var codepoints = collectCodepoints(chapters, title, author);
+          var subsetBuffer = await subsetFontWithHarfBuzz(rawFontData, codepoints, onProgress);
+          fontDataToEmbed = subsetBuffer;
+          subsetExt = 'ttf';
+          subsetMime = 'font/ttf';
+          subsetFormat = 'truetype';
+          var origMB = (rawFontData.byteLength / 1048576).toFixed(2);
+          var subMB = (subsetBuffer.byteLength / 1048576).toFixed(2);
+          onProgress({ stage: 'font', message: '字體精簡完成（' + origMB + ' MB → ' + subMB + ' MB）' });
+        } catch (subErr) {
+          console.warn('字體子集化失敗，改用原始字體：', subErr);
+          onProgress({ stage: 'font', message: '字體子集化失敗，改用原始字體（' + (rawFontData.byteLength / 1048576).toFixed(1) + ' MB）' });
+        }
+        // 讀字體實際 family name（從子集化後的字體讀，因為閱讀器看到的是這個檔案）
+        var realName = readFontFamilyName(fontDataToEmbed);
+        if (realName) {
+          actualFontFamily = realName;
+          onProgress({ stage: 'font', message: '字體名稱：' + realName });
+        }
+        var fontFilename = (useCustom ? 'user-font' : fontFamily) + '.' + subsetExt;
+        zip.file('OEBPS/fonts/' + fontFilename, fontDataToEmbed);
+        // CSS 用字體真實名稱（避免閱讀器比對 family name 失敗而忽略 @font-face）
+        // 自訂字體額外宣告 CustomUserFont 別名，雙保險
+        fontFaceCSS =
+          '@font-face {\n' +
+          '  font-family: "' + actualFontFamily + '";\n' +
+          '  src: url("fonts/' + fontFilename + '") format("' + subsetFormat + '");\n' +
+          '  font-weight: normal;\n' +
+          '  font-style: normal;\n' +
+          '}\n';
+        if (useCustom) {
+          fontFaceCSS +=
+            '@font-face {\n' +
+            '  font-family: "CustomUserFont";\n' +
+            '  src: url("fonts/' + fontFilename + '") format("' + subsetFormat + '");\n' +
+            '  font-weight: normal;\n' +
+            '  font-style: normal;\n' +
+            '}\n';
+        }
+        fontFaceCSS += '\n';
+        var fontItemId = useCustom ? 'user-font' : ('font-' + fontFamily);
+        fontManifest = '<item id="' + fontItemId + '" href="fonts/' + fontFilename + '" media-type="' + subsetMime + '"/>';
+        // fontFamilyCSS：真實名稱優先，再 fallback config 名稱、通用族
+        var fallbacks = useCustom
+          ? '"CustomUserFont", sans-serif'
+          : '"' + fontConfig.family + '", "Noto Sans TC", sans-serif';
+        fontFamilyCSS = '"' + actualFontFamily + '", ' + fallbacks;
       }
-      var fontFilename = 'user-font.' + subsetExt;
-      zip.file('OEBPS/fonts/' + fontFilename, fontDataToEmbed);
-      // CSS 用字體真實名稱（避免閱讀器比對 family name 失敗而忽略 @font-face）
-      // 同時宣告 CustomUserFont 別名，雙保險
-      fontFaceCSS =
-        '@font-face {\n' +
-        '  font-family: "' + actualFontFamily + '";\n' +
-        '  src: url("fonts/' + fontFilename + '") format("' + subsetFormat + '");\n' +
-        '  font-weight: normal;\n' +
-        '  font-style: normal;\n' +
-        '}\n' +
-        '@font-face {\n' +
-        '  font-family: "CustomUserFont";\n' +
-        '  src: url("fonts/' + fontFilename + '") format("' + subsetFormat + '");\n' +
-        '  font-weight: normal;\n' +
-        '  font-style: normal;\n' +
-        '}\n\n';
-      fontManifest = '<item id="user-font" href="fonts/' + fontFilename + '" media-type="' + subsetMime + '"/>';
-      // 設定 fontFamilyCSS — 真實名稱優先，CustomUserFont 為 alias，再 fallback 通用族
-      fontFamilyCSS = '"' + actualFontFamily + '", "CustomUserFont", sans-serif';
     }
 
     // CSS
     var verticalCSS = isVertical ? '\n  writing-mode: vertical-rl;\n  -webkit-writing-mode: vertical-rl;\n  -epub-writing-mode: vertical-rl;\n  text-orientation: mixed;' : '';
-    // 自訂字體用 !important + 全域 * 選擇器強制覆蓋，避免被閱讀器系統字體吃掉
-    var globalFontRule = useCustom
+    // 內嵌字體（自訂或內建 CDN）用 !important + 全域 * 選擇器強制覆蓋，避免被閱讀器系統字體吃掉
+    var globalFontRule = willEmbed
       ? '* {\n  font-family: ' + fontFamilyCSS + fontImportant + ';\n}\n\n'
       : '';
     var css = fontFaceCSS + globalFontRule +

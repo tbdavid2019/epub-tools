@@ -111,6 +111,20 @@
           <div id="encodingInfo" class="encoding-info hidden">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <span>偵測到編碼：<strong id="encodingLabel"></strong></span>
+            <button type="button" id="btnSwitchEncoding" class="encoding-switch-btn">看起來是亂碼？換個編碼試試</button>
+          </div>
+        </div>
+
+        <!-- 編碼切換彈窗：並排預覽四個版本，眼睛挑哪個是正常中文 -->
+        <div id="encodingModal" class="encoding-modal hidden" role="dialog" aria-modal="true" aria-labelledby="encodingModalTitle">
+          <div class="encoding-modal-backdrop"></div>
+          <div class="encoding-modal-card">
+            <div class="encoding-modal-header">
+              <h3 id="encodingModalTitle">挑出正常中文的那一版</h3>
+              <button type="button" id="btnCloseEncodingModal" class="encoding-modal-close" aria-label="關閉">×</button>
+            </div>
+            <p class="encoding-modal-hint">不用懂編碼，眼睛看哪個版本是看得懂的中文，點哪個就對了。</p>
+            <div id="encodingCandidates" class="encoding-candidates"></div>
           </div>
         </div>
 

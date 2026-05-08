@@ -125,21 +125,22 @@
     try {
       var result = await window.EncodingDetector.readFileWithAutoEncoding(file);
       state.file = file;
+      state.fileBuffer = result.buffer;
       state.content = result.text;
+      state.currentEncoding = result.encoding;
 
       $('encodingInfo').classList.remove('hidden');
       $('encodingLabel').textContent = result.encodingLabel;
 
-      // Detect chapters
-      state.chapters = window.ChapterDetector.detectChapters(result.text);
-
-      // Detect metadata
-      var fileName = file.name.replace(/\.txt$/i, '');
-      var meta = window.ChapterDetector.detectBookMetadata(result.text, fileName);
-      state.settings.title = meta.title || fileName;
-      state.settings.author = meta.author || '';
+      // 套用解碼後的章節 + metadata
+      applyDecodedText(result.text, file.name);
 
       $('btnNext').disabled = false;
+
+      // 解碼結果亂碼率超過 5% → 主動跳出編碼挑選彈窗
+      if (result.garbledRatio > 0.05) {
+        showEncodingModal(true);
+      }
 
       // Auto-advance to step 2
       showStep(2);
@@ -151,6 +152,74 @@
       $('dropText').textContent = '拖放檔案到這裡';
     }
   }
+
+  // 把解碼後的文字套到 state（章節 + 書名 + 作者）
+  function applyDecodedText(text, fileName) {
+    state.content = text;
+    state.chapters = window.ChapterDetector.detectChapters(text);
+    var bareName = fileName.replace(/\.txt$/i, '');
+    var meta = window.ChapterDetector.detectBookMetadata(text, bareName);
+    state.settings.title = meta.title || bareName;
+    state.settings.author = meta.author || '';
+  }
+
+  // 編碼挑選彈窗
+  function showEncodingModal(autoOpen) {
+    if (!state.fileBuffer) return;
+    var candidates = window.EncodingDetector.getPreviewCandidates(state.fileBuffer, 200);
+    // 找亂碼率最低的當推薦
+    var bestRatio = 1;
+    for (var i = 0; i < candidates.length; i++) {
+      if (candidates[i].garbledRatio < bestRatio) bestRatio = candidates[i].garbledRatio;
+    }
+    var html = '';
+    for (var k = 0; k < candidates.length; k++) {
+      var c = candidates[k];
+      var isCurrent = c.id === state.currentEncoding;
+      var isRecommended = !isCurrent && c.garbledRatio === bestRatio && c.garbledRatio < 0.02;
+      var tagHtml = '';
+      if (isCurrent) tagHtml = '<span class="encoding-candidate-tag">目前使用</span>';
+      else if (isRecommended) tagHtml = '<span class="encoding-candidate-tag">推薦</span>';
+      else if (c.garbledRatio > 0.05) tagHtml = '<span class="encoding-candidate-tag warn">看起來有亂碼</span>';
+      var previewHtml = escapeHtml(c.preview).replace(/\n/g, '<br>');
+      if (!previewHtml) previewHtml = '<span style="color:var(--text-muted)">（無法解碼）</span>';
+      html += '<button type="button" class="encoding-candidate' + (isRecommended ? ' recommended' : '') + '" data-encoding="' + c.id + '">' +
+        '<div class="encoding-candidate-head">' +
+          '<span class="encoding-candidate-name">' + escapeHtml(c.label) + '</span>' +
+          tagHtml +
+        '</div>' +
+        '<div class="encoding-candidate-preview">' + previewHtml + '</div>' +
+      '</button>';
+    }
+    $('encodingCandidates').innerHTML = html;
+    $('encodingModal').classList.remove('hidden');
+
+    // 點選任一候選 → 套用該編碼
+    var btns = $('encodingCandidates').querySelectorAll('.encoding-candidate');
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var enc = btn.dataset.encoding;
+        var newText = window.EncodingDetector.decodeWithEncoding(state.fileBuffer, enc);
+        state.currentEncoding = enc;
+        var labels = window.EncodingDetector.ENCODING_LABELS;
+        $('encodingLabel').textContent = labels[enc] || enc.toUpperCase();
+        applyDecodedText(newText, state.file.name);
+        $('encodingModal').classList.add('hidden');
+        // 如果在 step 2 就刷新章節列表
+        if (state.step === 2) {
+          chapterShowAll = false;
+          renderChapters();
+        }
+      });
+    });
+  }
+
+  // 編碼切換按鈕（隨時可手動開）
+  $('btnSwitchEncoding').addEventListener('click', function () { showEncodingModal(false); });
+  $('btnCloseEncodingModal').addEventListener('click', function () { $('encodingModal').classList.add('hidden'); });
+  document.querySelector('#encodingModal .encoding-modal-backdrop').addEventListener('click', function () {
+    $('encodingModal').classList.add('hidden');
+  });
 
   // ── Step 2: Chapter Preview ──
   var chapterShowAll = false;

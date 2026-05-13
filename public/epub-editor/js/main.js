@@ -717,11 +717,19 @@ h1, h2, h3, h4, h5, h6 { font-family: "${realFamily}", "CustomUserFont", sans-se
   }
 
   if (isVertical) {
-    css += `body {
-  writing-mode: vertical-rl;
-  -webkit-writing-mode: vertical-rl;
-  -epub-writing-mode: vertical-rl;
-  text-orientation: mixed;
+    css += `html, body {
+  writing-mode: vertical-rl !important;
+  -webkit-writing-mode: vertical-rl !important;
+  -epub-writing-mode: vertical-rl !important;
+  text-orientation: mixed !important;
+}\n`;
+  } else {
+    // 橫排：強制覆蓋原 EPUB 可能存在的直排設定
+    css += `html, body {
+  writing-mode: horizontal-tb !important;
+  -webkit-writing-mode: horizontal-tb !important;
+  -epub-writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
 }\n`;
   }
 

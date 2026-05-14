@@ -8,7 +8,7 @@
 <meta name="robots" content="noindex, nofollow" />
 
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="stylesheet" href="./css/style.css?v=20260426" />
+<link rel="stylesheet" href="./css/style.css?v=20260514" />
 </head>
 <body>
 
@@ -65,6 +65,34 @@
     </div>
   </section>
 
+  <!-- 功能③：OTA 快速更新 -->
+  <section class="card">
+    <h2>③ OTA 快速更新（保留書籤與設定）</h2>
+    <p class="hint">
+      只寫入韌體的 app 分區（X4 約 6.25 MB / X3 約 7.44 MB），跳過設定區與 SPIFFS。約 <b>5～7 分鐘</b>，比完整刷快約 60%。
+    </p>
+    <ul class="hint">
+      <li><b>什麼時候用</b>：手邊有 <b>app 分區的 bin 檔</b>（不是 16 MB 完整 bin），例如 CrossPoint 開源韌體、純應用更新檔。</li>
+      <li><b>什麼時候不能用</b>：原廠 <code>xtc-backup-日期.bin</code>（16 MB 完整檔）不能用這個刷，要走②。</li>
+      <li><b>雙分區備援</b>：新韌體寫到「閒置的那塊 app 分區」，原本的舊韌體完整保留。萬一新韌體開不了機，重刷一次就會切回舊版。</li>
+      <li><b>裝置型號自動辨識</b>：連線後讀分區表判斷 X3 或 X4，不用手動選。</li>
+    </ul>
+    <p class="hint">
+      <b>檔案大小限制</b>：X4 最大 6.25 MB（6553600 bytes），X3 最大 7.4375 MB（7798784 bytes），最小 960 KB。
+    </p>
+    <div class="btn-row">
+      <input type="file" id="file-ota" accept=".bin" class="file-input" />
+      <button id="btn-ota" class="btn btn-primary">OTA 快速刷入</button>
+    </div>
+    <p class="hint credit-note">
+      <b>核心邏輯致謝</b>：OTA 雙分區寫入、otadata CRC 校驗、X3 / X4 分區表辨識，整段是改作自
+      <a href="https://github.com/crosspoint-reader/crosspoint-reader" target="_blank" rel="noopener">CrossPoint Reader</a>
+      開源專案（MIT 授權，作者
+      <a href="https://github.com/daveallie" target="_blank" rel="noopener">@daveallie</a>）。
+      閱星曈 X3 / X4 的標準分區表常數也來自該專案，已在多台裝置上驗證過。沒有這份開源實作，這個功能不可能在這個工具上重現。
+    </p>
+  </section>
+
   <!-- 執行狀態 -->
   <section class="card card-status">
     <h2>執行狀態</h2>
@@ -97,16 +125,21 @@
 
 <footer class="footer">
   <p>
-    基於 MIT 授權改作自
+    OTA 快速刷入功能改作自
     <a href="https://github.com/crosspoint-reader/crosspoint-reader" target="_blank" rel="noopener">CrossPoint Reader</a>
+    （MIT 授權，作者
+    <a href="https://github.com/daveallie" target="_blank" rel="noopener">@daveallie</a>）
     &nbsp;|&nbsp;
-    工具 by HelloRuru
+    底層串接
+    <a href="https://github.com/espressif/esptool-js" target="_blank" rel="noopener">esptool-js</a>
+    &nbsp;|&nbsp;
+    介面與整合 by HelloRuru
   </p>
   <p class="copyright">&copy; 2026 Kaoru Tsai. All Rights Reserved.</p>
 </footer>
 
 <!-- esptool-js 從 CDN 載入 -->
-<script type="module" src="./js/app.js?v=20260426"></script>
+<script type="module" src="./js/app.js?v=20260514"></script>
 
 </body>
 </html>

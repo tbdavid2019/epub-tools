@@ -209,8 +209,250 @@ async function flashBin() {
   }
 }
 
+// ========== 功能 3：OTA 快速刷入 ==========
+// 改作自 CrossPoint Reader（MIT，by daveallie） https://github.com/crosspoint-reader/crosspoint-reader
+// 只刷 app 分區，跳過 NVS / SPIFFS，保留書籤與設定
+
+// CRC32（ESP-IDF 用來校驗 otadata 的 ota_seq）
+const CRC32_TABLE = new Uint32Array(256);
+(() => {
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    CRC32_TABLE[i] = c >>> 0;
+  }
+})();
+function crc32(data, previous = 0) {
+  let crc = previous === 0 ? 0 : (previous ^ 0xFFFFFFFF) >>> 0;
+  for (let i = 0; i < data.length; i++) crc = CRC32_TABLE[(crc ^ data[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+// 小端序 byte 工具
+function u32ToLE(v) {
+  return new Uint8Array([v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF]);
+}
+function leToU32(b) {
+  return ((b[0] || 0) + (((b[1] || 0) << 8) >>> 0) + (((b[2] || 0) << 16) >>> 0) + (((b[3] || 0) << 24) >>> 0)) >>> 0;
+}
+function bytesEqual(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+function otaSeqCrc(seq) {
+  // ESP-IDF: crc32_le(UINT32_MAX, ota_seq, 4)
+  return u32ToLE(crc32(u32ToLE(seq), 0xFFFFFFFF));
+}
+
+// X3 / X4 分區表（CrossPoint 已驗證）
+const X4_LAYOUT = { app0Offset: 0x10000, app1Offset: 0x650000, appSize: 0x640000 };
+const X3_LAYOUT = { app0Offset: 0x10000, app1Offset: 0x780000, appSize: 0x770000 };
+
+const X4_TABLE = [
+  { type: "data-nvs",       offset: 0x9000,   size: 0x5000   },
+  { type: "data-ota",       offset: 0xE000,   size: 0x2000   },
+  { type: "app-ota_0",      offset: 0x10000,  size: 0x640000 },
+  { type: "app-ota_1",      offset: 0x650000, size: 0x640000 },
+  { type: "data-spiffs",    offset: 0xC90000, size: 0x360000 },
+  { type: "data-coredump",  offset: 0xFF0000, size: 0x10000  },
+];
+const X3_TABLE = [
+  { type: "data-nvs",       offset: 0x9000,   size: 0x5000   },
+  { type: "data-ota",       offset: 0xE000,   size: 0x2000   },
+  { type: "app-ota_0",      offset: 0x10000,  size: 0x770000 },
+  { type: "app-ota_1",      offset: 0x780000, size: 0x770000 },
+  { type: "data-spiffs",    offset: 0xEF0000, size: 0x100000 },
+  { type: "data-coredump",  offset: 0xFF0000, size: 0x10000  },
+];
+
+// 解析分區表（ESP32 分區表是 32 byte 一筆，最多 0x2000 大小，放在 0x8000）
+const PARTITION_TYPES = {
+  0x00: { 0x10: "app-ota_0", 0x11: "app-ota_1" },
+  0x01: { 0x00: "data-ota", 0x01: "data-phy", 0x02: "data-nvs", 0x03: "data-coredump", 0x82: "data-spiffs" },
+};
+function parsePartitionTable(data) {
+  const out = [];
+  for (let off = 0; off < data.length; off += 32) {
+    const c = data.slice(off, off + 32);
+    if (c.length !== 32) break;
+    let allFF = true;
+    for (let i = 0; i < 32; i++) if (c[i] !== 0xFF) { allFF = false; break; }
+    if (allFF) break;
+    if (c[0] === 0xEB && c[1] === 0xEB) continue; // md5 chksum entry
+    const type = PARTITION_TYPES[c[2]]?.[c[3]] || "unknown";
+    out.push({ type, offset: leToU32(c.slice(4, 8)), size: leToU32(c.slice(8, 12)) });
+  }
+  return out;
+}
+function tableMatches(actual, expected) {
+  return actual.length === expected.length && expected.every((e, i) =>
+    actual[i].type === e.type && actual[i].offset === e.offset && actual[i].size === e.size);
+}
+
+// 解析 otadata（0xE000，8KB，兩個 4KB slot）
+const OTA_STATE = { NEW: 0, PENDING_VERIFY: 1, VALID: 2, INVALID: 3, ABORTED: 4 };
+const INVALID_STATES = new Set([OTA_STATE.INVALID, OTA_STATE.ABORTED]);
+
+function parseOtaSlot(data, offset) {
+  const sequence = leToU32(data.slice(offset, offset + 4));
+  const state = leToU32(data.slice(offset + 0x18, offset + 0x1C));
+  const crcBytes = data.slice(offset + 0x1C, offset + 0x20);
+  return { sequence, state, crcValid: bytesEqual(crcBytes, otaSeqCrc(sequence)) };
+}
+function parseOtadata(data) {
+  const slot0 = parseOtaSlot(data, 0);
+  const slot1 = parseOtaSlot(data, 0x1000);
+  const candidates = [];
+  if (!INVALID_STATES.has(slot0.state) && slot0.crcValid) candidates.push({ label: "app0", ...slot0 });
+  if (!INVALID_STATES.has(slot1.state) && slot1.crcValid) candidates.push({ label: "app1", ...slot1 });
+  candidates.sort((a, b) => b.sequence - a.sequence);
+  const currentBoot = candidates[0]?.label || "app0";
+  const backup = currentBoot === "app0" ? "app1" : "app0";
+  const nextSeq = (candidates[0]?.sequence || 0) + 1;
+  return { slot0, slot1, currentBoot, backup, nextSeq };
+}
+function buildNewOtadata(existing, backupLabel, nextSeq) {
+  const out = new Uint8Array(existing);
+  const off = backupLabel === "app1" ? 0x1000 : 0;
+  out.set(u32ToLE(nextSeq), off);
+  out.set(u32ToLE(OTA_STATE.NEW), off + 0x18);
+  out.set(otaSeqCrc(nextSeq), off + 0x1C);
+  return out;
+}
+
+// 把 Uint8Array 轉成 binary string（esptool-js writeFlash 要 binary string）
+function bytesToBinStr(bytes) {
+  let s = "";
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return s;
+}
+
+async function flashOTA() {
+  const fileInput = $("file-ota");
+  if (!fileInput.files || fileInput.files.length === 0) {
+    setStatus("請先選擇一個 app 分區的 bin 檔。", "error");
+    return;
+  }
+  const file = fileInput.files[0];
+
+  // 預先大小檢查（X3 比較大，用 X3 上限做寬鬆驗證；下限取 CrossPoint 用的 0xF0000 = 960 KB）
+  if (file.size < 0xF0000) {
+    setStatus(`檔案太小（${(file.size / 1024).toFixed(1)} KB），不像 app 分區韌體。`, "error");
+    return;
+  }
+  if (file.size > X3_LAYOUT.appSize) {
+    setStatus(`檔案太大（${(file.size / 1024 / 1024).toFixed(2)} MB），超過 X3 最大 7.44 MB。`, "error");
+    return;
+  }
+
+  setButtonsDisabled(true);
+  resetProgress();
+  let transport;
+
+  try {
+    log(`OTA 模式：bin 檔大小 ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+
+    // [1/6] 連線
+    setStatus("[1/6] 連線中…", "running");
+    const { loader, transport: t } = await connect();
+    transport = t;
+
+    // [2/6] 驗證並辨識分區表
+    setStatus("[2/6] 讀取並驗證分區表…", "running");
+    log("讀取分區表（0x8000，8 KB）…");
+    const tableRaw = await loader.readFlash(0x8000, 0x2000);
+    const tableBytes = (tableRaw instanceof Uint8Array) ? tableRaw : new Uint8Array(tableRaw);
+    const parsed = parsePartitionTable(tableBytes);
+    log(`分區表共 ${parsed.length} 個分區。`);
+
+    let layout, model;
+    if (tableMatches(parsed, X4_TABLE)) {
+      layout = X4_LAYOUT; model = "X4";
+    } else if (tableMatches(parsed, X3_TABLE)) {
+      layout = X3_LAYOUT; model = "X3";
+    } else {
+      const dump = parsed.map(p => `  ${p.type} @ 0x${p.offset.toString(16)} (${p.size} bytes)`).join("\n");
+      throw new Error(`分區表不符合 X3 或 X4 標準佈局。建議改用②完整刷入。\n讀到的分區表：\n${dump}`);
+    }
+    log(`✅ 辨識為 ${model}，app 分區最大 ${(layout.appSize / 1024 / 1024).toFixed(2)} MB。`);
+
+    // 檢查檔案大小是否超過該機型 app 分區
+    if (file.size > layout.appSize) {
+      throw new Error(`bin 檔 ${(file.size / 1024 / 1024).toFixed(2)} MB 超過 ${model} app 分區上限 ${(layout.appSize / 1024 / 1024).toFixed(2)} MB。`);
+    }
+
+    // [3/6] 讀 otadata
+    setStatus("[3/6] 讀取 OTA 啟動紀錄…", "running");
+    log("讀取 otadata（0xE000，8 KB）…");
+    const otaRawRead = await loader.readFlash(0xE000, 0x2000);
+    const otaRaw = (otaRawRead instanceof Uint8Array) ? otaRawRead : new Uint8Array(otaRawRead);
+    const ota = parseOtadata(otaRaw);
+    log(`目前開機分區：${ota.currentBoot}（slot0 seq=${ota.slot0.sequence}, slot1 seq=${ota.slot1.sequence}）`);
+    log(`本次寫入目標：${ota.backup}（@ 0x${(ota.backup === "app0" ? layout.app0Offset : layout.app1Offset).toString(16)}）`);
+
+    // [4/6] 寫 app 分區到 backup
+    const targetOffset = ota.backup === "app0" ? layout.app0Offset : layout.app1Offset;
+    const buf = await file.arrayBuffer();
+    const firmwareBytes = new Uint8Array(buf);
+    const firmwareBinStr = bytesToBinStr(firmwareBytes);
+
+    setStatus(`[4/6] 寫入韌體到 ${ota.backup} 分區，約 5～7 分鐘，請勿拔線…`, "running");
+    log(`開始寫入：0x${targetOffset.toString(16)}（${(firmwareBytes.length / 1024 / 1024).toFixed(2)} MB）`);
+    await loader.writeFlash({
+      fileArray: [{ data: firmwareBinStr, address: targetOffset }],
+      flashSize: "keep",
+      flashMode: "keep",
+      flashFreq: "keep",
+      eraseAll: false,
+      compress: true,
+      reportProgress: (_, written, total) => setProgress(written, total),
+    });
+    log("✅ app 分區寫入完成。");
+    resetProgress();
+
+    // [5/6] 改寫 otadata 並驗證
+    setStatus("[5/6] 切換開機分區並驗證…", "running");
+    log(`寫入新 otadata（指向 ${ota.backup}, seq=${ota.nextSeq}）…`);
+    const newOta = buildNewOtadata(otaRaw, ota.backup, ota.nextSeq);
+    const newOtaBinStr = bytesToBinStr(newOta);
+    await loader.writeFlash({
+      fileArray: [{ data: newOtaBinStr, address: 0xE000 }],
+      flashSize: "keep",
+      flashMode: "keep",
+      flashFreq: "keep",
+      eraseAll: false,
+      compress: true,
+      reportProgress: (_, written, total) => setProgress(written, total),
+    });
+
+    // 寫後驗證
+    log("讀回 otadata 驗證切換是否成功…");
+    const verifyRawRead = await loader.readFlash(0xE000, 0x2000);
+    const verifyRaw = (verifyRawRead instanceof Uint8Array) ? verifyRawRead : new Uint8Array(verifyRawRead);
+    const verify = parseOtadata(verifyRaw);
+    if (verify.currentBoot !== ota.backup) {
+      throw new Error(`otadata 切換驗證失敗：預期 ${ota.backup}，實際 ${verify.currentBoot}。請重試或改用②完整刷入。`);
+    }
+    log(`✅ 驗證通過：開機分區已切到 ${verify.currentBoot}。`);
+    resetProgress();
+
+    // [6/6] 完成
+    setStatus(`[6/6] OTA 完成！${model} 已更新到 ${ota.backup} 分區。請按 Reset 後長按電源 3 秒。`, "success");
+    log(`🎉 OTA 快速更新完成（${model} → ${ota.backup}）。舊韌體完整保留，萬一新版有問題重刷一次會切回。`);
+  } catch (err) {
+    log(`❌ 錯誤：${err.message}`);
+    setStatus(`OTA 失敗：${err.message}`, "error");
+    console.error(err);
+  } finally {
+    if (transport) await disconnect(transport, true);
+    setButtonsDisabled(false);
+  }
+}
+
 // ========== 綁定按鈕 ==========
 $("btn-backup").addEventListener("click", backupFullFlash);
 $("btn-restore").addEventListener("click", flashBin);
+$("btn-ota").addEventListener("click", flashOTA);
 
 log("XTC Flasher 已就緒。建議先做完整備份，再進行任何刷入動作。");

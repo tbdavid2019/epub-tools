@@ -255,6 +255,27 @@ body {
 .hint.small { font-size: 13px; }
 .hint b { color: var(--rose-gray); font-weight: 500; }
 
+/* 致謝段落（OTA 區塊用，視覺上跟 hint 區隔） */
+.credit-note {
+  margin-top: 18px;
+  padding: 14px 18px;
+  background: var(--coral-bg);
+  border-left: 3px solid var(--brand-pink);
+  border-radius: 12px;
+  color: var(--text-body);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.credit-note a {
+  color: var(--brand-brown);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.credit-note a:hover {
+  color: var(--rose-gray);
+}
+
 /* ===== 按鈕（DS 2.2 圓角 24px）===== */
 .btn {
   font-family: 'GenSenRounded', 'Noto Sans TC', sans-serif;

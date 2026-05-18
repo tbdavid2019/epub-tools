@@ -178,15 +178,23 @@
               </div>
             </div>
 
-            <!-- Convert Toggle -->
-            <div class="toggle-row">
-              <div class="toggle-label">
-                <div class="toggle-title">簡體轉繁體</div>
-                <div class="toggle-desc">使用 OpenCC 引擎，含詞彙轉換</div>
+            <!-- Convert Mode -->
+            <div class="form-group">
+              <label class="form-label">簡轉繁模式</label>
+              <div class="option-grid">
+                <button class="option-btn active" id="convertModeTwp">
+                  <div class="option-btn-title">含詞彙轉換</div>
+                  <div class="option-btn-desc">奔馳→賓士、的士→計程車、激光→雷射</div>
+                </button>
+                <button class="option-btn" id="convertModeTw">
+                  <div class="option-btn-title">純字轉換</div>
+                  <div class="option-btn-desc">只轉字形，保留原詞彙（奔馳還是奔馳）</div>
+                </button>
+                <button class="option-btn" id="convertModeOff">
+                  <div class="option-btn-title">不轉換</div>
+                  <div class="option-btn-desc">維持原文字</div>
+                </button>
               </div>
-              <button class="toggle-switch on" id="toggleConvert">
-                <span class="toggle-knob"></span>
-              </button>
             </div>
 
             <!-- Punctuation Toggle -->

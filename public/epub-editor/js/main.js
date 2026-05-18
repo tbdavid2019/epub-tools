@@ -8,7 +8,7 @@
 const state = {
   file: null,           // 原始 File 物件
   zip: null,            // JSZip 實例（解壓後）
-  converter: null,      // OpenCC converter
+  converters: {},       // OpenCC converter cache（依模式 tw / twp）
   resultBlob: null,     // 處理完成的 blob
   resultFilename: '',   // 輸出檔名
   epubMeta: {},         // 解析到的 metadata
@@ -21,7 +21,7 @@ const state = {
 
   // 設定
   settings: {
-    convertToTraditional: true,
+    convertMode: 'twp',        // 'twp' 含詞彙 / 'tw' 純字 / 'off' 關閉
     convertPunctuation: true,
     writingMode: 'horizontal',
     fontFamily: 'noto-sans',
@@ -394,14 +394,16 @@ function decodeContent(uint8Array) {
 }
 
 /* ========== OpenCC 初始化 ========== */
-function getConverter() {
-  if (state.converter) return state.converter;
+// mode: 'twp'（含詞彙）/ 'tw'（純字）。回傳 null 表示不轉換。
+function getConverter(mode) {
+  var m = mode || state.settings.convertMode;
+  if (m !== 'tw' && m !== 'twp') return null;
+  if (state.converters[m]) return state.converters[m];
   if (typeof OpenCC === 'undefined') {
     throw new Error('OpenCC 載入失敗，請檢查網路連線後重新整理頁面');
   }
-  // opencc-js UMD: OpenCC.Converter
-  state.converter = OpenCC.Converter({ from: 'cn', to: 'twp' });
-  return state.converter;
+  state.converters[m] = OpenCC.Converter({ from: 'cn', to: m });
+  return state.converters[m];
 }
 
 /* ========== 標點符號轉換 ========== */
@@ -604,11 +606,13 @@ function renderPreview() {
   let text = sample.text || '上傳 EPUB 後會在這裡看到實際排版。';
 
   // 簡轉繁 / 標點
-  if (state.settings.convertToTraditional) {
+  if (state.settings.convertMode !== 'off') {
     try {
       const conv = getConverter();
-      title = conv(title);
-      text = conv(text);
+      if (conv) {
+        title = conv(title);
+        text = conv(text);
+      }
     } catch (e) {}
   }
   if (state.settings.convertPunctuation) {
@@ -969,8 +973,8 @@ async function processEpub() {
     let converter = null;
 
     // 2. 初始化 OpenCC（如果需要）
-    if (settings.convertToTraditional) {
-      updateProgress(8, '載入繁化姬引擎...');
+    if (settings.convertMode !== 'off') {
+      updateProgress(8, '載入 OpenCC 引擎...');
       try {
         converter = getConverter();
       } catch (err) {
@@ -992,7 +996,7 @@ async function processEpub() {
       let modified = false;
 
       // 簡轉繁
-      if (settings.convertToTraditional && converter) {
+      if (settings.convertMode !== 'off' && converter) {
         const ext = filename.toLowerCase().slice(filename.lastIndexOf('.'));
         if (CONTENT_EXTENSIONS.includes(ext) || ext === '.ncx' || ext === '.opf') {
           const converted = converter(content);
@@ -1128,12 +1132,13 @@ async function processEpub() {
     // 7. 生成檔名
     const originalName = file.name.replace(/\.epub$/i, '');
     let outputName = originalName;
-    if (settings.convertToTraditional && converter) {
+    if (settings.convertMode !== 'off' && converter) {
       try { outputName = converter(originalName); } catch { /* 用原名 */ }
     }
 
     const suffixes = [];
-    if (settings.convertToTraditional) suffixes.push('繁');
+    if (settings.convertMode === 'twp') suffixes.push('繁・詞彙');
+    else if (settings.convertMode === 'tw') suffixes.push('繁');
     if (settings.writingMode === 'vertical') suffixes.push('直排');
     if (suffixes.length > 0) {
       outputName += '（' + suffixes.join('・') + '）';
@@ -1309,13 +1314,14 @@ function initEvents() {
   // 移除檔案
   $('#btn-remove-file').addEventListener('click', resetFile);
 
-  // Toggle 開關
-  $('#toggle-convert').addEventListener('click', function() {
-    this.classList.toggle('active');
-    const isActive = this.classList.contains('active');
-    this.setAttribute('aria-pressed', isActive);
-    state.settings.convertToTraditional = isActive;
-    renderPreview();
+  // 簡轉繁三選一
+  $$('[data-convert]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('[data-convert]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.settings.convertMode = btn.dataset.convert;
+      renderPreview();
+    });
   });
 
   $('#toggle-punctuation').addEventListener('click', function() {

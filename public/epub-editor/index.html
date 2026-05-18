@@ -160,15 +160,21 @@
     <!-- EPUB Info -->
     <div id="epub-info" class="epub-info"></div>
 
-    <!-- Conversion Toggle -->
+    <!-- Conversion Mode -->
     <div class="setting-group">
-      <div class="setting-row">
-        <div>
-          <p class="setting-label">簡體轉繁體</p>
-          <p class="setting-desc">使用 OpenCC 引擎，含詞彙轉換（如「軟件」→「軟體」）</p>
-        </div>
-        <button id="toggle-convert" class="toggle active" aria-pressed="true">
-          <span class="toggle-knob"></span>
+      <p class="setting-section-title">簡轉繁模式</p>
+      <div class="option-buttons">
+        <button class="option-btn active" data-convert="twp">
+          <p class="option-title">含詞彙轉換</p>
+          <p class="option-desc">奔馳→賓士、的士→計程車、激光→雷射</p>
+        </button>
+        <button class="option-btn" data-convert="tw">
+          <p class="option-title">純字轉換</p>
+          <p class="option-desc">只轉字形，保留原詞彙（奔馳還是奔馳）</p>
+        </button>
+        <button class="option-btn" data-convert="off">
+          <p class="option-title">不轉換</p>
+          <p class="option-desc">維持原文字</p>
         </button>
       </div>
     </div>

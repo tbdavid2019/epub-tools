@@ -6,12 +6,19 @@
   'use strict';
 
   // ── OpenCC ──
-  var converter = null;
-  function getConverter() {
-    if (!converter) converter = OpenCC.Converter({ from: 'cn', to: 'twp' });
-    return converter;
+  // twp = 簡 → 台灣繁體（含詞彙轉換，奔馳→賓士、的士→計程車、激光→雷射）
+  // tw  = 簡 → 台灣繁體（純字轉換，保留原詞彙）
+  var converters = {};
+  function getConverter(mode) {
+    if (mode !== 'tw' && mode !== 'twp') return null;
+    if (!converters[mode]) converters[mode] = OpenCC.Converter({ from: 'cn', to: mode });
+    return converters[mode];
   }
-  function convertText(text) { return getConverter()(text); }
+  function convertText(text, mode) {
+    var m = mode || state.settings.convertMode;
+    var c = getConverter(m);
+    return c ? c(text) : text;
+  }
 
   // ── 台灣標點符號轉換 ──
   var CJK = '[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\uff00-\uffef]';
@@ -50,7 +57,7 @@
     lastFilename: '',
     settings: {
       title: '', author: '',
-      convertToTraditional: true,
+      convertMode: 'twp',
       convertPunctuation: true,
       writingMode: 'horizontal',
       fontFamily: 'noto-sans',
@@ -313,9 +320,10 @@
     $('inputTitle').value = state.settings.title;
     $('inputAuthor').value = state.settings.author;
 
-    // Convert toggles
-    var toggleBtn = $('toggleConvert');
-    toggleBtn.className = 'toggle-switch ' + (state.settings.convertToTraditional ? 'on' : 'off');
+    // Convert mode（三選一）
+    $('convertModeTwp').classList.toggle('active', state.settings.convertMode === 'twp');
+    $('convertModeTw').classList.toggle('active', state.settings.convertMode === 'tw');
+    $('convertModeOff').classList.toggle('active', state.settings.convertMode === 'off');
     var punctBtn = $('togglePunctuation');
     punctBtn.className = 'toggle-switch ' + (state.settings.convertPunctuation ? 'on' : 'off');
 
@@ -390,7 +398,7 @@
       rawText = '上傳檔案後會在這裡看到實際排版。';
     }
     // 套用簡轉繁 / 標點
-    if (state.settings.convertToTraditional) {
+    if ((state.settings.convertMode !== 'off')) {
       try {
         rawTitle = convertText(rawTitle);
         rawText = convertText(rawText);
@@ -559,11 +567,17 @@
   $('inputTitle').addEventListener('input', function () { state.settings.title = this.value; });
   $('inputAuthor').addEventListener('input', function () { state.settings.author = this.value; });
 
-  $('toggleConvert').addEventListener('click', function () {
-    state.settings.convertToTraditional = !state.settings.convertToTraditional;
-    this.className = 'toggle-switch ' + (state.settings.convertToTraditional ? 'on' : 'off');
-    renderPreview();
-  });
+  function bindConvertModeBtn(id, mode) {
+    var el = $(id);
+    if (!el) return;
+    el.addEventListener('click', function () {
+      state.settings.convertMode = mode;
+      renderSettings();
+    });
+  }
+  bindConvertModeBtn('convertModeTwp', 'twp');
+  bindConvertModeBtn('convertModeTw', 'tw');
+  bindConvertModeBtn('convertModeOff', 'off');
 
   $('togglePunctuation').addEventListener('click', function () {
     state.settings.convertPunctuation = !state.settings.convertPunctuation;
@@ -680,7 +694,7 @@
       ['章節數', state.chapters.length + ' 章'],
       ['總字數', totalCharsDisplay],
       ['封面', state.coverBlob ? '已設定' : '無'],
-      ['簡轉繁', state.settings.convertToTraditional ? '是' : '否'],
+      ['簡轉繁', state.settings.convertMode === 'twp' ? '含詞彙' : (state.settings.convertMode === 'tw' ? '純字' : '關閉')],
       ['台灣標點', state.settings.convertPunctuation ? '是' : '否'],
       ['排版', state.settings.writingMode === 'vertical' ? '直排' : '橫排'],
       ['字型', fontName],
@@ -713,7 +727,7 @@
       var processedTitle = state.settings.title;
       var processedAuthor = state.settings.author;
 
-      if (state.settings.convertToTraditional) {
+      if ((state.settings.convertMode !== 'off')) {
         $('exportProgressText').textContent = '正在轉換簡體為繁體...';
         processedChapters = [];
         for (var i = 0; i < state.chapters.length; i++) {
@@ -815,7 +829,7 @@
       // 前處理：簡轉繁 + 標點
       function processChapters(chapters) {
         var result = chapters;
-        if (state.settings.convertToTraditional) {
+        if ((state.settings.convertMode !== 'off')) {
           var converted = [];
           for (var i = 0; i < result.length; i++) {
             converted.push({ title: convertText(result[i].title), content: convertText(result[i].content) });
@@ -832,7 +846,7 @@
         return result;
       }
 
-      if (state.settings.convertToTraditional) {
+      if ((state.settings.convertMode !== 'off')) {
         processedTitle = convertText(processedTitle);
         if (processedAuthor) processedAuthor = convertText(processedAuthor);
       }
@@ -915,7 +929,7 @@
     state.lastBlob = null;
     state.settings.title = '';
     state.settings.author = '';
-    state.settings.convertToTraditional = true;
+    state.settings.convertMode = 'twp';
     state.settings.convertPunctuation = true;
     state.settings.writingMode = 'horizontal';
     state.settings.fontFamily = 'noto-sans';

@@ -8,7 +8,7 @@
 <meta name="robots" content="noindex, nofollow" />
 
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="stylesheet" href="./css/style.css?v=20260514" />
+<link rel="stylesheet" href="./css/style.css?v=20260520" />
 </head>
 <body>
 
@@ -106,8 +106,30 @@
     </div>
 
     <div id="log-wrap" class="log-wrap hidden">
-      <div class="log-header">詳細記錄</div>
-      <pre id="log"></pre>
+      <div class="log-toolbar">
+        <div class="log-toolbar-left">
+          <span class="log-header-title">詳細記錄</span>
+          <span class="log-count" id="log-count">0 行</span>
+        </div>
+        <div class="log-toolbar-right">
+          <button type="button" id="btn-copy-all" class="log-tool-btn log-tool-primary" title="把整個 log 複製到剪貼簿">
+            一鍵複製全部 log
+          </button>
+          <button type="button" id="btn-copy-error" class="log-tool-btn" title="自動帶上裝置/瀏覽器/時間，產生可以直接貼給嚕嚕的錯誤回報">
+            複製錯誤給嚕嚕
+          </button>
+          <button type="button" id="btn-download-log" class="log-tool-btn" title="下載完整 log .txt 檔">
+            下載 .txt
+          </button>
+          <button type="button" id="btn-toggle-scroll" class="log-tool-btn log-tool-toggle" title="刷機進行中是否自動滾到最新" aria-pressed="true">
+            自動滾動：開
+          </button>
+          <button type="button" id="btn-clear-log" class="log-tool-btn log-tool-ghost" title="清空目前的 log（已刷的內容不會被清掉）">
+            清空
+          </button>
+        </div>
+      </div>
+      <pre id="log" tabindex="0" aria-live="polite"></pre>
     </div>
   </section>
 
@@ -139,7 +161,7 @@
 </footer>
 
 <!-- esptool-js 從 CDN 載入 -->
-<script type="module" src="./js/app.js?v=20260514"></script>
+<script type="module" src="./js/app.js?v=20260520"></script>
 
 </body>
 </html>

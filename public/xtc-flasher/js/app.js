@@ -11,9 +11,15 @@ const progressFill = $("progress-fill");
 const progressText = $("progress-text");
 const logWrap = $("log-wrap");
 const logEl = $("log");
+const logCountEl = $("log-count");
 const browserWarning = $("browser-warning");
 
 const allButtons = () => document.querySelectorAll("button.btn");
+
+// ========== Log 狀態 ==========
+let logLineCount = 0;
+let logHasError = false;
+let autoScroll = true;
 
 // ========== 工具函式 ==========
 function setStatus(text, state = "idle") {
@@ -43,8 +49,121 @@ function resetProgress() {
 function log(msg) {
   logWrap.classList.remove("hidden");
   const ts = new Date().toLocaleTimeString("zh-TW", { hour12: false });
-  logEl.textContent += `[${ts}] ${msg}\n`;
-  logEl.scrollTop = logEl.scrollHeight;
+  const line = `[${ts}] ${msg}\n`;
+  logEl.textContent += line;
+  logLineCount += 1;
+
+  // 偵測錯誤關鍵字 → 標紅 + 切換 log 邊框
+  if (!logHasError && /[❌]|錯誤|失敗|error|fail/i.test(msg)) {
+    logHasError = true;
+    logEl.classList.add("has-error");
+    logCountEl.classList.add("has-error");
+  }
+
+  updateLogCount();
+
+  if (autoScroll) {
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+}
+
+function updateLogCount() {
+  logCountEl.textContent = logHasError
+    ? `${logLineCount} 行（含錯誤）`
+    : `${logLineCount} 行`;
+}
+
+function getLogText() {
+  return logEl.textContent || "";
+}
+
+function buildErrorReport() {
+  const ua = navigator.userAgent;
+  const lang = navigator.language || "unknown";
+  const platform = navigator.platform || "unknown";
+  const now = new Date().toLocaleString("zh-TW", { hour12: false });
+  const statusText = statusLine.textContent || "（無）";
+  return [
+    "===== 閱星曈刷機錯誤回報 =====",
+    `時間：${now}`,
+    `目前狀態：${statusText}`,
+    `平台：${platform}`,
+    `語系：${lang}`,
+    `瀏覽器：${ua}`,
+    "----- 完整 Log -----",
+    getLogText().trim() || "（無 log）",
+    "===== 回報結束 =====",
+  ].join("\n");
+}
+
+async function copyToClipboard(text) {
+  if (!text) return false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (_) { /* fallthrough */ }
+  // Fallback：用隱形 textarea + execCommand
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "-1000px";
+    ta.style.left = "-1000px";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+function flashCopied(btn, label = "已複製 ✓") {
+  const original = btn.textContent;
+  btn.classList.add("copied");
+  btn.textContent = label;
+  setTimeout(() => {
+    btn.classList.remove("copied");
+    btn.textContent = original;
+  }, 1800);
+}
+
+function downloadLogTxt() {
+  const text = getLogText();
+  if (!text.trim()) return;
+  const now = new Date();
+  const ts = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `xtc-flasher-log-${ts}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function toggleAutoScroll(btn) {
+  autoScroll = !autoScroll;
+  btn.setAttribute("aria-pressed", String(autoScroll));
+  btn.textContent = `自動滾動：${autoScroll ? "開" : "關"}`;
+  if (autoScroll) {
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+}
+
+function clearLog() {
+  logEl.textContent = "";
+  logLineCount = 0;
+  logHasError = false;
+  logEl.classList.remove("has-error");
+  logCountEl.classList.remove("has-error");
+  updateLogCount();
 }
 
 function setButtonsDisabled(disabled) {
@@ -454,5 +573,39 @@ async function flashOTA() {
 $("btn-backup").addEventListener("click", backupFullFlash);
 $("btn-restore").addEventListener("click", flashBin);
 $("btn-ota").addEventListener("click", flashOTA);
+
+// log 工具列
+$("btn-copy-all").addEventListener("click", async (e) => {
+  const ok = await copyToClipboard(getLogText());
+  if (ok) flashCopied(e.currentTarget, "已複製全部 ✓");
+  else flashCopied(e.currentTarget, "複製失敗，請手動選取");
+});
+$("btn-copy-error").addEventListener("click", async (e) => {
+  const ok = await copyToClipboard(buildErrorReport());
+  if (ok) flashCopied(e.currentTarget, "錯誤回報已複製 ✓");
+  else flashCopied(e.currentTarget, "複製失敗");
+});
+$("btn-download-log").addEventListener("click", downloadLogTxt);
+$("btn-toggle-scroll").addEventListener("click", (e) => toggleAutoScroll(e.currentTarget));
+$("btn-clear-log").addEventListener("click", () => {
+  if (confirm("確定要清空目前的 log 嗎？（已寫到裝置的內容不會被清掉）")) {
+    clearLog();
+  }
+});
+
+// 使用者手動往上捲 → 自動暫停滾動；捲回最底 → 恢復
+logEl.addEventListener("scroll", () => {
+  const nearBottom = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight < 24;
+  const btn = $("btn-toggle-scroll");
+  if (!nearBottom && autoScroll) {
+    autoScroll = false;
+    btn.setAttribute("aria-pressed", "false");
+    btn.textContent = "自動滾動：關";
+  } else if (nearBottom && !autoScroll) {
+    autoScroll = true;
+    btn.setAttribute("aria-pressed", "true");
+    btn.textContent = "自動滾動：開";
+  }
+});
 
 log("XTC Flasher 已就緒。建議先做完整備份，再進行任何刷入動作。");

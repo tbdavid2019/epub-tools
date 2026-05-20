@@ -418,25 +418,138 @@ body {
 
 /* ===== Log ===== */
 .log-wrap { margin-top: 20px; }
-.log-header {
+
+/* log 工具列（複製、下載、滾動切換） */
+.log-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #FBF8FC, #FDF8F5);
+  border: 1px solid rgba(223, 198, 198, 0.30);
+  border-radius: 12px 12px 0 0;
+  border-bottom: none;
+}
+.log-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.log-toolbar-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.log-header-title {
   font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
+  color: var(--brand-brown);
   font-weight: 500;
 }
+.log-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: "Consolas", "Monaco", monospace;
+  background: rgba(184, 169, 201, 0.15);
+  padding: 2px 10px;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+}
+.log-count.has-error {
+  background: rgba(201, 146, 154, 0.18);
+  color: var(--rose-gray);
+}
+
+.log-tool-btn {
+  font-family: 'GenSenRounded', 'Noto Sans TC', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(223, 198, 198, 0.50);
+  background: #FFFFFF;
+  color: var(--brand-brown);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  min-height: 30px;
+}
+.log-tool-btn:hover {
+  background: var(--coral-bg);
+  border-color: var(--coral);
+  color: var(--coral-deep);
+}
+.log-tool-btn:active {
+  transform: scale(0.97);
+}
+.log-tool-btn.copied {
+  background: rgba(168, 181, 160, 0.20);
+  border-color: var(--sage);
+  color: #5A8F5A;
+}
+.log-tool-primary {
+  background: linear-gradient(135deg, var(--coral), var(--coral-deep));
+  color: #FFFFFF;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(232, 168, 124, 0.30);
+}
+.log-tool-primary:hover {
+  background: linear-gradient(135deg, var(--coral-deep), var(--coral));
+  color: #FFFFFF;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(232, 168, 124, 0.40);
+}
+.log-tool-toggle[aria-pressed="false"] {
+  background: rgba(184, 169, 201, 0.18);
+  color: var(--aubergine);
+  border-color: rgba(184, 169, 201, 0.40);
+}
+.log-tool-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: rgba(184, 173, 167, 0.30);
+}
+
 #log {
   background: #2C2426;
   color: #EDE8E9;
   padding: 16px 20px;
-  border-radius: 12px;
+  border-radius: 0 0 12px 12px;
   font-family: "Consolas", "Monaco", monospace;
   font-size: 12px;
   line-height: 1.6;
-  max-height: 260px;
+  max-height: 320px;
   overflow-y: auto;
   white-space: pre-wrap;
   word-break: break-all;
   margin: 0;
+  border: 1px solid rgba(223, 198, 198, 0.30);
+  border-top: none;
+}
+#log:focus {
+  outline: 2px solid var(--coral);
+  outline-offset: -2px;
+}
+#log.has-error {
+  border-color: var(--rose-gray);
+}
+
+/* 響應式 log 工具列 */
+@media (max-width: 767px) {
+  .log-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .log-toolbar-right {
+    justify-content: flex-start;
+  }
+  .log-tool-btn {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 /* ===== 隱藏 ===== */

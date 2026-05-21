@@ -167,7 +167,14 @@ function clearLog() {
 }
 
 function setButtonsDisabled(disabled) {
-  allButtons().forEach((b) => (b.disabled = disabled));
+  allButtons().forEach((b) => {
+    // log 工具列按鈕永遠保留(複製/下載/清空都不影響刷機)
+    if (b.id && b.id.startsWith("btn-copy-")) return;
+    if (b.id === "btn-download-log" || b.id === "btn-toggle-scroll" || b.id === "btn-clear-log") return;
+    // 監視按鈕由 monitor 狀態自己管,不被 setButtonsDisabled 蓋掉
+    if (b.id === "btn-monitor-start" || b.id === "btn-monitor-stop") return;
+    b.disabled = disabled;
+  });
 }
 
 // esptool-js 的 Terminal 介面
@@ -223,8 +230,126 @@ async function disconnect(transport, skipReset = false) {
   }
 }
 
-// ========== 功能 1：備份完整韌體 ==========
+// ========== 功能 0:Serial Monitor(裝置即時 log 監視)==========
+// 用原生 Web Serial API,跳過 esptool-js
+// 設計考量:esptool-js 會把裝置打到 bootloader,看不到正常開機 log
+// 必須用 115200 baud 直接讀原生 serial,才能看到 Serial.printf 的輸出
+let monitorPort = null;
+let monitorReader = null;
+let monitorAbortController = null;
+let monitorLineBuffer = "";
+
+function setMonitorStatus(text, isConnected = false) {
+  const el = $("monitor-status");
+  if (!el) return;
+  el.innerHTML = `目前狀態:<b>${text}</b>`;
+  el.style.color = isConnected ? "var(--coral, #E8A87C)" : "";
+}
+
+function setMonitorButtons(connected) {
+  const btnStart = $("btn-monitor-start");
+  const btnStop = $("btn-monitor-stop");
+  if (btnStart) btnStart.disabled = connected;
+  if (btnStop) btnStop.disabled = !connected;
+}
+
+async function startMonitor() {
+  if (monitorPort) {
+    log("監視已在執行中。");
+    return;
+  }
+  try {
+    setMonitorStatus("請在彈窗中選擇 USB 連線埠……");
+    log("[Monitor] 等待使用者選擇 serial port…");
+    const port = await navigator.serial.requestPort({});
+    await port.open({ baudRate: 115200, bufferSize: 4096 });
+    monitorPort = port;
+    monitorAbortController = new AbortController();
+    setMonitorButtons(true);
+    setMonitorStatus("監視中(115200 baud)", true);
+    log("[Monitor] ✅ 已連線,開始接收裝置輸出(115200 baud)。");
+    log("[Monitor] 提示:按裝置 Reset 鍵會重啟,可以看到開機訊息。");
+
+    // 持續讀取 serial 資料
+    const decoder = new TextDecoder("utf-8", { fatal: false });
+    while (monitorPort && monitorPort.readable) {
+      monitorReader = monitorPort.readable.getReader();
+      try {
+        while (true) {
+          const { value, done } = await monitorReader.read();
+          if (done) break;
+          if (value && value.length > 0) {
+            const text = decoder.decode(value, { stream: true });
+            monitorLineBuffer += text;
+            const lines = monitorLineBuffer.split(/\r?\n/);
+            monitorLineBuffer = lines.pop() || "";
+            for (const line of lines) {
+              if (line.length > 0) log(`[Device] ${line}`);
+            }
+          }
+        }
+      } catch (e) {
+        if (e.name !== "AbortError") {
+          log(`[Monitor] 讀取中斷:${e.message}`);
+        }
+        break;
+      } finally {
+        try { monitorReader.releaseLock(); } catch (_) {}
+        monitorReader = null;
+      }
+      // 如果還沒收到中斷指令,繼續嘗試重讀
+      if (!monitorAbortController || monitorAbortController.signal.aborted) break;
+    }
+  } catch (err) {
+    log(`[Monitor] ❌ 連線失敗:${err.message}`);
+    setMonitorStatus("未連線");
+    setMonitorButtons(false);
+    await cleanupMonitor();
+  }
+}
+
+async function cleanupMonitor() {
+  if (monitorReader) {
+    try { await monitorReader.cancel(); } catch (_) {}
+    try { monitorReader.releaseLock(); } catch (_) {}
+    monitorReader = null;
+  }
+  if (monitorPort) {
+    try { await monitorPort.close(); } catch (_) {}
+    monitorPort = null;
+  }
+  if (monitorLineBuffer) {
+    log(`[Device] ${monitorLineBuffer}`);
+    monitorLineBuffer = "";
+  }
+  monitorAbortController = null;
+}
+
+async function stopMonitor(silent = false) {
+  if (!monitorPort) {
+    if (!silent) log("[Monitor] 目前沒有監視中。");
+    setMonitorButtons(false);
+    setMonitorStatus("未連線");
+    return;
+  }
+  if (monitorAbortController) monitorAbortController.abort();
+  await cleanupMonitor();
+  setMonitorButtons(false);
+  setMonitorStatus("未連線");
+  if (!silent) log("[Monitor] 已中斷監視。");
+}
+
+// 刷機動作前自動關監視(共用 USB port,不能同時佔用)
+async function ensureMonitorStoppedBeforeFlash() {
+  if (monitorPort) {
+    log("[Monitor] 偵測到刷機動作,自動中斷監視以釋放 USB port…");
+    await stopMonitor(true);
+  }
+}
+
+// ========== 功能 1:備份完整韌體 ==========
 async function backupFullFlash() {
+  await ensureMonitorStoppedBeforeFlash();
   setButtonsDisabled(true);
   resetProgress();
   let transport;
@@ -284,12 +409,13 @@ async function flashBin() {
     return;
   }
 
+  await ensureMonitorStoppedBeforeFlash();
   setButtonsDisabled(true);
   resetProgress();
   let transport;
 
   try {
-    // ⚠️ 關鍵：先要 USB 權限（必須在 user gesture 同一 tick 內），再做其他事
+    // ⚠️ 關鍵:先要 USB 權限(必須在 user gesture 同一 tick 內),再做其他事
     const { loader, transport: t } = await connect();
     transport = t;
 
@@ -465,12 +591,13 @@ async function flashOTA() {
     return;
   }
 
+  await ensureMonitorStoppedBeforeFlash();
   setButtonsDisabled(true);
   resetProgress();
   let transport;
 
   try {
-    log(`OTA 模式：bin 檔大小 ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+    log(`OTA 模式:bin 檔大小 ${(file.size / 1024 / 1024).toFixed(2)} MB`);
 
     // [1/6] 連線
     setStatus("[1/6] 連線中…", "running");
@@ -573,6 +700,12 @@ async function flashOTA() {
 $("btn-backup").addEventListener("click", backupFullFlash);
 $("btn-restore").addEventListener("click", flashBin);
 $("btn-ota").addEventListener("click", flashOTA);
+
+// 監視按鈕
+const btnMonStart = $("btn-monitor-start");
+const btnMonStop = $("btn-monitor-stop");
+if (btnMonStart) btnMonStart.addEventListener("click", startMonitor);
+if (btnMonStop) btnMonStop.addEventListener("click", () => stopMonitor(false));
 
 // log 工具列
 $("btn-copy-all").addEventListener("click", async (e) => {

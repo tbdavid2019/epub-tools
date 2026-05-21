@@ -8,7 +8,7 @@
 <meta name="robots" content="noindex, nofollow" />
 
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="stylesheet" href="./css/style.css?v=20260520" />
+<link rel="stylesheet" href="./css/style.css?v=20260521" />
 </head>
 <body>
 
@@ -35,11 +35,31 @@
       <li>插上 USB-C 線前，<b>先按住 X3 / X4 的 BOOT 鍵</b>，再按 Reset 鬆開，最後再放開 BOOT。</li>
       <li>操作過程中<b>請勿拔線、勿關閉分頁、勿讓電腦睡眠</b>。</li>
       <li>建議第一次使用先做完整備份，留一份原廠 bin 在手邊，日後想回復隨時可以用。</li>
-      <li>本工具是 HelloRuru 個人改作，非閱星曈官方工具，使用風險請自行評估。</li>
+      <li>本工具是 HelloRuru 個人改作,非閱星曈官方工具,使用風險請自行評估。</li>
     </ul>
   </section>
 
-  <!-- 功能①：備份 -->
+  <!-- 功能 0：裝置連線監視（Serial Monitor） -->
+  <section class="card">
+    <h2>⓪ 連線監視（看裝置即時輸出）</h2>
+    <p class="hint">
+      不刷東西,只連到裝置看 serial log。適合：刷完想看裝置重啟訊息、開機卡關 debug、確認韌體有正常啟動。
+    </p>
+    <ul class="hint">
+      <li><b>連線速率</b>:115200 baud(裝置正常開機輸出用的速率,不是刷機用的高速)。</li>
+      <li><b>使用時機</b>:刷機完成、按完 Reset 後,按「START 開始監視」就能看到裝置重啟訊息。</li>
+      <li><b>注意</b>:監視中無法同時刷機。要刷機時,系統會自動中斷監視。</li>
+    </ul>
+    <div class="btn-row">
+      <button id="btn-monitor-start" class="btn btn-secondary">START 開始監視</button>
+      <button id="btn-monitor-stop" class="btn btn-secondary" disabled>中斷監視</button>
+    </div>
+    <p id="monitor-status" class="hint" style="margin-top: 8px;">
+      目前狀態:<b>未連線</b>
+    </p>
+  </section>
+
+  <!-- 功能①:備份 -->
   <section class="card">
     <h2>① 備份完整韌體</h2>
     <p class="hint">讀取 X3 / X4 目前 Flash 整片 16 MB 內容，存成 <code>xtc-backup-日期.bin</code> 檔。約 25 分鐘。</p>
@@ -161,7 +181,7 @@
 </footer>
 
 <!-- esptool-js 從 CDN 載入 -->
-<script type="module" src="./js/app.js?v=20260520"></script>
+<script type="module" src="./js/app.js?v=20260521"></script>
 
 </body>
 </html>

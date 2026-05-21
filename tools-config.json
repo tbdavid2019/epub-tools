@@ -211,6 +211,16 @@
       "external": true
     },
     {
+      "id": "font-binary",
+      "name": "閱星曈字體轉換器",
+      "description": "把 TTF / OTF 字體轉成閱星曈墨水屏吃的 .bin 或刷機用的 .epdfont。免安裝、跨平台，檔案不上傳純前端轉檔。",
+      "path": "/font-binary/",
+      "icon": "type",
+      "ready": true,
+      "color": "coral",
+      "external": true
+    },
+    {
       "id": "suno-prompt",
       "name": "蘇諾大姊姊 · Suno 提示詞產生器",
       "description": "PM 追問式 7 題幫你配出 Suno 不會跑掉的 Style + Exclude + 歌詞結構 + Voice 命名 + 封面 prompt。支援 V5/V5.5。",
